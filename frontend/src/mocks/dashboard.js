@@ -26,13 +26,6 @@ export const mockPriorityQueue = [
   { tag_id: "TDN-002", kategori_triase: "kuning", status_label: "In Transit", elapsed: "5 mnt" },
 ];
 
-export const mockRecentActivity = [
-  { time: "10:48", message: "TDN-018 Registered by Medical Post" },
-  { time: "10:46", message: "TDN-008 Arrived at Hijau Pos" },
-  { time: "10:43", message: "TDN-004 Picked Up by Team" },
-  { time: "10:43", message: "TDN-002 Picked Up by Team" },
-];
-
 export const mockIncidentInfo = {
   nama_bencana: "Nama Bencana",
   tanggal: "13/05/2026",

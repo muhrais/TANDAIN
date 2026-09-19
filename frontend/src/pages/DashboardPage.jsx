@@ -6,6 +6,7 @@ import RegistrationSummaryRow from "../components/dashboard/RegistrationSummaryR
 import MapPanel from "../components/dashboard/MapPanel";
 import PriorityQueueCard from "../components/dashboard/PriorityQueueCard";
 import RecentActivityCard from "../components/dashboard/RecentActivityCard";
+import ActivityTab from "../components/activity/ActivityTab";
 import {
   getTriageDistribution,
   getEvacuationStatus,
@@ -91,7 +92,9 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {activeTab !== "Overview" && (
+      {activeTab === "Aktivitas" && <ActivityTab />}
+
+      {activeTab === "Alert" && (
         <div className="rounded-2xl bg-white p-8 text-sm text-muted shadow-sm">
           Tab "{activeTab}" belum diimplementasikan.
         </div>

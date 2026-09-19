@@ -3,10 +3,11 @@ import {
   mockEvacuationStatus,
   mockRegistrationStatus,
   mockPriorityQueue,
-  mockRecentActivity,
   mockIncidentInfo,
 } from "../mocks/dashboard";
 import { mockVictims, mockPoskoUtama } from "../mocks/victims";
+import { getActivities } from "./activityService";
+import { describeActivity, formatTime } from "../lib/activity";
 
 // Layer ini yang nanti diganti jadi fetch ke GET /api/dashboard/summary,
 // GET /api/victims, dan WS /ws/updates (FR-BE-06, FR-BE-11). Signature fungsi
@@ -29,8 +30,12 @@ export async function getPriorityQueue() {
   return mockPriorityQueue;
 }
 
-export async function getRecentActivity() {
-  return mockRecentActivity;
+export async function getRecentActivity(limit = 4) {
+  const activities = await getActivities();
+  return activities.slice(0, limit).map((activity) => ({
+    time: formatTime(activity.waktu_perubahan),
+    message: `${activity.tag_id} ${describeActivity(activity)}`,
+  }));
 }
 
 export async function getIncidentInfo() {
