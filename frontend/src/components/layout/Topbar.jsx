@@ -37,21 +37,26 @@ export default function Topbar({ incidentInfo, activeTab, onTabChange }) {
         </div>
       </div>
 
-      <div className="mt-5 flex items-center gap-6 border-b border-black/5 text-sm">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => onTabChange(tab)}
-            className={`-mb-px border-b-2 pb-2 font-medium transition-colors ${
-              activeTab === tab
-                ? "border-ink text-ink"
-                : "border-transparent text-muted hover:text-ink"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div role="tablist" aria-label="Tampilan dashboard" className="mt-5 flex items-center gap-1">
+        {TABS.map((tab) => {
+          const active = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => onTabChange(tab)}
+              className={`rounded-md px-5 py-3 text-[15px] leading-5 transition-colors ${
+                active
+                  ? "bg-white font-bold text-ink"
+                  : "font-semibold text-muted hover:text-ink"
+              }`}
+            >
+              {tab}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

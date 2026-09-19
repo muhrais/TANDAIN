@@ -1,67 +1,76 @@
 import {
-  LayoutDashboard,
+  House,
   Map,
-  ScanLine,
+  Nfc,
   ArrowLeftRight,
-  Stethoscope,
-  ClipboardList,
+  CirclePlus,
+  Database,
   Settings,
 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", icon: LayoutDashboard, active: true },
+  { label: "Dashboard", icon: House, active: true },
   { label: "Maps", icon: Map },
-  { label: "Scan NFC", icon: ScanLine },
+  { label: "Scan NFC", icon: Nfc },
   { label: "Evakuasi", icon: ArrowLeftRight },
-  { label: "Medis", icon: Stethoscope },
-  { label: "Data Pasien", icon: ClipboardList },
+  { label: "Medis", icon: CirclePlus },
+  { label: "Data Pasien", icon: Database },
   { label: "Pengaturan", icon: Settings },
 ];
 
+const ACTIVE_STRIPE = {
+  backgroundImage:
+    "linear-gradient(to right, var(--color-brand) 0 2px, var(--color-logo-yellow) 2px 6px, var(--color-logo-green) 6px 10px)",
+};
+
 export default function Sidebar() {
   return (
-    <aside className="flex h-screen w-[220px] shrink-0 flex-col bg-sidebar text-white">
-      <div className="flex items-center gap-2 px-6 py-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white">
-          <span className="text-sm font-bold text-brand">+</span>
-        </div>
-        <div className="leading-tight">
-          <div className="text-lg font-extrabold tracking-wide text-brand">TANDAIN</div>
-          <div className="text-[9px] tracking-[0.15em] text-muted">
-            TRIAGE DARURAT INDIVIDU
-          </div>
-        </div>
+    <aside className="sticky top-0 flex h-screen w-[204px] shrink-0 flex-col bg-sidebar">
+      <div className="px-5 pb-5 pt-7">
+        <img
+          src="/logo-tandain.png"
+          alt="TANDAIN - Triage Darurat Individu"
+          className="block w-[156px]"
+        />
       </div>
 
-      <nav className="mt-2 flex-1 space-y-1 px-3">
+      <nav aria-label="Navigasi utama" className="flex flex-1 flex-col gap-2 pr-6">
         {NAV_ITEMS.map(({ label, icon: Icon, active }) => (
           <button
             key={label}
             type="button"
-            className={`flex w-full items-center gap-3 rounded-md border-l-4 px-3 py-2.5 text-sm transition-colors ${
+            aria-current={active ? "page" : undefined}
+            className={`group relative flex h-10 items-center gap-2.5 pl-5 text-left text-[15px] font-semibold transition-colors ${
               active
-                ? "border-brand bg-white/5 font-semibold text-white"
-                : "border-transparent text-white/70 hover:bg-sidebar-hover hover:text-white"
+                ? "rounded-r-full bg-brand text-white"
+                : "text-neutral-400 hover:text-white"
             }`}
           >
-            <Icon size={18} strokeWidth={2} />
+            {active && (
+              <span aria-hidden="true" className="absolute inset-y-0 left-0 w-2.5" style={ACTIVE_STRIPE} />
+            )}
+            <Icon
+              size={20}
+              strokeWidth={1.75}
+              className={active ? "text-white" : "text-neutral-300 group-hover:text-white"}
+            />
             {label}
           </button>
         ))}
       </nav>
 
-      <div className="border-t border-white/10 px-4 py-4">
-        <div className="mb-3 flex items-center gap-2 text-xs text-white/60">
-          <span className="h-2 w-2 rounded-full bg-triase-hijau" />
+      <div className="border-t border-neutral-700 px-5 py-4">
+        <div className="mb-3 flex items-center gap-2 text-[11px] text-neutral-300">
+          <span className="h-2 w-2 rounded-full bg-logo-green" />
           Server Online
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand text-xs font-semibold">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-600 text-sm font-medium text-white">
             BP
           </div>
           <div className="leading-tight">
-            <div className="text-sm font-medium">Budi Prasetyo</div>
-            <div className="text-[11px] text-white/50">Admin</div>
+            <div className="text-[13px] font-semibold text-white">Budi Prasetyo</div>
+            <div className="text-[10px] text-neutral-400">Admin</div>
           </div>
         </div>
       </div>
