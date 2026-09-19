@@ -1,4 +1,4 @@
-export default function ActivityBreakdownCard({ title, items, className = "" }) {
+export default function BreakdownCard({ title, items, className = "" }) {
   const max = Math.max(1, ...items.map((item) => item.count));
 
   return (

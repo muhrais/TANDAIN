@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import ActivityTimelineCard from "./ActivityTimelineCard";
-import ActivityBreakdownCard from "./ActivityBreakdownCard";
+import BreakdownCard from "../common/BreakdownCard";
 import { getActivities } from "../../services/activityService";
 import { STATUS_ORDER, STATUS_LABEL, SOURCE_LABEL } from "../../lib/activity";
 
@@ -38,8 +38,8 @@ export default function ActivityTab() {
       <ActivityTimelineCard activities={activities} className="xl:col-span-8" />
 
       <div className="grid grid-rows-2 gap-5 xl:col-span-4">
-        <ActivityBreakdownCard title="Ringkasan Aktivitas" items={byStatus} />
-        <ActivityBreakdownCard title="Sumber Aktivitas" items={bySource} />
+        <BreakdownCard title="Ringkasan Aktivitas" items={byStatus} />
+        <BreakdownCard title="Sumber Aktivitas" items={bySource} />
       </div>
     </div>
   );

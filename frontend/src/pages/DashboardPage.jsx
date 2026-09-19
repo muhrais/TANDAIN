@@ -7,6 +7,9 @@ import MapPanel from "../components/dashboard/MapPanel";
 import PriorityQueueCard from "../components/dashboard/PriorityQueueCard";
 import RecentActivityCard from "../components/dashboard/RecentActivityCard";
 import ActivityTab from "../components/activity/ActivityTab";
+import AlertTab from "../components/alert/AlertTab";
+import { getAlerts, resolveAlert } from "../services/alertService";
+import { countAlerts } from "../lib/alert";
 import {
   getTriageDistribution,
   getEvacuationStatus,
@@ -20,6 +23,8 @@ import {
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("Overview");
   const [data, setData] = useState(null);
+  // Alert dipegang di sini agar angka di header ikut berubah saat alert ditandai ditangani.
+  const [alerts, setAlerts] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,9 +37,11 @@ export default function DashboardPage() {
       getPriorityQueue(),
       getRecentActivity(),
       getMapMarkers(),
-    ]).then(([incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map]) => {
+      getAlerts(),
+    ]).then(([incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, alertList]) => {
       if (cancelled) return;
       setData({ incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map });
+      setAlerts(alertList);
     });
 
     return () => {
@@ -42,13 +49,23 @@ export default function DashboardPage() {
     };
   }, []);
 
-  if (!data) {
+  async function handleResolveAlert(alertId) {
+    const update = await resolveAlert(alertId);
+    setAlerts((prev) => prev.map((a) => (a.alert_id === alertId ? { ...a, ...update } : a)));
+  }
+
+  if (!data || !alerts) {
     return <div className="min-w-0 flex-1 p-8 text-sm text-muted">Memuat dashboard...</div>;
   }
 
   return (
     <div className="min-w-0 flex-1 space-y-8 p-8">
-      <Topbar incidentInfo={data.incidentInfo} activeTab={activeTab} onTabChange={setActiveTab} />
+      <Topbar
+        incidentInfo={data.incidentInfo}
+        alertCounts={countAlerts(alerts)}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
       {activeTab === "Overview" && (
         // Satu grid 12 kolom: baris atas 6/6 (lebar sama), baris bawah 8/4 (peta lebih lebar).
@@ -94,11 +111,7 @@ export default function DashboardPage() {
 
       {activeTab === "Aktivitas" && <ActivityTab />}
 
-      {activeTab === "Alert" && (
-        <div className="rounded-2xl bg-white p-8 text-sm text-muted shadow-sm">
-          Tab "{activeTab}" belum diimplementasikan.
-        </div>
-      )}
+      {activeTab === "Alert" && <AlertTab alerts={alerts} onResolve={handleResolveAlert} />}
     </div>
   );
 }

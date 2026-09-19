@@ -30,6 +30,4 @@ export const mockIncidentInfo = {
   nama_bencana: "Nama Bencana",
   tanggal: "13/05/2026",
   waktu: "21.50 WIB",
-  alert_kritis: 2,
-  notifikasi: 5,
 };

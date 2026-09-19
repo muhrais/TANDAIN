@@ -2,7 +2,7 @@ import { TriangleAlert, Bell, Clock } from "lucide-react";
 
 const TABS = ["Overview", "Alert", "Aktivitas"];
 
-export default function Topbar({ incidentInfo, activeTab, onTabChange }) {
+export default function Topbar({ incidentInfo, alertCounts, activeTab, onTabChange }) {
   return (
     <div>
       <div className="flex items-start justify-between">
@@ -18,15 +18,26 @@ export default function Topbar({ incidentInfo, activeTab, onTabChange }) {
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 rounded-full bg-triase-merah-soft px-3 py-1 text-xs font-semibold text-triase-merah">
-            <TriangleAlert size={14} />
-            {incidentInfo.alert_kritis} alert kritis
-          </span>
-          <button type="button" className="relative text-muted hover:text-ink" aria-label="Notifikasi">
+          {alertCounts.kritis > 0 && (
+            <button
+              type="button"
+              onClick={() => onTabChange("Alert")}
+              className="flex items-center gap-1.5 rounded-full bg-triase-merah-soft px-3 py-1 text-xs font-semibold text-triase-merah transition-colors hover:bg-triase-merah/15"
+            >
+              <TriangleAlert size={14} />
+              {alertCounts.kritis} alert kritis
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onTabChange("Alert")}
+            className="relative text-muted hover:text-ink"
+            aria-label={`Notifikasi, ${alertCounts.aktif} alert aktif`}
+          >
             <Bell size={20} />
-            {incidentInfo.notifikasi > 0 && (
+            {alertCounts.aktif > 0 && (
               <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">
-                {incidentInfo.notifikasi}
+                {alertCounts.aktif}
               </span>
             )}
           </button>

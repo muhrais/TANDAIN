@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
+import FilterChip from "../common/FilterChip";
 import { STATUS_ORDER, STATUS_LABEL, describeActivity, formatTime } from "../../lib/activity";
 
 const DOT_COLOR = {
@@ -25,21 +26,6 @@ const TRIASE_FILTERS = [
   { key: "kuning", label: "Kuning" },
   { key: "hijau", label: "Hijau" },
 ];
-
-function FilterChip({ active, onClick, children }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-semibold transition-colors ${
-        active ? "bg-sidebar text-white" : "bg-page text-muted hover:text-ink"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
 
 function TimelineRow({ activity, isFirst, isLast }) {
   const transition = activity.status_lama
