@@ -42,58 +42,53 @@ export default function DashboardPage() {
   }, []);
 
   if (!data) {
-    return <div className="p-8 text-sm text-muted">Memuat dashboard...</div>;
+    return <div className="min-w-0 flex-1 p-8 text-sm text-muted">Memuat dashboard...</div>;
   }
 
   return (
-    <div className="flex-1 space-y-6 p-8">
+    <div className="min-w-0 flex-1 space-y-8 p-8">
       <Topbar incidentInfo={data.incidentInfo} activeTab={activeTab} onTabChange={setActiveTab} />
 
       {activeTab === "Overview" && (
-        <>
-          <div className="flex flex-col gap-5 xl:flex-row">
-            <div className="xl:w-[440px] xl:shrink-0">
-              <TriageDistributionCard data={data.triage} />
-            </div>
+        // Satu grid 12 kolom: baris atas 6/6 (lebar sama), baris bawah 8/4 (peta lebih lebar).
+        // Tinggi tiap baris mengikuti kolom tertinggi sehingga tepi bawah kartu selalu rata.
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+          <TriageDistributionCard data={data.triage} className="xl:col-span-6" />
 
-            <div className="flex flex-1 flex-col gap-5">
-              <div className="grid grid-cols-3 gap-4">
-                <StatCard
-                  label="Waiting Pickup"
-                  value={data.evacuation.waiting_pickup}
-                  caption="Belum di Evakuasi"
-                  color="merah"
-                />
-                <StatCard
-                  label="In Transit"
-                  value={data.evacuation.in_transit}
-                  caption="Sedang di Evakuasi"
-                  color="kuning"
-                />
-                <StatCard
-                  label="Arrived"
-                  value={data.evacuation.arrived}
-                  caption="Sudah di Evakuasi"
-                  color="kuning"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <RegistrationSummaryRow value={data.registration.not_registered} label="Not registered" />
-                <RegistrationSummaryRow value={data.registration.registered} label="Registered" />
-              </div>
+          <div className="flex flex-col gap-5 xl:col-span-6">
+            <div className="grid grid-cols-3 gap-5">
+              <StatCard
+                label="Waiting Pickup"
+                value={data.evacuation.waiting_pickup}
+                caption="Belum di Evakuasi"
+                color="merah"
+              />
+              <StatCard
+                label="In Transit"
+                value={data.evacuation.in_transit}
+                caption="Sedang di Evakuasi"
+                color="kuning"
+              />
+              <StatCard
+                label="Arrived"
+                value={data.evacuation.arrived}
+                caption="Sudah di Evakuasi"
+                color="kuning"
+              />
+            </div>
+            <div className="grid flex-1 grid-rows-2 gap-5">
+              <RegistrationSummaryRow value={data.registration.not_registered} label="Not registered" />
+              <RegistrationSummaryRow value={data.registration.registered} label="Registered" />
             </div>
           </div>
 
-          <div className="flex flex-col gap-5 xl:flex-row">
-            <div className="flex-1">
-              <MapPanel victims={data.map.victims} posko={data.map.posko} />
-            </div>
-            <div className="flex flex-col gap-5 xl:w-[360px] xl:shrink-0">
-              <PriorityQueueCard items={data.priorityQueue} />
-              <RecentActivityCard items={data.recentActivity} />
-            </div>
+          <MapPanel victims={data.map.victims} posko={data.map.posko} className="xl:col-span-8" />
+
+          <div className="grid grid-rows-2 gap-5 xl:col-span-4">
+            <PriorityQueueCard items={data.priorityQueue} />
+            <RecentActivityCard items={data.recentActivity} />
           </div>
-        </>
+        </div>
       )}
 
       {activeTab !== "Overview" && (
