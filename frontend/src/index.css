@@ -1,11 +1,14 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
 
 @theme {
-  --color-sidebar: #17191d;
-  --color-sidebar-hover: #23262b;
+  --color-sidebar: #000000;
+  --color-sidebar-hover: #161616;
 
-  --color-brand: #e13c3c;
-  --color-brand-dark: #c22f2f;
+  --color-brand: #c51725;
+  --color-brand-dark: #a8121e;
+  --color-logo-yellow: #f9b90c;
+  --color-logo-green: #088327;
 
   --color-triase-merah: #dc2626;
   --color-triase-merah-soft: #fdeaea;
@@ -18,7 +21,7 @@
   --color-ink: #1f2328;
   --color-muted: #8a8f98;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 body {
