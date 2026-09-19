@@ -1,86 +1,89 @@
-# TANDAIN Backend API
+# TANDAIN
 
-Backend API server untuk **TANDAIN (Triage Darurat Individu) - Smart Triage Tag**.
+**TANDAIN (Triage Darurat Individu)** - Smart Triage Tag untuk manajemen korban pada Mass-Casualty Incident (MCI).
 
----
+| Bagian | Lokasi | Stack | Port |
+|---|---|---|---|
+| Backend API | root (`server.js`, `src/`) | Node.js, Express, MongoDB | 3000 |
+| Frontend Dashboard | `frontend/` | React, Vite, Tailwind, Leaflet | 5173 |
 
-## 🚀 Panduan Initial Setup & Menjalankan Backend
+## Prasyarat
 
-### 1. Prasyarat (Prerequisites)
-- **Node.js** (v16+)
-- **MongoDB** (Lokal, Docker, atau MongoDB Atlas)
+- **Node.js 20.19+** (atau 22.12+), dibutuhkan Vite
+- **MongoDB** (lokal, Docker, atau Atlas)
 
----
+## Setup Backend
 
-### 2. Konfigurasi Environment Variable (`.env`)
-File `.env` sudah dibuat secara otomatis di root folder `TANDAIN`. Pastikan nilainya sesuai dengan lingkungan Anda:
+Jalankan dari root repo.
 
-```env
-# Port server API
-PORT=3000
-
-# Connection String MongoDB
-# MongoDB Lokal: mongodb://127.0.0.1:27017/tandain_db
-# MongoDB Atlas: mongodb+srv://<username>:<password>@cluster.mongodb.net/tandain_db
-MONGODB_URI=mongodb://127.0.0.1:27017/tandain_db
-
-# Mode Lingkungan
-NODE_ENV=development
-
-# JWT Configuration
-JWT_SECRET=tandain_super_secret_jwt_key_2026_change_in_production
-JWT_EXPIRES_IN=8h
+**1. Buat file `.env`**
+```bash
+cp .env.example .env
 ```
+Nilai default sudah cukup untuk MongoDB lokal. Ubah `MONGODB_URI` jika memakai Atlas, dan ganti `JWT_SECRET` untuk produksi.
 
----
-
-### 3. Instalasi Dependencies
-Jalankan perintah berikut di terminal pada folder `TANDAIN`:
+**2. Install dependencies**
 ```bash
 npm install
 ```
 
----
+**3. Jalankan MongoDB** (pilih salah satu)
+- Service lokal: pastikan `mongod` sudah berjalan.
+- Docker:
+  ```bash
+  docker run -d --name tandain-mongo -p 27017:27017 mongo:latest
+  ```
+- Atlas: isi `MONGODB_URI` di `.env` dengan connection string Atlas.
 
-### 4. Menjalankan MongoDB
-
-#### Opsi A: MongoDB Service Lokal
-Pastikan service MongoDB (`mongod`) sudah berjalan di komputer Anda.
-
-#### Opsi B: Menggunakan Docker
-Jika Anda menggunakan Docker, Anda dapat menjalankan container MongoDB dengan perintah:
-```bash
-docker run -d --name tandain-mongo -p 27017:27017 mongo:latest
-```
-
-#### Opsi C: MongoDB Atlas (Cloud)
-Ubah `MONGODB_URI` pada file `.env` dengan Connection String dari MongoDB Atlas Anda.
-
----
-
-### 5. Seeding Data Awal (Opsional)
-Untuk mengisi database dengan akun pengguna dan data posko bawaan:
+**4. Seed data awal** (akun pengguna + 4 posko)
 ```bash
 npm run seed
 ```
 
-**Akun bawaan hasil seed:**
-- **Koordinator**: username: `koordinator1`, password: `koordinator123`
-- **Petugas Pos Medis**: username: `petugas1`, password: `petugas123`
-
----
-
-### 6. Menjalankan Server Backend
-
-#### Mode Development (Auto-reload dengan nodemon):
+**5. Jalankan server**
 ```bash
 npm run dev
 ```
+Cek: `http://localhost:3000/api/health` harus mengembalikan `"status": "ok"`.
 
-#### Mode Production:
+## Setup Frontend
+
+Jalankan dari folder `frontend/`.
+
 ```bash
-npm start
+cd frontend
+npm install
+npm run dev
 ```
+Buka `http://localhost:5173`.
 
-Server akan berjalan di: `http://localhost:3000`  
-Endpoint Health Check: `GET http://localhost:3000/api/health`
+> Saat ini dashboard masih memakai **data mock** (`frontend/src/mocks/`) dan belum terhubung ke backend, jadi frontend bisa dijalankan tanpa backend.
+
+## Menjalankan Keduanya
+
+Buka dua terminal:
+
+| Terminal | Perintah |
+|---|---|
+| 1 (backend, dari root) | `npm run dev` |
+| 2 (frontend) | `cd frontend && npm run dev` |
+
+## Akun Bawaan (hasil seed)
+
+| Role | Username | Password |
+|---|---|---|
+| Koordinator | `koordinator1` | `koordinator123` |
+| Petugas Pos Medis | `petugas1` | `petugas123` |
+
+Login via `POST /api/auth/login` (`{ "username", "password" }`), lalu kirim token sebagai header `Authorization: Bearer <token>`.
+
+## Script
+
+| Lokasi | Script | Fungsi |
+|---|---|---|
+| root | `npm run dev` | Backend dengan auto-reload (nodemon) |
+| root | `npm start` | Backend mode produksi |
+| root | `npm run seed` | Isi user & posko awal |
+| `frontend/` | `npm run dev` | Dev server Vite |
+| `frontend/` | `npm run build` | Build produksi ke `frontend/dist` |
+| `frontend/` | `npm run lint` | Lint dengan oxlint |
