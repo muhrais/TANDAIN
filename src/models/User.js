@@ -1,7 +1,11 @@
 const mongoose = require("mongoose");
+const schemaOptions = require("../utils/schemaOptions");
 const { v4: uuidv4 } = require("uuid");
 
-// Koleksi user untuk login dan role.
+/**
+ * Koleksi `users` — PRD Software bagian 5.7
+ * Akun tenaga medis/operator yang mengakses sistem (login & role-based access).
+ */
 const userSchema = new mongoose.Schema(
   {
     user_id: {
@@ -31,7 +35,7 @@ const userSchema = new mongoose.Schema(
       select: false, // tidak ikut ter-query kecuali diminta eksplisit (.select("+password_hash"))
     },
   },
-  { versionKey: false }
+  schemaOptions()
 );
 
 module.exports = mongoose.model("User", userSchema);

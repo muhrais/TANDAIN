@@ -7,7 +7,8 @@ const { sendSuccess } = require("../utils/apiResponse");
 
 const TRIASE_CATEGORIES = ["merah", "kuning", "hijau"];
 
-// Urutan status korban harus berurutan.
+// Urutan status wajib berjalan sekuensial sesuai PRD bagian 4.2 (FR-BE-05)
+// dan kriteria keberhasilan #6 pada bagian 11.
 const STATUS_ORDER = [
   "registered",
   "triaged",
@@ -23,7 +24,12 @@ function isValidTransition(from, to) {
   return toIndex === fromIndex + 1;
 }
 
-// POST /api/tags/:tag_id/scan
+/**
+ * POST /api/tags/:tag_id/scan (Auth: Ya)
+ * Petugas Pos Medis melakukan scan NFC. FR-BE-02.
+ * Mengembalikan data korban aktif jika tag sudah terdaftar (Registered),
+ * atau status "not_registered" jika tag belum punya korban aktif.
+ */
 const scanTag = asyncHandler(async (req, res) => {
   const { tag_id } = req.params;
 
@@ -38,21 +44,39 @@ const scanTag = asyncHandler(async (req, res) => {
   }).sort({ created_at: -1 });
 
   if (!victim) {
-    return sendSuccess(res, 200, { status: "not_registered", tag_id });
+    // Week 5: sertakan status_tag juga, berguna kalau frontend perlu tahu
+    // tag-nya rusak/nonaktif sebelum menampilkan form registrasi (FR-DASH-07).
+    return sendSuccess(res, 200, {
+      status: "not_registered",
+      tag_id,
+      status_tag: tag.status_tag,
+    });
   }
 
+  // Week 5 (review bareng Raditya): lengkapi field yang dikembalikan supaya
+  // halaman Scan NFC bisa langsung menampilkan kartu detail korban tanpa
+  // perlu request tambahan ke GET /api/victims/:id.
   return sendSuccess(res, 200, {
     status: "registered",
     victim_id: victim.victim_id,
+    tag_id: victim.tag_id,
     nama: victim.nama,
+    usia: victim.usia,
+    jenis_kelamin: victim.jenis_kelamin,
     kategori_triase: victim.kategori_triase,
+    kondisi_klinis: victim.kondisi_klinis,
     status_korban: victim.status_korban,
     posko_asal: victim.posko_asal,
     posko_tujuan: victim.posko_tujuan,
+    lokasi_terakhir: victim.lokasi_terakhir,
+    waktu_update_terakhir: victim.waktu_update_terakhir,
   });
 });
 
-// POST /api/victims
+/**
+ * POST /api/victims (Auth: Ya)
+ * Registrasi data korban baru & menghubungkannya dengan tag_id. FR-BE-03.
+ */
 const createVictim = asyncHandler(async (req, res) => {
   const {
     tag_id,
@@ -82,14 +106,15 @@ const createVictim = asyncHandler(async (req, res) => {
     );
   }
 
-  // Pastikan tag sudah ada sebelum registrasi korban.
+  // Pastikan tag terdaftar (auto-register jika belum ada, konsisten dengan locationController).
   await Tag.findOneAndUpdate(
     { tag_id },
     { $setOnInsert: { tag_id, status_tag: "active" } },
     { upsert: true }
   );
 
-  // Satu tag hanya boleh punya satu korban aktif.
+  // FR-BE dan error DUPLICATE_ACTIVE_VICTIM: satu tag hanya boleh punya
+  // satu korban aktif (belum berstatus "arrived") pada satu waktu.
   const existingActive = await Victim.findOne({
     tag_id,
     status_korban: { $ne: "arrived" },
@@ -122,10 +147,17 @@ const createVictim = asyncHandler(async (req, res) => {
     diubah_oleh: req.user ? req.user.user_id : null,
   });
 
+  // Week 5 (review response): field `_id` Mongo internal otomatis
+  // disembunyikan lewat schemaOptions() toJSON transform pada model Victim,
+  // jadi frontend cukup pakai `victim_id` sebagai identifier.
   return sendSuccess(res, 201, victim);
 });
 
-// PUT /api/victims/:id
+/**
+ * PUT /api/victims/:id (Auth: Ya)
+ * Memperbarui kategori triase, kondisi klinis, status perpindahan,
+ * dan posko tujuan korban. FR-BE-04, FR-BE-05.
+ */
 const updateVictim = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { kategori_triase, kondisi_klinis, status_korban, posko_tujuan, nama, usia } = req.body;
@@ -176,7 +208,11 @@ const updateVictim = asyncHandler(async (req, res) => {
   return sendSuccess(res, 200, victim);
 });
 
-// GET /api/victims
+/**
+ * GET /api/victims (Auth: Ya)
+ * Daftar seluruh korban untuk dashboard, mendukung filter kategori & status.
+ * Query params opsional: ?kategori_triase=merah&status_korban=registered
+ */
 const listVictims = asyncHandler(async (req, res) => {
   const { kategori_triase, status_korban } = req.query;
   const filter = {};
@@ -187,7 +223,10 @@ const listVictims = asyncHandler(async (req, res) => {
   return sendSuccess(res, 200, victims);
 });
 
-// GET /api/victims/:id
+/**
+ * GET /api/victims/:id (Auth: Ya)
+ * Detail satu korban beserta riwayat status.
+ */
 const getVictimDetail = asyncHandler(async (req, res) => {
   const { id } = req.params;
 

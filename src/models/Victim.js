@@ -1,7 +1,11 @@
 const mongoose = require("mongoose");
+const schemaOptions = require("../utils/schemaOptions");
 const { v4: uuidv4 } = require("uuid");
 
-// Koleksi data korban dan statusnya.
+/**
+ * Koleksi `victims` — PRD Software bagian 5.3
+ * Menyimpan data & status korban, terhubung dengan tag_id.
+ */
 const victimSchema = new mongoose.Schema(
   {
     victim_id: {
@@ -71,7 +75,7 @@ const victimSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { versionKey: false }
+  schemaOptions()
 );
 
 // Index untuk mempercepat query dashboard/real-time (FR-DB-03)

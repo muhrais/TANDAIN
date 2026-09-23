@@ -1,7 +1,12 @@
 const jwt = require("jsonwebtoken");
 const ApiError = require("../utils/ApiError");
 
-// Validasi JWT dan isi req.user.
+/**
+ * Middleware `authenticate`
+ * Memvalidasi header "Authorization: Bearer <JWT>" sesuai PRD bagian 6
+ * (endpoint dengan Auth = "Ya"). Jika valid, req.user diisi
+ * { user_id, role } agar bisa dipakai controller & requireRole().
+ */
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
 
@@ -28,7 +33,11 @@ function authenticate(req, res, next) {
   }
 }
 
-// Cek role user agar endpoint hanya bisa diakses role tertentu.
+/**
+ * Middleware factory `requireRole`
+ * Contoh: requireRole("koordinator") atau requireRole("koordinator", "petugas_pos_medis")
+ * Sesuai FR-BE-08 (role-based access control).
+ */
 function requireRole(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user) {

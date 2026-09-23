@@ -5,8 +5,11 @@ const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
 
-/* POST /api/auth/login
- * Body: { username, password } */
+/**
+ * POST /api/auth/login
+ * Body: { username, password }
+ * Sesuai PRD bagian 6: "Login petugas (username, password) -> mengembalikan JWT & role."
+ */
 const login = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
 

@@ -1,7 +1,11 @@
 const mongoose = require("mongoose");
+const schemaOptions = require("../utils/schemaOptions");
 const { v4: uuidv4 } = require("uuid");
 
-// Riwayat perubahan status korban.
+/**
+ * Koleksi `status_history` — PRD Software bagian 5.5
+ * Riwayat perubahan status korban untuk menjaga traceability end-to-end.
+ */
 const statusHistorySchema = new mongoose.Schema(
   {
     history_id: {
@@ -32,7 +36,7 @@ const statusHistorySchema = new mongoose.Schema(
       default: null, // null = perubahan otomatis oleh sistem (bukan input manual petugas)
     },
   },
-  { versionKey: false }
+  schemaOptions()
 );
 
 statusHistorySchema.index({ victim_id: 1, waktu_perubahan: 1 });

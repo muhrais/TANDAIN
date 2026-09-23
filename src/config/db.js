@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 
-// Hubungkan ke MongoDB menggunakan URI dari .env.
+/**
+ * Menghubungkan aplikasi ke MongoDB menggunakan Mongoose.
+ * Koneksi diarahkan ke MONGODB_URI pada .env (default: MongoDB lokal).
+ */
 async function connectDB() {
   const uri = process.env.MONGODB_URI;
 
@@ -14,6 +17,8 @@ async function connectDB() {
 
   try {
     const conn = await mongoose.connect(uri, {
+      // Opsi ini aman untuk Mongoose 8.x (driver modern sudah default-nya baik),
+      // tapi tetap dicantumkan agar eksplisit untuk pembaca/anggota tim lain.
       serverSelectionTimeoutMS: 8000,
     });
 

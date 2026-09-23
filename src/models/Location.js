@@ -1,7 +1,11 @@
 const mongoose = require("mongoose");
+const schemaOptions = require("../utils/schemaOptions");
 const { v4: uuidv4 } = require("uuid");
 
-// Koleksi lokasi tag.
+/**
+ * Koleksi `locations` — PRD Software bagian 5.4
+ * Log setiap titik lokasi yang dikirim tag, untuk audit pergerakan & analisis.
+ */
 const locationSchema = new mongoose.Schema(
   {
     location_id: {
@@ -36,7 +40,7 @@ const locationSchema = new mongoose.Schema(
       default: "synced",
     },
   },
-  { versionKey: false }
+  schemaOptions()
 );
 
 locationSchema.index({ tag_id: 1, timestamp: -1 });

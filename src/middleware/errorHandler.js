@@ -1,8 +1,14 @@
 const ApiError = require("../utils/ApiError");
 
-// Tangani semua error yang muncul dari route agar response konsisten.
+/**
+ * Error handler global (harus didaftarkan PALING TERAKHIR di app.js).
+ * Menerjemahkan semua error (ApiError kustom, error validasi Mongoose,
+ * atau error tak terduga lain) ke format response seragam sesuai
+ * PRD Software bagian 6.3.2:
+ *   { success: false, error: { code, message, details? } }
+ */
 function errorHandler(err, req, res, next) {
-  // Error aplikasi custom.
+  // 1) Error kustom aplikasi (ApiError) — sudah punya statusCode & code yang jelas.
   if (err instanceof ApiError) {
     return res.status(err.statusCode).json({
       success: false,
@@ -14,7 +20,7 @@ function errorHandler(err, req, res, next) {
     });
   }
 
-  // Validasi Mongoose.
+  // 2) Error validasi bawaan Mongoose (mis. field enum/required tidak sesuai skema)
   if (err.name === "ValidationError") {
     const details = Object.values(err.errors).map((e) => ({
       field: e.path,
@@ -30,7 +36,7 @@ function errorHandler(err, req, res, next) {
     });
   }
 
-  // Duplicate key MongoDB.
+  // 3) Duplicate key error MongoDB (unique index bentrok, mis. tag_id/username ganda)
   if (err.code === 11000) {
     return res.status(409).json({
       success: false,
@@ -43,7 +49,8 @@ function errorHandler(err, req, res, next) {
     });
   }
 
-  // Error tidak terduga: log server, response aman ke client.
+  // 4) Fallback: error tak terduga -> dicatat di log server untuk debugging (6.3.4),
+  //    namun pesan ke klien tetap generik agar tidak membocorkan detail internal.
   console.error("[INTERNAL_ERROR]", new Date().toISOString(), req.method, req.originalUrl, err);
 
   return res.status(500).json({
@@ -55,7 +62,11 @@ function errorHandler(err, req, res, next) {
   });
 }
 
-// 404 fallback untuk endpoint yang tidak ada.
+/**
+ * Middleware untuk menangani route yang tidak ditemukan (404 generik,
+ * bukan bagian dari daftar kode error aplikasi PRD tapi tetap perlu
+ * agar API tidak diam-diam mengembalikan HTML default Express).
+ */
 function notFoundHandler(req, res, next) {
   next(
     new ApiError(

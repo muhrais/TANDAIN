@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
+const schemaOptions = require("../utils/schemaOptions");
 
-// Koleksi posko penanganan korban.
+/**
+ * Koleksi `posko` — PRD Software bagian 5.6
+ * Data titik penanganan korban (Pos Triase Utama, Pos Merah, Kuning, Hijau).
+ */
 const poskoSchema = new mongoose.Schema(
   {
     posko_id: {
@@ -33,7 +37,7 @@ const poskoSchema = new mongoose.Schema(
       default: 0,
     },
   },
-  { versionKey: false }
+  schemaOptions()
 );
 
 module.exports = mongoose.model("Posko", poskoSchema);

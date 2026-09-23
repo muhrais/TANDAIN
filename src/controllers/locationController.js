@@ -5,7 +5,10 @@ const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
 
-// Validasi payload lokasi: tag_id, lat, lng, timestamp.
+/**
+ * Validasi satu payload lokasi sesuai contoh pada PRD bagian 6.1:
+ * { tag_id, lat, lng, timestamp, battery_pct }
+ */
 function validateLocationPayload(body) {
   const { tag_id, lat, lng, timestamp } = body;
   const errors = [];
@@ -26,11 +29,17 @@ function validateLocationPayload(body) {
   return errors;
 }
 
-// Simpan lokasi baru dan update posisi korban aktif yang memakai tag ini.
+/**
+ * Menyimpan satu entri lokasi ke koleksi `locations`, memastikan tag
+ * terdaftar (auto-register tag baru sebagai "active" jika belum ada —
+ * praktis untuk tahap prototipe saat tag fisik langsung mengirim data
+ * tanpa proses pendaftaran manual terlebih dahulu), lalu memperbarui
+ * lokasi_terakhir korban aktif yang terhubung dengan tag tersebut (jika ada).
+ */
 async function ingestSingleLocation(payload) {
   const { tag_id, lat, lng, timestamp, battery_pct } = payload;
 
-  // Pastikan tag ada di database sebelum menyimpan lokasi.
+  // Pastikan tag terdaftar di koleksi `tags` (FR-DB-01: data saling terhubung).
   await Tag.findOneAndUpdate(
     { tag_id },
     { $setOnInsert: { tag_id, status_tag: "active" } },
@@ -46,7 +55,7 @@ async function ingestSingleLocation(payload) {
     sync_status: "synced",
   });
 
-  // Update lokasi terakhir korban yang masih aktif.
+  // Perbarui korban aktif (belum "arrived") yang memakai tag ini, jika ada.
   await Victim.findOneAndUpdate(
     { tag_id, status_korban: { $ne: "arrived" } },
     {
@@ -61,7 +70,10 @@ async function ingestSingleLocation(payload) {
   return location;
 }
 
-// POST /api/locations
+/**
+ * POST /api/locations (Auth: Tidak)
+ * Tag mengirim satu titik lokasi terbaru. FR-BE-01, FR-FW-05.
+ */
 const receiveLocation = asyncHandler(async (req, res) => {
   const errors = validateLocationPayload(req.body);
   if (errors.length > 0) {
@@ -72,7 +84,12 @@ const receiveLocation = asyncHandler(async (req, res) => {
   return sendSuccess(res, 201, { location_id: location.location_id });
 });
 
-// POST /api/locations/batch
+/**
+ * POST /api/locations/batch (Auth: Tidak)
+ * Tag mengirim kumpulan data offline buffer sekaligus setelah koneksi pulih.
+ * FR-BE-01, FR-FW-07.
+ * Body: { items: [ { tag_id, lat, lng, timestamp, battery_pct }, ... ] }
+ */
 const receiveLocationBatch = asyncHandler(async (req, res) => {
   const { items } = req.body;
 

@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
+const schemaOptions = require("../utils/schemaOptions");
 
-// Koleksi tag NFC/RFID.
+/**
+ * Koleksi `tags` — PRD Software bagian 5.2
+ * Menyimpan data fisik tag NFC/RFID yang telah diproduksi/diaktifkan.
+ */
 const tagSchema = new mongoose.Schema(
   {
     tag_id: {
@@ -19,7 +23,7 @@ const tagSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { versionKey: false }
+  schemaOptions()
 );
 
 module.exports = mongoose.model("Tag", tagSchema);
