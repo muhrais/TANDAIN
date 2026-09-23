@@ -13,6 +13,7 @@ async function seed() {
   const usersToSeed = [
     { nama: "Koordinator Posko", username: "koordinator1", password: "koordinator123", role: "koordinator" },
     { nama: "Petugas Pos Medis 1", username: "petugas1", password: "petugas123", role: "petugas_pos_medis" },
+    { nama: "Rais", username: "rais123", password: "123", role: "koordinator" },
   ];
 
   for (const u of usersToSeed) {
