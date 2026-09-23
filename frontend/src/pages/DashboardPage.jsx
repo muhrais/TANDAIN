@@ -59,7 +59,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-w-0 flex-1 space-y-8 p-8">
+    <div className="min-w-0 flex-1 space-y-6 p-4 md:space-y-8 md:p-8">
       <Topbar
         incidentInfo={data.incidentInfo}
         alertCounts={countAlerts(alerts)}
@@ -74,7 +74,7 @@ export default function DashboardPage() {
           <TriageDistributionCard data={data.triage} className="xl:col-span-6" />
 
           <div className="flex flex-col gap-5 xl:col-span-6">
-            <div className="grid grid-cols-3 gap-5">
+            <div className="grid grid-cols-3 gap-2 sm:gap-5">
               <StatCard
                 label="Waiting Pickup"
                 value={data.evacuation.waiting_pickup}

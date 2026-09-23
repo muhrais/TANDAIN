@@ -30,7 +30,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-page px-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm sm:p-8">
         <img src="/logo-tandain.png" alt="TANDAIN" className="mx-auto mb-6 w-40" />
         <h1 className="text-center text-xl font-bold text-ink">Masuk ke TANDAIN</h1>
         <p className="mt-1 text-center text-sm text-muted">Sistem Triase Darurat Individu</p>

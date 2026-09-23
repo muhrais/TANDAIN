@@ -8,6 +8,7 @@ import {
   Database,
   Settings,
   LogOut,
+  X,
 } from "lucide-react";
 import { getCurrentUser, logout } from "../../services/authService";
 
@@ -41,7 +42,7 @@ function getInitials(nama) {
     .join("");
 }
 
-function NavItem({ label, icon: Icon, path }) {
+function NavItem({ label, icon: Icon, path, onNavigate }) {
   const content = (active) => (
     <>
       {active && (
@@ -70,13 +71,13 @@ function NavItem({ label, icon: Icon, path }) {
   }
 
   return (
-    <NavLink to={path} end={path === "/"} className={({ isActive }) => className(isActive)}>
+    <NavLink to={path} end={path === "/"} onClick={onNavigate} className={({ isActive }) => className(isActive)}>
       {({ isActive }) => content(isActive)}
     </NavLink>
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ open = false, onClose }) {
   const navigate = useNavigate();
   const user = getCurrentUser();
 
@@ -86,18 +87,38 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="sticky top-0 flex h-screen w-[204px] shrink-0 flex-col bg-sidebar">
-      <div className="px-5 pb-5 pt-7">
+    <>
+      {open && (
+        <div
+          aria-hidden="true"
+          onClick={onClose}
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+        />
+      )}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-[204px] shrink-0 flex-col bg-sidebar transition-transform duration-200 md:sticky md:top-0 md:translate-x-0 ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+      <div className="flex items-center justify-between px-5 pb-5 pt-7">
         <img
           src="/logo-tandain.png"
           alt="TANDAIN - Triage Darurat Individu"
           className="block w-[156px]"
         />
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Tutup menu"
+          className="text-neutral-400 hover:text-white md:hidden"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       <nav aria-label="Navigasi utama" className="flex flex-1 flex-col gap-2 pr-6">
         {NAV_ITEMS.map((item) => (
-          <NavItem key={item.label} {...item} />
+          <NavItem key={item.label} {...item} onNavigate={onClose} />
         ))}
       </nav>
 
@@ -128,6 +149,7 @@ export default function Sidebar() {
           </button>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

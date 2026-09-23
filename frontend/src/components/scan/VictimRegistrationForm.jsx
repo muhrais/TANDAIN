@@ -58,7 +58,7 @@ export default function VictimRegistrationForm({ tagId, onRegistered }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-white p-6 shadow-sm" noValidate>
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-white p-4 shadow-sm sm:p-6" noValidate>
       <div>
         <h2 className="text-base font-bold text-ink">Registrasi Korban Baru</h2>
         <p className="mt-0.5 text-sm text-muted">
@@ -66,8 +66,8 @@ export default function VictimRegistrationForm({ tagId, onRegistered }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
           <label htmlFor="nama" className="mb-1.5 block text-sm font-semibold text-ink">
             Nama
           </label>
@@ -113,7 +113,7 @@ export default function VictimRegistrationForm({ tagId, onRegistered }) {
           </select>
         </div>
 
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <span className="mb-1.5 block text-sm font-semibold text-ink">Kategori Triase</span>
           <div className="flex gap-2">
             {TRIASE_OPTIONS.map((opt) => (
@@ -133,7 +133,7 @@ export default function VictimRegistrationForm({ tagId, onRegistered }) {
           </div>
         </div>
 
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <label htmlFor="kondisi_klinis" className="mb-1.5 block text-sm font-semibold text-ink">
             Kondisi Klinis
           </label>

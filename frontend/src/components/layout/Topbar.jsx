@@ -5,10 +5,10 @@ const TABS = ["Overview", "Alert", "Aktivitas"];
 export default function Topbar({ incidentInfo, alertCounts, activeTab, onTabChange }) {
   return (
     <div>
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-ink">Dashboard</h1>
-          <div className="mt-1 flex items-center gap-2 text-sm text-muted">
+          <h1 className="text-xl font-bold text-ink md:text-2xl">Dashboard</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
             <span>{incidentInfo.nama_bencana}</span>
             <span className="text-muted/50">•</span>
             <span>{incidentInfo.tanggal}</span>
@@ -41,14 +41,14 @@ export default function Topbar({ incidentInfo, alertCounts, activeTab, onTabChan
               </span>
             )}
           </button>
-          <span className="flex items-center gap-1.5 text-sm text-muted">
+          <span className="hidden items-center gap-1.5 text-sm text-muted sm:flex">
             <Clock size={16} />
             09:15 WIB
           </span>
         </div>
       </div>
 
-      <div role="tablist" aria-label="Tampilan dashboard" className="mt-5 flex items-center gap-1">
+      <div role="tablist" aria-label="Tampilan dashboard" className="mt-5 flex items-center gap-1 overflow-x-auto">
         {TABS.map((tab) => {
           const active = activeTab === tab;
           return (
@@ -58,7 +58,7 @@ export default function Topbar({ incidentInfo, alertCounts, activeTab, onTabChan
               role="tab"
               aria-selected={active}
               onClick={() => onTabChange(tab)}
-              className={`rounded-md px-5 py-3 text-[15px] leading-5 transition-colors ${
+              className={`shrink-0 rounded-md px-3.5 py-2.5 text-sm leading-5 transition-colors md:px-5 md:py-3 md:text-[15px] ${
                 active
                   ? "bg-white font-bold text-ink"
                   : "font-semibold text-muted hover:text-ink"
