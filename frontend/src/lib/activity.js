@@ -42,3 +42,9 @@ const timeFormatter = new Intl.DateTimeFormat("en-GB", {
 export function formatTime(iso) {
   return timeFormatter.format(new Date(iso));
 }
+
+export function formatElapsed(iso) {
+  const minutes = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (minutes < 60) return `${minutes} mnt`;
+  return `${Math.round(minutes / 60)} jam`;
+}
