@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+// String kosong ("") sengaja valid: artinya pakai path relatif lewat proxy
+// Vite (lihat vite.config.js), makanya pengecekan pakai ?? bukan ||.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 const TOKEN_KEY = "tandain_token";
 const USER_KEY = "tandain_user";
 

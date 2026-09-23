@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { Nfc, CircleCheck, CircleAlert } from "lucide-react";
+import { Nfc, CircleCheck, CircleAlert, Radar } from "lucide-react";
 import { scanTag } from "../services/tagService";
 import { ApiClientError } from "../lib/apiClient";
 import VictimRegistrationForm from "../components/scan/VictimRegistrationForm";
+
+// Web NFC API: cuma jalan di Chrome Android + secure context (HTTPS/localhost).
+// Browser lain (Safari iOS, desktop) ga punya window.NDEFReader sama sekali.
+const NFC_SUPPORTED = typeof window !== "undefined" && "NDEFReader" in window;
 
 const TRIASE_LABEL = { merah: "Merah", kuning: "Kuning", hijau: "Hijau" };
 const TRIASE_BADGE_CLASS = {
@@ -23,10 +27,10 @@ export default function ScanNfcPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [nfcListening, setNfcListening] = useState(false);
 
-  async function handleScan(event) {
-    event.preventDefault();
-    const trimmed = tagId.trim();
+  async function performScan(rawId) {
+    const trimmed = rawId.trim();
     if (!trimmed) return;
 
     setError("");
@@ -42,22 +46,85 @@ export default function ScanNfcPage() {
     }
   }
 
+  function handleManualScan(event) {
+    event.preventDefault();
+    performScan(tagId);
+  }
+
+  async function handleNfcScan() {
+    setError("");
+    try {
+      const reader = new window.NDEFReader();
+      await reader.scan();
+      setNfcListening(true);
+
+      reader.onreading = (event) => {
+        setNfcListening(false);
+        // Tag generik (belum ditulis NDEF apa-apa) tetap punya serial number unik dari hardware.
+        const id = event.serialNumber;
+        if (!id) {
+          setError("Tag terbaca tapi tidak ada serial number.");
+          return;
+        }
+        setTagId(id);
+        performScan(id);
+      };
+
+      reader.onreadingerror = () => {
+        setNfcListening(false);
+        setError("Gagal membaca tag NFC. Coba tempelkan ulang ke bagian belakang HP.");
+      };
+    } catch (err) {
+      setNfcListening(false);
+      if (err.name === "NotAllowedError") {
+        setError("Izin akses NFC ditolak. Aktifkan lewat pengaturan browser.");
+      } else if (err.name === "NotSupportedError") {
+        setError("NFC tidak aktif di perangkat ini. Cek pengaturan NFC HP.");
+      } else {
+        setError("Gagal mengaktifkan NFC: " + err.message);
+      }
+    }
+  }
+
   function reset() {
     setTagId("");
     setResult(null);
     setError("");
+    setNfcListening(false);
   }
 
   return (
-    <div className="min-w-0 flex-1 space-y-6 p-8">
+    <div className="min-w-0 flex-1 space-y-6 p-4 md:p-8">
       <div>
         <h1 className="text-2xl font-bold text-ink">Scan NFC</h1>
         <p className="mt-1 text-sm text-muted">
-          Masukkan tag_id secara manual (fallback selama Web NFC API belum tersedia di semua perangkat).
+          {NFC_SUPPORTED
+            ? "Tempelkan tag NFC ke HP, atau masukkan tag_id manual di bawah."
+            : "Web NFC API tidak tersedia di browser ini (cuma Chrome Android). Masukkan tag_id manual."}
         </p>
       </div>
 
-      <form onSubmit={handleScan} className="flex items-end gap-3 rounded-xl bg-white p-6 shadow-sm">
+      {NFC_SUPPORTED && (
+        <div className="flex flex-col items-start gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:gap-4 md:p-6">
+          <button
+            type="button"
+            onClick={handleNfcScan}
+            disabled={nfcListening}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-60 sm:w-auto"
+          >
+            <Radar size={18} className={nfcListening ? "animate-pulse" : ""} />
+            {nfcListening ? "Menunggu tag..." : "Scan pakai NFC"}
+          </button>
+          {nfcListening && (
+            <span className="text-sm text-muted">Tempelkan tag NFC ke bagian belakang HP.</span>
+          )}
+        </div>
+      )}
+
+      <form
+        onSubmit={handleManualScan}
+        className="flex flex-col gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-end md:p-6"
+      >
         <div className="flex-1">
           <label htmlFor="tag_id" className="mb-1.5 block text-sm font-semibold text-ink">
             Tag ID
@@ -78,7 +145,7 @@ export default function ScanNfcPage() {
         <button
           type="submit"
           disabled={loading || !tagId.trim()}
-          className="rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
+          className="w-full rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-60 sm:w-auto"
         >
           {loading ? "Memindai..." : "Scan"}
         </button>
@@ -91,7 +158,7 @@ export default function ScanNfcPage() {
       )}
 
       {result?.status === "registered" && (
-        <div className="space-y-4 rounded-xl bg-white p-6 shadow-sm">
+        <div className="space-y-4 rounded-xl bg-white p-4 shadow-sm md:p-6">
           <div className="flex items-center gap-2 text-triase-hijau">
             <CircleCheck size={20} />
             <span className="text-sm font-semibold">Tag terdaftar</span>
