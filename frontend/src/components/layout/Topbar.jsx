@@ -29,9 +29,9 @@ export default function Topbar({
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
             <span>{incidentInfo.nama_bencana}</span>
             <span className="text-muted/50">•</span>
-            <span>{incidentInfo.tanggal}</span>
+            <span>{incidentInfo.lokasi}</span>
             <span className="text-muted/50">•</span>
-            <span>{incidentInfo.waktu}</span>
+            <span>{incidentInfo.total_korban} korban</span>
           </div>
         </div>
 

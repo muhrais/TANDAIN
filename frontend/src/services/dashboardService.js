@@ -1,5 +1,4 @@
 import { apiClient } from "../lib/apiClient";
-import { mockIncidentInfo } from "../mocks/dashboard";
 import { STATUS_LABEL, formatTime, formatElapsed } from "../lib/activity";
 import { getLatestLocations } from "./locationService";
 
@@ -66,8 +65,18 @@ export async function getRecentActivity(limit = 4) {
   }));
 }
 
+// Belum ada GET /api/incident (T-BE-7, stretch). Nama & lokasi insiden
+// dikonfigurasi lewat env (lihat frontend/.env.example) supaya tidak perlu
+// hardcode; total korban dari data asli. Jumlah relawan/nakes (FR-DASH-05,
+// Should) belum ada sumber datanya sama sekali - sengaja tidak ditampilkan
+// daripada munculkan angka palsu.
 export async function getIncidentInfo() {
-  return mockIncidentInfo;
+  const summary = await getSummary();
+  return {
+    nama_bencana: import.meta.env.VITE_INCIDENT_NAME || "Insiden belum dikonfigurasi",
+    lokasi: import.meta.env.VITE_INCIDENT_LOCATION || "-",
+    total_korban: summary.totals.all_victims,
+  };
 }
 
 export async function getMapMarkers() {

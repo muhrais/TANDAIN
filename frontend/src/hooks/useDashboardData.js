@@ -10,11 +10,12 @@ import {
   getSummary,
 } from "../services/dashboardService";
 import { getAlerts } from "../services/alertService";
+import { getActivities } from "../services/activityService";
 
 async function fetchDashboardData() {
   // getSummary() di sini dedupe otomatis dengan panggilan lain ke summary
   // (getTriageDistribution dkk) lewat summaryPromise bersama di dashboardService.
-  const [incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, summary] =
+  const [incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, summary, activities] =
     await Promise.all([
       getIncidentInfo(),
       getTriageDistribution(),
@@ -24,6 +25,7 @@ async function fetchDashboardData() {
       getRecentActivity(),
       getMapMarkers(),
       getSummary(),
+      getActivities(),
     ]);
 
   const alerts = await getAlerts({
@@ -33,7 +35,7 @@ async function fetchDashboardData() {
     now: map.serverTime,
   });
 
-  return { incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, alerts };
+  return { incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, alerts, activities };
 }
 
 export function useDashboardData() {

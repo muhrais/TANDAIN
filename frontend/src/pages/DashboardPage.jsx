@@ -91,7 +91,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {activeTab === "Aktivitas" && <ActivityTab />}
+      {activeTab === "Aktivitas" && <ActivityTab activities={data.activities} />}
 
       {activeTab === "Alert" && <AlertTab alerts={alerts} onResolve={handleResolveAlert} />}
     </div>
