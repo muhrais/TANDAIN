@@ -16,8 +16,14 @@ export class ApiClientError extends Error {
   }
 }
 
+// Batas waktu tiap request. Mencegah polling menggantung selamanya kalau
+// hotspot/Wi-Fi putus di tengah request (bukan gagal konek dari awal).
+const REQUEST_TIMEOUT_MS = 10000;
+
 async function request(path, { method = "GET", body, headers = {} } = {}) {
   const token = localStorage.getItem(TOKEN_KEY);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   let res;
   try {
@@ -29,9 +35,15 @@ async function request(path, { method = "GET", body, headers = {} } = {}) {
         ...headers,
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
     });
-  } catch {
+  } catch (err) {
+    if (err.name === "AbortError") {
+      throw new ApiClientError(0, "TIMEOUT", "Permintaan ke server memakan waktu terlalu lama.");
+    }
     throw new ApiClientError(0, "NETWORK_ERROR", "Tidak bisa terhubung ke server.");
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   const json = await res.json().catch(() => null);
@@ -40,6 +52,7 @@ async function request(path, { method = "GET", body, headers = {} } = {}) {
     if (res.status === 401) {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
+      window.dispatchEvent(new Event("auth:expired"));
     }
     throw new ApiClientError(
       res.status,
@@ -55,6 +68,7 @@ async function request(path, { method = "GET", body, headers = {} } = {}) {
 export const apiClient = {
   get: (path) => request(path),
   post: (path, body) => request(path, { method: "POST", body }),
+  put: (path, body) => request(path, { method: "PUT", body }),
   patch: (path, body) => request(path, { method: "PATCH", body }),
   delete: (path) => request(path, { method: "DELETE" }),
 };

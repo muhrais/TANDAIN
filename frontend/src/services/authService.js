@@ -21,6 +21,26 @@ export function getCurrentUser() {
   return raw ? JSON.parse(raw) : null;
 }
 
+export function getRole() {
+  return getCurrentUser()?.role ?? null;
+}
+
+// Decode payload JWT tanpa library (base64url -> JSON). Tidak memverifikasi
+// signature — itu tetap tanggung jawab backend, ini cuma baca field `exp`.
+function decodeJwtPayload(token) {
+  try {
+    const payload = token.split(".")[1];
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
 export function isAuthenticated() {
-  return Boolean(getToken());
+  const token = getToken();
+  if (!token) return false;
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return false;
+  return payload.exp * 1000 > Date.now();
 }

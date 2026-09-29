@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { login, isAuthenticated } from "../services/authService";
 import { ApiClientError } from "../lib/apiClient";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(
+    searchParams.get("expired") === "1" ? "Sesi berakhir, silakan login lagi." : ""
+  );
   const [loading, setLoading] = useState(false);
 
   if (isAuthenticated()) {
