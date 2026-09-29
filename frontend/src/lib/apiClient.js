@@ -54,6 +54,9 @@ async function request(path, { method = "GET", body, headers = {} } = {}) {
       localStorage.removeItem(USER_KEY);
       window.dispatchEvent(new Event("auth:expired"));
     }
+    if (res.status === 403 && json?.error?.code === "FORBIDDEN_ROLE") {
+      window.dispatchEvent(new Event("role:forbidden"));
+    }
     throw new ApiClientError(
       res.status,
       json?.error?.code ?? "UNKNOWN_ERROR",

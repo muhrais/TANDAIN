@@ -1,9 +1,11 @@
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import RequireRole from "./components/auth/RequireRole";
 import AppLayout from "./layouts/AppLayout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ScanNfcPage from "./pages/ScanNfcPage";
+import ForbiddenPage from "./pages/ForbiddenPage";
 
 export default function App() {
   return (
@@ -12,7 +14,10 @@ export default function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/forbidden" element={<ForbiddenPage />} />
+          <Route element={<RequireRole roles={["koordinator"]} />}>
+            <Route path="/" element={<DashboardPage />} />
+          </Route>
           <Route path="/scan" element={<ScanNfcPage />} />
         </Route>
       </Route>

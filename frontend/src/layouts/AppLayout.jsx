@@ -12,8 +12,15 @@ export default function AppLayout() {
     function handleAuthExpired() {
       navigate("/login?expired=1", { replace: true });
     }
+    function handleForbidden() {
+      navigate("/forbidden", { replace: true });
+    }
     window.addEventListener("auth:expired", handleAuthExpired);
-    return () => window.removeEventListener("auth:expired", handleAuthExpired);
+    window.addEventListener("role:forbidden", handleForbidden);
+    return () => {
+      window.removeEventListener("auth:expired", handleAuthExpired);
+      window.removeEventListener("role:forbidden", handleForbidden);
+    };
   }, [navigate]);
 
   return (

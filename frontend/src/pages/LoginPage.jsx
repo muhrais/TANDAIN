@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { login, isAuthenticated } from "../services/authService";
+import { login, isAuthenticated, getRole } from "../services/authService";
 import { ApiClientError } from "../lib/apiClient";
+
+// Dashboard ("/") khusus koordinator (lihat RequireRole di App.jsx); petugas
+// pos medis halaman utamanya Scan NFC.
+function homePathForRole(role) {
+  return role === "koordinator" ? "/" : "/scan";
+}
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -14,7 +20,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   if (isAuthenticated()) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={homePathForRole(getRole())} replace />;
   }
 
   async function handleSubmit(event) {
@@ -22,8 +28,8 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(username, password);
-      navigate("/", { replace: true });
+      const user = await login(username, password);
+      navigate(homePathForRole(user.role), { replace: true });
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : "Gagal terhubung ke server.");
     } finally {
