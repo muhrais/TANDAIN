@@ -100,7 +100,12 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <MapPanel victims={data.map.victims} posko={data.map.posko} className="xl:col-span-8" />
+          <MapPanel
+            markers={data.map.markers}
+            posko={data.map.posko}
+            serverTime={data.map.serverTime}
+            className="xl:col-span-8"
+          />
 
           <div className="grid grid-rows-2 gap-5 xl:col-span-4">
             <PriorityQueueCard items={data.priorityQueue} />

@@ -1,7 +1,7 @@
 import { apiClient } from "../lib/apiClient";
 import { mockIncidentInfo } from "../mocks/dashboard";
-import { mockVictims, mockPoskoUtama } from "../mocks/victims";
 import { STATUS_LABEL, formatTime, formatElapsed } from "../lib/activity";
+import { getLatestLocations } from "./locationService";
 
 // Beberapa fetch di halaman dashboard sama-sama butuh /api/dashboard/summary
 // dalam satu batch render — dedupe jadi satu request lewat promise bersama.
@@ -69,5 +69,9 @@ export async function getIncidentInfo() {
 }
 
 export async function getMapMarkers() {
-  return { victims: mockVictims, posko: mockPoskoUtama };
+  const [locations, posko] = await Promise.all([
+    getLatestLocations(),
+    apiClient.get("/api/posko"),
+  ]);
+  return { ...locations, posko };
 }
