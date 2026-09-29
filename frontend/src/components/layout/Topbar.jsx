@@ -1,8 +1,26 @@
-import { TriangleAlert, Bell, Clock } from "lucide-react";
+import { TriangleAlert, Bell, RefreshCw } from "lucide-react";
 
 const TABS = ["Overview", "Alert", "Aktivitas"];
 
-export default function Topbar({ incidentInfo, alertCounts, activeTab, onTabChange }) {
+const clockFormatter = new Intl.DateTimeFormat("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+  timeZone: "Asia/Jakarta",
+});
+
+export default function Topbar({
+  incidentInfo,
+  alertCounts,
+  activeTab,
+  onTabChange,
+  lastUpdated,
+  pollError,
+  onRefresh,
+}) {
+  const isLive = Boolean(lastUpdated) && !pollError;
+
   return (
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -41,10 +59,19 @@ export default function Topbar({ incidentInfo, alertCounts, activeTab, onTabChan
               </span>
             )}
           </button>
-          <span className="hidden items-center gap-1.5 text-sm text-muted sm:flex">
-            <Clock size={16} />
-            09:15 WIB
-          </span>
+          <button
+            type="button"
+            onClick={onRefresh}
+            title="Refresh manual"
+            className={`hidden items-center gap-1.5 text-sm font-medium sm:flex ${
+              isLive ? "text-logo-green" : "text-triase-merah"
+            }`}
+          >
+            <span className={`h-2 w-2 rounded-full ${isLive ? "bg-logo-green" : "bg-triase-merah"}`} />
+            {isLive ? "Live" : "Terputus"} · {isLive ? "update" : "data"}{" "}
+            {lastUpdated ? clockFormatter.format(lastUpdated) : "--:--:--"}
+            <RefreshCw size={14} />
+          </button>
         </div>
       </div>
 

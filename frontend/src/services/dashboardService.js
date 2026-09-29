@@ -7,7 +7,9 @@ import { getLatestLocations } from "./locationService";
 // dalam satu batch render — dedupe jadi satu request lewat promise bersama.
 let summaryPromise = null;
 
-function getSummary() {
+// Diekspor juga (bukan cuma dipakai internal) supaya deriveAlerts (T-FE-4)
+// bisa akses priority_queue mentah tanpa bikin field baru khusus alert.
+export function getSummary() {
   if (!summaryPromise) {
     summaryPromise = apiClient.get("/api/dashboard/summary");
     summaryPromise.finally(() => {
