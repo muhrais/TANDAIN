@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Tooltip, Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { STATUS_LABEL } from "../../lib/activity";
 import { STALE_THRESHOLD_MS, pickMapCenter, formatAgo } from "../../lib/map";
+import { record, correctedNow } from "../../lib/metrics";
 
 const MARKER_COLOR = {
   merah: "#dc2626",
@@ -49,6 +50,31 @@ export default function MapPanel({ markers = [], posko = [], serverTime, classNa
   // useEffect) supaya peta tidak "loncat" tiap polling saat user sedang zoom/geser.
   const [center] = useState(() => pickMapCenter(posko, markers));
   const now = serverTime ?? new Date();
+
+  // P-03: catat delay lokasi->marker sekali per (tag_id, received_at) unik,
+  // saat pertama kali benar-benar dirender (bukan cuma pertama kali ada di
+  // props) - dipakai requestAnimationFrame supaya setelah commit ke layar.
+  const seenRef = useRef(new Set());
+  useEffect(() => {
+    const newOnes = markers.filter((item) => !seenRef.current.has(`${item.tag_id}|${item.received_at}`));
+    if (newOnes.length === 0) return;
+    requestAnimationFrame(() => {
+      const renderedAtMs = correctedNow();
+      for (const item of newOnes) {
+        const key = `${item.tag_id}|${item.received_at}`;
+        if (seenRef.current.has(key)) continue;
+        seenRef.current.add(key);
+        const receivedAtMs = new Date(item.received_at).getTime();
+        record("P-03", {
+          tag_id: item.tag_id,
+          received_at: item.received_at,
+          rendered_at: new Date(renderedAtMs).toISOString(),
+          delay_ms: renderedAtMs - receivedAtMs,
+          value_ms: renderedAtMs - receivedAtMs,
+        });
+      }
+    });
+  }, [markers]);
 
   return (
     <div className={`relative min-h-[420px] overflow-hidden rounded-2xl bg-white shadow-sm ${className}`}>

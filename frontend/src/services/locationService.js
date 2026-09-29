@@ -1,4 +1,5 @@
 import { apiClient } from "../lib/apiClient";
+import { setServerTimeOffset } from "../lib/metrics";
 
 // T-BE-1 (`GET /api/locations/latest`, lihat PLANNING_WEEK6_SOFTWARE.md §3.1)
 // belum tersedia di backend. Sementara derive dari GET /api/victims: hanya
@@ -28,8 +29,13 @@ export async function getLatestLocations() {
       },
     }));
 
+  const serverTime = new Date();
+  // Belum ada server_time asli (nunggu T-BE-1) - offset akan ~0 sampai saat
+  // itu tiba, tapi wiring-nya sudah siap dan tidak perlu diubah lagi nanti.
+  setServerTimeOffset(serverTime);
+
   return {
-    serverTime: new Date(),
+    serverTime,
     markers,
     noFix: [],
   };

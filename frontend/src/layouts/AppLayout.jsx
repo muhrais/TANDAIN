@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
 import Sidebar from "../components/layout/Sidebar";
+import DebugMetricsPanel from "../components/debug/DebugMetricsPanel";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,6 +33,8 @@ export default function AppLayout() {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <Outlet />
+
+      <DebugMetricsPanel />
     </div>
   );
 }

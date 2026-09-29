@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { POLL_INTERVAL_MS } from "../lib/config";
+import { record } from "../lib/metrics";
 
 const MAX_BACKOFF_MS = 30000;
 
@@ -18,17 +19,24 @@ export function usePolling(fetcher, intervalMs = POLL_INTERVAL_MS) {
   const inFlightRef = useRef(false);
   const timerRef = useRef(null);
   const delayRef = useRef(intervalMs);
+  const cycleRef = useRef(0);
 
   const fetchNow = useCallback(async () => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
+    const cycle = ++cycleRef.current;
+    const t0 = performance.now();
     try {
       const result = await fetcherRef.current();
+      const duration = Math.round(performance.now() - t0);
+      record("P-poll", { cycle, duration_ms: duration, ok: true, value_ms: duration });
       setData(result);
       setError(null);
       delayRef.current = intervalMs;
       setLastUpdated(new Date());
     } catch (err) {
+      const duration = Math.round(performance.now() - t0);
+      record("P-poll", { cycle, duration_ms: duration, ok: false, value_ms: duration });
       setError(err);
       delayRef.current = Math.min(delayRef.current * 2, MAX_BACKOFF_MS);
     } finally {
