@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Nfc, CircleCheck, CircleAlert, Radar } from "lucide-react";
 import { scanTag } from "../services/tagService";
 import { ApiClientError } from "../lib/apiClient";
 import VictimRegistrationForm from "../components/scan/VictimRegistrationForm";
+import StatusActionButton from "../components/evacuation/StatusActionButton";
+import { listPosko } from "../services/poskoService";
+import { record, detectNetwork } from "../lib/metrics";
 
 // Web NFC API: cuma jalan di Chrome Android + secure context (HTTPS/localhost).
 // Browser lain (Safari iOS, desktop) ga punya window.NDEFReader sama sekali.
@@ -28,19 +31,53 @@ export default function ScanNfcPage() {
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
   const [nfcListening, setNfcListening] = useState(false);
+  const [posko, setPosko] = useState([]);
 
-  async function performScan(rawId) {
+  // Dipakai dropdown posko tujuan di tombol status. Gagal dimuat bukan
+  // masalah fatal: halaman scan tetap jalan, dropdown cuma kosong.
+  useEffect(() => {
+    listPosko()
+      .then(setPosko)
+      .catch(() => setPosko([]));
+  }, []);
+
+  async function performScan(rawId, mode = "manual") {
     const trimmed = rawId.trim();
     if (!trimmed) return;
 
+    // t0 = mulai submit (manual) / event `reading` NFC (lihat handleNfcScan).
+    const t0 = performance.now();
     setError("");
     setResult(null);
     setLoading(true);
     try {
       const data = await scanTag(trimmed);
       setResult(data);
+      // t1 diambil setelah commit render (requestAnimationFrame), bukan
+      // langsung setelah fetch selesai - P-01 mengukur "sampai tampil", bukan
+      // "sampai response datang".
+      requestAnimationFrame(() => {
+        record("P-01", {
+          mode,
+          tag_id: trimmed,
+          status: data.status,
+          latency_ms: Math.round(performance.now() - t0),
+          value_ms: Math.round(performance.now() - t0),
+          network: detectNetwork(),
+        });
+      });
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : "Gagal terhubung ke server.");
+      requestAnimationFrame(() => {
+        record("P-01", {
+          mode,
+          tag_id: trimmed,
+          status: "error",
+          latency_ms: Math.round(performance.now() - t0),
+          value_ms: Math.round(performance.now() - t0),
+          network: detectNetwork(),
+        });
+      });
     } finally {
       setLoading(false);
     }
@@ -48,7 +85,7 @@ export default function ScanNfcPage() {
 
   function handleManualScan(event) {
     event.preventDefault();
-    performScan(tagId);
+    performScan(tagId, "manual");
   }
 
   async function handleNfcScan() {
@@ -60,6 +97,7 @@ export default function ScanNfcPage() {
 
       reader.onreading = (event) => {
         setNfcListening(false);
+        record("S-11", { success: 1, error: "" });
         // Tag generik (belum ditulis NDEF apa-apa) tetap punya serial number unik dari hardware.
         const id = event.serialNumber;
         if (!id) {
@@ -67,11 +105,12 @@ export default function ScanNfcPage() {
           return;
         }
         setTagId(id);
-        performScan(id);
+        performScan(id, "nfc");
       };
 
       reader.onreadingerror = () => {
         setNfcListening(false);
+        record("S-11", { success: 0, error: "readingerror" });
         setError("Gagal membaca tag NFC. Coba tempelkan ulang ke bagian belakang HP.");
       };
     } catch (err) {
@@ -189,13 +228,21 @@ export default function ScanNfcPage() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={reset}
-            className="text-sm font-semibold text-brand hover:text-brand-dark"
-          >
-            Scan tag lain
-          </button>
+          <div className="flex flex-col-reverse gap-3 border-t border-black/5 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              type="button"
+              onClick={reset}
+              className="self-start text-sm font-semibold text-brand hover:text-brand-dark"
+            >
+              Scan tag lain
+            </button>
+            <StatusActionButton
+              key={result.status_korban}
+              victim={result}
+              posko={posko}
+              onUpdated={(victim) => setResult({ status: "registered", ...victim })}
+            />
+          </div>
         </div>
       )}
 
@@ -208,14 +255,7 @@ export default function ScanNfcPage() {
           <VictimRegistrationForm
             tagId={result.tag_id}
             onRegistered={(victim) =>
-              setResult({
-                status: "registered",
-                nama: victim.nama,
-                kategori_triase: victim.kategori_triase,
-                status_korban: victim.status_korban,
-                posko_asal: victim.posko_asal,
-                posko_tujuan: victim.posko_tujuan,
-              })
+              setResult({ status: "registered", ...victim })
             }
           />
         </>

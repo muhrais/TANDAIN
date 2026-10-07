@@ -1,10 +1,27 @@
-import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
 import Sidebar from "../components/layout/Sidebar";
+import DebugMetricsPanel from "../components/debug/DebugMetricsPanel";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    function handleAuthExpired() {
+      navigate("/login?expired=1", { replace: true });
+    }
+    function handleForbidden() {
+      navigate("/forbidden", { replace: true });
+    }
+    window.addEventListener("auth:expired", handleAuthExpired);
+    window.addEventListener("role:forbidden", handleForbidden);
+    return () => {
+      window.removeEventListener("auth:expired", handleAuthExpired);
+      window.removeEventListener("role:forbidden", handleForbidden);
+    };
+  }, [navigate]);
 
   return (
     <div className="flex min-h-screen flex-col bg-page md:flex-row">
@@ -23,6 +40,8 @@ export default function AppLayout() {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <Outlet />
+
+      <DebugMetricsPanel />
     </div>
   );
 }

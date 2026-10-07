@@ -67,3 +67,82 @@ export function countAlerts(alerts) {
     kritis: aktif.filter((a) => a.severity === "kritis").length,
   };
 }
+
+// Alert diturunkan dari data yang sudah di-fetch untuk dashboard (summary,
+// posko, lokasi terkini) - tidak butuh endpoint khusus alert di backend.
+// `alert_id` deterministik (`${jenis}:${subjek}`) supaya status "ditangani"
+// yang disimpan terpisah (lihat alertService) tetap nempel ke alert yang
+// sama walau daftar ini diturunkan ulang tiap siklus polling.
+//
+// Catatan: alert `merah_menunggu` baru akurat setelah bug B1 diperbaiki di
+// backend (waktu_update_terakhir saat ini masih ketimpa tiap ping GPS).
+export function deriveAlerts({ summary, posko = [], locations, now = new Date() }) {
+  const alerts = [];
+  const MENUNGGU_STATUSES = ["registered", "triaged", "waiting_transfer"];
+
+  for (const item of summary?.priority_queue ?? []) {
+    if (item.kategori_triase !== "merah") continue;
+    if (!MENUNGGU_STATUSES.includes(item.status_korban)) continue;
+    const waitMinutes = (now - new Date(item.waktu_update_terakhir)) / 60000;
+    if (waitMinutes <= MERAH_WAIT_LIMIT_MIN) continue;
+    alerts.push({
+      alert_id: `merah_menunggu:${item.tag_id}`,
+      jenis: "merah_menunggu",
+      severity: "kritis",
+      status: "aktif",
+      subjek: item.tag_id,
+      kategori_triase: item.kategori_triase,
+      waktu: item.waktu_update_terakhir,
+      detail: `Menunggu jemputan ${Math.round(waitMinutes)} menit, melewati batas ${MERAH_WAIT_LIMIT_MIN} menit.`,
+    });
+  }
+
+  for (const p of posko) {
+    if (!p.kapasitas_maksimum) continue;
+    const pct = (p.jumlah_korban_saat_ini / p.kapasitas_maksimum) * 100;
+    if (pct < CAPACITY_WARN_PCT) continue;
+    alerts.push({
+      alert_id: `kapasitas_posko:${p.posko_id}`,
+      jenis: "kapasitas_posko",
+      severity: pct >= 100 ? "kritis" : "peringatan",
+      status: "aktif",
+      subjek: p.nama_posko,
+      waktu: now.toISOString(),
+      detail: `Kapasitas terisi ${p.jumlah_korban_saat_ini} dari ${p.kapasitas_maksimum} korban (${Math.round(pct)}%).`,
+    });
+  }
+
+  for (const item of locations?.markers ?? []) {
+    const silentMinutes = (now - new Date(item.received_at)) / 60000;
+    if (item.gps_fix === false || silentMinutes > GPS_SILENT_LIMIT_MIN) {
+      alerts.push({
+        alert_id: `sinyal_gps:${item.tag_id}`,
+        jenis: "sinyal_gps",
+        severity: "peringatan",
+        status: "aktif",
+        subjek: item.tag_id,
+        kategori_triase: item.victim?.kategori_triase,
+        waktu: item.received_at,
+        detail: `Tidak ada update GPS selama ${Math.max(0, Math.round(silentMinutes))} menit. Menampilkan lokasi terakhir yang diketahui.`,
+      });
+    }
+
+    if (item.battery_pct != null && item.battery_pct < BATTERY_LOW_PCT) {
+      alerts.push({
+        alert_id: `baterai_rendah:${item.tag_id}`,
+        jenis: "baterai_rendah",
+        severity: "peringatan",
+        status: "aktif",
+        subjek: item.tag_id,
+        kategori_triase: item.victim?.kategori_triase,
+        waktu: item.received_at,
+        detail: `Baterai tag tersisa ${item.battery_pct}%, di bawah batas ${BATTERY_LOW_PCT}%.`,
+      });
+    }
+  }
+
+  return alerts.map((a) => ({
+    ...a,
+    usia_menit: Math.max(0, Math.round((now - new Date(a.waktu)) / 60000)),
+  }));
+}

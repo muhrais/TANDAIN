@@ -12,11 +12,14 @@ import {
 } from "lucide-react";
 import { getCurrentUser, logout } from "../../services/authService";
 
+// `roles` cuma relevan untuk item yang punya `path` (halaman sungguhan).
+// Item tanpa `path` (Medis/Data Pasien/Pengaturan belum ada halamannya)
+// selalu tampil nonaktif untuk semua role - lihat NavItem.
 const NAV_ITEMS = [
-  { label: "Dashboard", icon: House, path: "/" },
-  { label: "Maps", icon: Map },
-  { label: "Scan NFC", icon: Nfc, path: "/scan" },
-  { label: "Evakuasi", icon: ArrowLeftRight },
+  { label: "Dashboard", icon: House, path: "/", roles: ["koordinator"] },
+  { label: "Maps", icon: Map, path: "/maps", roles: ["koordinator"] },
+  { label: "Scan NFC", icon: Nfc, path: "/scan", roles: ["koordinator", "petugas_pos_medis"] },
+  { label: "Evakuasi", icon: ArrowLeftRight, path: "/evakuasi", roles: ["koordinator", "petugas_pos_medis"] },
   { label: "Medis", icon: CirclePlus },
   { label: "Data Pasien", icon: Database },
   { label: "Pengaturan", icon: Settings },
@@ -64,7 +67,13 @@ function NavItem({ label, icon: Icon, path, onNavigate }) {
 
   if (!path) {
     return (
-      <button type="button" disabled className={`${className(false)} cursor-not-allowed opacity-50`}>
+      <button
+        type="button"
+        aria-disabled="true"
+        title="Segera"
+        onClick={(event) => event.preventDefault()}
+        className={`${className(false)} cursor-not-allowed opacity-50`}
+      >
         {content(false)}
       </button>
     );
@@ -80,6 +89,7 @@ function NavItem({ label, icon: Icon, path, onNavigate }) {
 export default function Sidebar({ open = false, onClose }) {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const visibleItems = NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(user?.role));
 
   function handleLogout() {
     logout();
@@ -117,7 +127,7 @@ export default function Sidebar({ open = false, onClose }) {
       </div>
 
       <nav aria-label="Navigasi utama" className="flex flex-1 flex-col gap-2 pr-6">
-        {NAV_ITEMS.map((item) => (
+        {visibleItems.map((item) => (
           <NavItem key={item.label} {...item} onNavigate={onClose} />
         ))}
       </nav>

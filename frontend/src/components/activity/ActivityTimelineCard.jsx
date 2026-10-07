@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import FilterChip from "../common/FilterChip";
-import { STATUS_ORDER, STATUS_LABEL, describeActivity, formatTime } from "../../lib/activity";
+import { STATUS_ORDER, STATUS_LABEL, formatTime } from "../../lib/activity";
 
 const DOT_COLOR = {
   merah: "bg-triase-merah",
@@ -14,6 +14,10 @@ const TEXT_COLOR = {
   kuning: "text-triase-kuning",
   hijau: "text-triase-hijau",
 };
+
+// Fallback saat kategori_triase tidak diketahui (mis. korban sudah dihapus).
+const NEUTRAL_DOT = "bg-neutral-300";
+const NEUTRAL_TEXT = "text-ink";
 
 const STATUS_FILTERS = [
   { key: "semua", label: "Semua" },
@@ -31,6 +35,8 @@ function TimelineRow({ activity, isFirst, isLast }) {
   const transition = activity.status_lama
     ? `${STATUS_LABEL[activity.status_lama]} → ${STATUS_LABEL[activity.status_baru]}`
     : STATUS_LABEL[activity.status_baru];
+  const dotColor = DOT_COLOR[activity.kategori_triase] ?? NEUTRAL_DOT;
+  const textColor = TEXT_COLOR[activity.kategori_triase] ?? NEUTRAL_TEXT;
 
   return (
     <li className="grid grid-cols-[3rem_1rem_minmax(0,1fr)_auto] items-start gap-x-3 py-3 text-sm">
@@ -43,16 +49,12 @@ function TimelineRow({ activity, isFirst, isLast }) {
             isLast ? "h-2" : "-bottom-3"
           }`}
         />
-        <span
-          className={`relative mt-1 h-2.5 w-2.5 rounded-full ring-4 ring-white ${DOT_COLOR[activity.kategori_triase]}`}
-        />
+        <span className={`relative mt-1 h-2.5 w-2.5 rounded-full ring-4 ring-white ${dotColor}`} />
       </span>
 
       <span className="min-w-0">
-        <span className={`mr-2 font-semibold ${TEXT_COLOR[activity.kategori_triase]}`}>
-          {activity.tag_id}
-        </span>
-        <span className="text-ink/80">{describeActivity(activity)}</span>
+        {activity.tag_id && <span className={`mr-2 font-semibold ${textColor}`}>{activity.tag_id}</span>}
+        <span className="text-ink/80">{activity.description}</span>
       </span>
 
       <span className="whitespace-nowrap rounded-md bg-page px-2 py-1 text-xs text-muted">
@@ -73,7 +75,7 @@ export default function ActivityTimelineCard({ activities, className = "" }) {
       (a) =>
         (status === "semua" || a.status_baru === status) &&
         (triase === "semua" || a.kategori_triase === triase) &&
-        (!q || a.tag_id.toLowerCase().includes(q))
+        (!q || (a.tag_id ?? "").toLowerCase().includes(q))
     );
   }, [activities, status, triase, query]);
 

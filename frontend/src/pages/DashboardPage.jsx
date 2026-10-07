@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Topbar from "../components/layout/Topbar";
 import TriageDistributionCard from "../components/dashboard/TriageDistributionCard";
 import StatCard from "../components/dashboard/StatCard";
@@ -8,55 +9,30 @@ import PriorityQueueCard from "../components/dashboard/PriorityQueueCard";
 import RecentActivityCard from "../components/dashboard/RecentActivityCard";
 import ActivityTab from "../components/activity/ActivityTab";
 import AlertTab from "../components/alert/AlertTab";
-import { getAlerts, resolveAlert } from "../services/alertService";
+import { resolveAlert } from "../services/alertService";
 import { countAlerts } from "../lib/alert";
-import {
-  getTriageDistribution,
-  getEvacuationStatus,
-  getRegistrationStatus,
-  getPriorityQueue,
-  getRecentActivity,
-  getIncidentInfo,
-  getMapMarkers,
-} from "../services/dashboardService";
+import { useDashboardData } from "../hooks/useDashboardData";
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Overview");
-  const [data, setData] = useState(null);
-  // Alert dipegang di sini agar angka di header ikut berubah saat alert ditandai ditangani.
-  const [alerts, setAlerts] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    Promise.all([
-      getIncidentInfo(),
-      getTriageDistribution(),
-      getEvacuationStatus(),
-      getRegistrationStatus(),
-      getPriorityQueue(),
-      getRecentActivity(),
-      getMapMarkers(),
-      getAlerts(),
-    ]).then(([incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, alertList]) => {
-      if (cancelled) return;
-      setData({ incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map });
-      setAlerts(alertList);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data, error, lastUpdated, refresh } = useDashboardData();
 
   async function handleResolveAlert(alertId) {
-    const update = await resolveAlert(alertId);
-    setAlerts((prev) => prev.map((a) => (a.alert_id === alertId ? { ...a, ...update } : a)));
+    await resolveAlert(alertId);
+    // resolveAlert menyimpan status "ditangani" ke localStorage (lihat
+    // alertService); refresh langsung supaya UI sinkron tanpa nunggu
+    // siklus polling berikutnya (~5 dtk).
+    refresh();
   }
 
-  if (!data || !alerts) {
+  // Loading awal saja yang menampilkan pesan ini. Refresh berikutnya dari
+  // polling tidak mengosongkan `data` lama (lihat usePolling), jadi tidak flicker.
+  if (!data) {
     return <div className="min-w-0 flex-1 p-8 text-sm text-muted">Memuat dashboard...</div>;
   }
+
+  const alerts = data.alerts;
 
   return (
     <div className="min-w-0 flex-1 space-y-6 p-4 md:space-y-8 md:p-8">
@@ -65,6 +41,9 @@ export default function DashboardPage() {
         alertCounts={countAlerts(alerts)}
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        lastUpdated={lastUpdated}
+        pollError={error}
+        onRefresh={refresh}
       />
 
       {activeTab === "Overview" && (
@@ -100,7 +79,15 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <MapPanel victims={data.map.victims} posko={data.map.posko} className="xl:col-span-8" />
+          <MapPanel
+            markers={data.map.markers}
+            posko={data.map.posko}
+            serverTime={data.map.serverTime}
+            onMarkerClick={(item) =>
+              item.victim && navigate(`/evakuasi?victim=${encodeURIComponent(item.victim.victim_id)}`)
+            }
+            className="xl:col-span-8"
+          />
 
           <div className="grid grid-rows-2 gap-5 xl:col-span-4">
             <PriorityQueueCard items={data.priorityQueue} />
@@ -109,7 +96,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {activeTab === "Aktivitas" && <ActivityTab />}
+      {activeTab === "Aktivitas" && <ActivityTab activities={data.activities} />}
 
       {activeTab === "Alert" && <AlertTab alerts={alerts} onResolve={handleResolveAlert} />}
     </div>
