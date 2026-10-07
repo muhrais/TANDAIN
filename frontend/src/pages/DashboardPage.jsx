@@ -25,6 +25,8 @@ import {
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("Overview");
   const [data, setData] = useState(null);
+  const [loadError, setLoadError] = useState("");
+  const [deviceError, setDeviceError] = useState("");
   // Alert dipegang di sini agar angka di header ikut berubah saat alert ditandai ditangani.
   const [alerts, setAlerts] = useState(null);
 
@@ -38,14 +40,18 @@ export default function DashboardPage() {
       getRegistrationStatus(),
       getPriorityQueue(),
       getRecentActivity(),
-      getDeviceStatuses(),
       getAlerts(),
-    ]).then(([incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, devices, alertList]) => {
-      if (cancelled) return;
-      const map = buildMapMarkers(devices);
-      setData({ incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, devices });
-      setAlerts(alertList);
-    });
+    ])
+      .then(([incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, alertList]) => {
+        if (cancelled) return;
+        const devices = [];
+        const map = buildMapMarkers(devices);
+        setData({ incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, devices });
+        setAlerts(alertList);
+      })
+      .catch((error) => {
+        if (!cancelled) setLoadError(error.message || "Dashboard gagal dimuat.");
+      });
 
     let timer;
 
@@ -56,7 +62,10 @@ export default function DashboardPage() {
         if (!cancelled) {
           const map = buildMapMarkers(devices);
           setData((current) => (current ? { ...current, map, devices } : current));
+          setDeviceError("");
         }
+      } catch (error) {
+        if (!cancelled) setDeviceError(error.message || "Tidak bisa terhubung ke backend.");
       } finally {
         if (!cancelled) {
           timer = window.setTimeout(refreshDevices, 2000);
@@ -64,7 +73,7 @@ export default function DashboardPage() {
       }
     }
 
-    timer = window.setTimeout(refreshDevices, 2000);
+    refreshDevices();
 
     return () => {
       cancelled = true;
@@ -78,7 +87,11 @@ export default function DashboardPage() {
   }
 
   if (!data || !alerts) {
-    return <div className="min-w-0 flex-1 p-8 text-sm text-muted">Memuat dashboard...</div>;
+    return (
+      <div className="min-w-0 flex-1 p-8 text-sm text-muted">
+        {loadError || "Memuat dashboard..."}
+      </div>
+    );
   }
 
   return (
@@ -130,7 +143,7 @@ export default function DashboardPage() {
             <RecentActivityCard items={data.recentActivity} />
           </div>
 
-          <DeviceStatusCard devices={data.devices} />
+          <DeviceStatusCard devices={data.devices} error={deviceError} />
         </div>
       )}
 

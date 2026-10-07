@@ -5,7 +5,7 @@ const GPS_LABEL = {
   unknown: "Status GPS belum diketahui",
 };
 
-export default function DeviceStatusCard({ devices }) {
+export default function DeviceStatusCard({ devices, error = "" }) {
   return (
     <section className="rounded-2xl bg-white p-5 shadow-sm xl:col-span-12">
       <div className="mb-4 flex items-center justify-between">
@@ -17,6 +17,12 @@ export default function DeviceStatusCard({ devices }) {
           {devices.filter((device) => device.online).length}/{devices.length} online
         </span>
       </div>
+
+      {error && (
+        <p className="mb-3 rounded-xl bg-triase-merah-soft px-4 py-3 text-sm text-triase-merah">
+          Status perangkat belum dapat diperbarui: {error}
+        </p>
+      )}
 
       {devices.length === 0 ? (
         <p className="rounded-xl bg-page px-4 py-3 text-sm text-muted">
