@@ -63,9 +63,13 @@ npm install
 - **Lokal**: pastikan service `mongod` sudah berjalan.
 - **Atlas**: isi `MONGODB_URI` di `.env` dengan connection string Atlas.
 
-**4. Seed data awal** (akun login + 4 posko)
+**4. Seed data awal** (akun login, 4 posko berkoordinat, 15 korban contoh)
 ```bash
 npm run seed
+```
+Untuk mengosongkan data korban, tag, lokasi, dan riwayat status sebelum sesi uji (user & posko tetap):
+```bash
+npm run seed -- --reset
 ```
 
 **5. Jalankan server**
@@ -110,7 +114,8 @@ Catatan perilaku:
 - Marker abu-abu bergaris putus = tag belum diregistrasi; marker pudar = tidak ada update lokasi > 60 detik. Klik marker korban untuk membukanya di halaman Evakuasi.
 - Tombol status hanya menawarkan langkah berikutnya (Registered → Triaged → Waiting Pickup → In Transit → Arrived), sesuai validasi backend.
 - **Ekspor CSV** saat ini disusun di frontend dari `GET /api/victims` (satu baris per korban + ringkasan per kategori dan status).
-- Peta masih membaca lokasi dari `GET /api/victims` (`lokasi_terakhir`). Tag yang belum diregistrasi baru muncul setelah endpoint `GET /api/locations/latest` tersedia di backend.
+- Peta membaca `GET /api/locations/latest`: satu titik terakhir per tag, termasuk tag yang belum diregistrasi.
+- Tab Alert memunculkan alert **tombol darurat** selama 10 menit setelah tombol perangkat ditekan.
 
 ### Panel metrik pengujian (`?debug=1`)
 
@@ -158,13 +163,55 @@ MongoDB (kalau pakai Docker) harus sudah `docker start tandain-mongo` sebelum te
 
 Login via `POST /api/auth/login` (`{ "username", "password" }`), lalu kirim token sebagai header `Authorization: Bearer <token>`.
 
+## Akses API per Role
+
+| Endpoint | Koordinator | Petugas Pos Medis | Tanpa token |
+|---|---|---|---|
+| `GET /api/dashboard/summary` | ✅ | 403 | 401 |
+| `GET /api/locations/latest` | ✅ | 403 | 401 |
+| `GET /api/devices` | ✅ | 403 | 401 |
+| `GET/POST/PUT /api/victims` | ✅ | ✅ | 401 |
+| `POST /api/tags/:tag_id/scan` | ✅ | ✅ | 401 |
+| `GET /api/posko` | ✅ | ✅ | 401 |
+| `POST /api/locations`, `/api/locations/batch` | perangkat | perangkat | ✅ |
+| `POST /api/devices/heartbeat`, `/api/devices/button` | perangkat | perangkat | ✅ |
+
+Endpoint perangkat sengaja tanpa token karena dipanggil firmware ESP32 (lihat `firmware/README.md`).
+
+## Simulator Tag & Benchmark API
+
+Untuk uji software tanpa menunggu hardware. Backend harus sudah jalan. Hasil CSV tersimpan di `scripts/out/` (tidak ikut git).
+
+**Simulator tag** meniru firmware: heartbeat tiap 5 dtk dan lokasi tiap `--interval` dtk, dengan payload yang sama.
+```bash
+npm run sim -- --count 10 --interval 10 --duration 600
+```
+
+| Uji | Perintah |
+|---|---|
+| Keandalan kirim (S-08s) | `npm run sim -- --count 10 --duration 600` |
+| Beban 50 tag (P-04) | `npm run sim -- --count 50 --interval 10 --duration 600` + dashboard terbuka |
+| Offline buffer (R-01s) | `npm run sim -- --count 5 --offline 60-180 --batch-on-reconnect` |
+| Paket hilang | tambah `--drop-rate 0.05` |
+
+Opsi lain: `--prefix` (default `SIM`), `--center LAT,LNG`, `--heartbeat 0` (matikan heartbeat), `--base http://IP:3000`. Daftar lengkap ada di komentar `scripts/simulate-tags.js`.
+
+**Benchmark API (P-02)** memanggil tiap endpoint utama N kali berurutan sebagai koordinator, lalu menampilkan avg/min/p50/p95/max per endpoint (target rata-rata ≤ 500 ms):
+```bash
+npm run bench -- --n 50
+```
+
+Jalankan `npm run seed -- --reset` sebelum tiap sesi uji supaya data simulator dan data lama tidak tercampur.
+
 ## Script
 
 | Lokasi | Script | Fungsi |
 |---|---|---|
 | root | `npm run dev` | Backend dengan auto-reload (nodemon) |
 | root | `npm start` | Backend mode produksi |
-| root | `npm run seed` | Isi user & posko awal |
+| root | `npm run seed` | Isi user, posko, dan korban contoh (`-- --reset` untuk mengosongkan dulu) |
+| root | `npm run sim` | Simulator tag virtual |
+| root | `npm run bench` | Benchmark latensi API |
 | `frontend/` | `npm run dev` | Dev server Vite |
 | `frontend/` | `npm run build` | Build produksi ke `frontend/dist` |
 | `frontend/` | `npm run lint` | Lint dengan oxlint |
