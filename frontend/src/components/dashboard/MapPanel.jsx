@@ -45,7 +45,14 @@ const LEGEND_ITEMS = [
   { label: "Tidak ada update", color: NO_VICTIM_COLOR, faded: true },
 ];
 
-export default function MapPanel({ markers = [], posko = [], serverTime, className = "" }) {
+export default function MapPanel({
+  markers = [],
+  posko = [],
+  serverTime,
+  onMarkerClick,
+  scrollWheelZoom = false,
+  className = "",
+}) {
   // Pusat peta ditentukan sekali saat mount saja (state initializer, bukan
   // useEffect) supaya peta tidak "loncat" tiap polling saat user sedang zoom/geser.
   const [center] = useState(() => pickMapCenter(posko, markers));
@@ -81,7 +88,7 @@ export default function MapPanel({ markers = [], posko = [], serverTime, classNa
       <MapContainer
         center={center}
         zoom={16}
-        scrollWheelZoom={false}
+        scrollWheelZoom={scrollWheelZoom}
         className="absolute inset-0 h-full w-full"
       >
         <TileLayer
@@ -115,6 +122,7 @@ export default function MapPanel({ markers = [], posko = [], serverTime, classNa
                 fillOpacity: isStale ? 0.4 : 1,
                 dashArray: hasVictim ? undefined : "4",
               }}
+              eventHandlers={onMarkerClick ? { click: () => onMarkerClick(item) } : undefined}
             >
               <Tooltip direction="top" offset={[0, -8]} opacity={1}>
                 <div className="text-xs">
@@ -130,6 +138,9 @@ export default function MapPanel({ markers = [], posko = [], serverTime, classNa
                     <div>Belum diregistrasi</div>
                   )}
                   {item.battery_pct != null && <div>Baterai {item.battery_pct}%</div>}
+                  {hasVictim && onMarkerClick && (
+                    <div className="mt-1 text-[10px] text-muted">Klik untuk buka di Evakuasi</div>
+                  )}
                   <div>
                     {isStale
                       ? `Lokasi terakhir diketahui · ${formatAgo(elapsedMs)}`

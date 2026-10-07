@@ -13,13 +13,13 @@ import {
 import { getCurrentUser, logout } from "../../services/authService";
 
 // `roles` cuma relevan untuk item yang punya `path` (halaman sungguhan).
-// Item tanpa `path` (Maps/Evakuasi/dst belum ada halamannya) selalu tampil
-// nonaktif untuk semua role - lihat NavItem.
+// Item tanpa `path` (Medis/Data Pasien/Pengaturan belum ada halamannya)
+// selalu tampil nonaktif untuk semua role - lihat NavItem.
 const NAV_ITEMS = [
   { label: "Dashboard", icon: House, path: "/", roles: ["koordinator"] },
-  { label: "Maps", icon: Map },
+  { label: "Maps", icon: Map, path: "/maps", roles: ["koordinator"] },
   { label: "Scan NFC", icon: Nfc, path: "/scan", roles: ["koordinator", "petugas_pos_medis"] },
-  { label: "Evakuasi", icon: ArrowLeftRight },
+  { label: "Evakuasi", icon: ArrowLeftRight, path: "/evakuasi", roles: ["koordinator", "petugas_pos_medis"] },
   { label: "Medis", icon: CirclePlus },
   { label: "Data Pasien", icon: Database },
   { label: "Pengaturan", icon: Settings },

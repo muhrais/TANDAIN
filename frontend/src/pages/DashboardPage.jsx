@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Topbar from "../components/layout/Topbar";
 import TriageDistributionCard from "../components/dashboard/TriageDistributionCard";
 import StatCard from "../components/dashboard/StatCard";
@@ -13,6 +14,7 @@ import { countAlerts } from "../lib/alert";
 import { useDashboardData } from "../hooks/useDashboardData";
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Overview");
   const { data, error, lastUpdated, refresh } = useDashboardData();
 
@@ -81,6 +83,9 @@ export default function DashboardPage() {
             markers={data.map.markers}
             posko={data.map.posko}
             serverTime={data.map.serverTime}
+            onMarkerClick={(item) =>
+              item.victim && navigate(`/evakuasi?victim=${encodeURIComponent(item.victim.victim_id)}`)
+            }
             className="xl:col-span-8"
           />
 
