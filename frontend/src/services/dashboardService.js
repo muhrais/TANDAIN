@@ -5,7 +5,8 @@ import {
   mockPriorityQueue,
   mockIncidentInfo,
 } from "../mocks/dashboard";
-import { mockVictims, mockPoskoUtama } from "../mocks/victims";
+import { mockPoskoUtama } from "../mocks/victims";
+import { apiClient } from "../lib/apiClient";
 import { getActivities } from "./activityService";
 import { describeActivity, formatTime } from "../lib/activity";
 
@@ -43,5 +44,27 @@ export async function getIncidentInfo() {
 }
 
 export async function getMapMarkers() {
-  return { victims: mockVictims, posko: mockPoskoUtama };
+  const devices = await apiClient.get("/api/devices");
+  const victims = devices
+    .filter(
+      (device) =>
+        typeof device.latest_location?.lat === "number" &&
+        typeof device.latest_location?.lng === "number"
+    )
+    .map((device) => ({
+      tag_id: device.tag_id,
+      nama: "",
+      kategori_triase: device.online ? "hijau" : "merah",
+      status_korban: device.online ? "online" : "offline",
+      lokasi_terakhir: {
+        lat: device.latest_location.lat,
+        lng: device.latest_location.lng,
+      },
+    }));
+
+  return { victims, posko: mockPoskoUtama };
+}
+
+export async function getDeviceStatuses() {
+  return apiClient.get("/api/devices");
 }

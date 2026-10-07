@@ -18,6 +18,28 @@ const tagSchema = new mongoose.Schema(
       enum: ["active", "inactive", "damaged"],
       default: "active",
     },
+    last_seen: {
+      type: Date,
+      default: null,
+    },
+    gps_status: {
+      type: String,
+      enum: ["no_data", "searching", "fixed", "unknown"],
+      default: "unknown",
+    },
+    satellites: {
+      type: Number,
+      default: 0,
+    },
+    ip_address: {
+      type: String,
+      default: null,
+    },
+    latest_location: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+      timestamp: { type: Date, default: null },
+    },
     created_at: {
       type: Date,
       default: Date.now,
@@ -25,5 +47,7 @@ const tagSchema = new mongoose.Schema(
   },
   schemaOptions()
 );
+
+tagSchema.index({ last_seen: -1 });
 
 module.exports = mongoose.model("Tag", tagSchema);

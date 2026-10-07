@@ -22,8 +22,8 @@ function validateLocationPayload(body) {
   if (typeof lng !== "number" || lng < -180 || lng > 180) {
     errors.push({ field: "lng", message: "lng harus berupa angka antara -180 dan 180." });
   }
-  if (!timestamp || isNaN(new Date(timestamp).getTime())) {
-    errors.push({ field: "timestamp", message: "timestamp wajib diisi dengan format ISO 8601 yang valid." });
+  if (timestamp !== undefined && isNaN(new Date(timestamp).getTime())) {
+    errors.push({ field: "timestamp", message: "timestamp harus memakai format ISO 8601 yang valid." });
   }
 
   return errors;
@@ -38,11 +38,24 @@ function validateLocationPayload(body) {
  */
 async function ingestSingleLocation(payload) {
   const { tag_id, lat, lng, timestamp, battery_pct } = payload;
+  const measuredAt = timestamp ? new Date(timestamp) : new Date();
 
   // Pastikan tag terdaftar di koleksi `tags` (FR-DB-01: data saling terhubung).
   await Tag.findOneAndUpdate(
     { tag_id },
-    { $setOnInsert: { tag_id, status_tag: "active" } },
+    {
+      $set: {
+        status_tag: "active",
+        last_seen: new Date(),
+        gps_status: "fixed",
+        latest_location: {
+          lat,
+          lng,
+          timestamp: measuredAt,
+        },
+      },
+      $setOnInsert: { tag_id },
+    },
     { upsert: true, new: true }
   );
 
@@ -50,7 +63,7 @@ async function ingestSingleLocation(payload) {
     tag_id,
     latitude: lat,
     longitude: lng,
-    timestamp: new Date(timestamp),
+    timestamp: measuredAt,
     battery_pct: typeof battery_pct === "number" ? battery_pct : null,
     sync_status: "synced",
   });
@@ -61,7 +74,7 @@ async function ingestSingleLocation(payload) {
     {
       $set: {
         lokasi_terakhir: { lat, lng },
-        waktu_update_terakhir: new Date(timestamp),
+        waktu_update_terakhir: measuredAt,
       },
     },
     { sort: { created_at: -1 } }
