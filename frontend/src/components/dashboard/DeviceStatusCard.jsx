@@ -5,6 +5,22 @@ const GPS_LABEL = {
   unknown: "Status GPS belum diketahui",
 };
 
+const dateFormatter = new Intl.DateTimeFormat("id-ID", {
+  dateStyle: "short",
+  timeStyle: "medium",
+});
+
+function formatDate(value) {
+  return value ? dateFormatter.format(new Date(value)) : "-";
+}
+
+function hasCoordinates(device) {
+  return (
+    typeof device.latest_location?.lat === "number" &&
+    typeof device.latest_location?.lng === "number"
+  );
+}
+
 export default function DeviceStatusCard({ devices, error = "" }) {
   return (
     <section className="rounded-2xl bg-white p-5 shadow-sm xl:col-span-12">
@@ -51,6 +67,33 @@ export default function DeviceStatusCard({ devices, error = "" }) {
                 <dd className="font-medium text-ink">{device.satellites}</dd>
                 <dt className="text-muted">IP</dt>
                 <dd className="font-medium text-ink">{device.ip_address || "-"}</dd>
+                <dt className="text-muted">Koordinat</dt>
+                <dd className="font-medium text-ink">
+                  {hasCoordinates(device) ? (
+                    <a
+                      className="text-blue-600 underline"
+                      href={`https://www.google.com/maps?q=${device.latest_location.lat},${device.latest_location.lng}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {device.latest_location.lat.toFixed(6)}, {device.latest_location.lng.toFixed(6)}
+                    </a>
+                  ) : (
+                    "Belum tersedia"
+                  )}
+                </dd>
+                <dt className="text-muted">Update lokasi</dt>
+                <dd className="font-medium text-ink">{formatDate(device.latest_location?.timestamp)}</dd>
+                <dt className="text-muted">Heartbeat</dt>
+                <dd className="font-medium text-ink">{formatDate(device.last_seen)}</dd>
+                <dt className="text-muted">Tombol</dt>
+                <dd className="font-medium text-ink">
+                  {device.button_press_count > 0
+                    ? `${device.button_press_count} kali ditekan`
+                    : "Belum pernah ditekan"}
+                </dd>
+                <dt className="text-muted">Tekan terakhir</dt>
+                <dd className="font-medium text-ink">{formatDate(device.last_button_pressed_at)}</dd>
               </dl>
             </article>
           ))}

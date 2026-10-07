@@ -35,6 +35,14 @@ const tagSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    button_press_count: {
+      type: Number,
+      default: 0,
+    },
+    last_button_pressed_at: {
+      type: Date,
+      default: null,
+    },
     latest_location: {
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },

@@ -35,7 +35,7 @@ const unsigned long locationUploadInterval = 10000;
 // ==============================
 
 #define GPS_RX_PIN 4
-#define BUTTON_PIN 1
+#define BUTTON_PIN 25
 #define LED_RED 6
 #define LED_GREEN 10
 
@@ -250,6 +250,22 @@ void sendLocation() {
   payload += "}";
 
   postJson("/api/locations", payload);
+}
+
+
+void sendButtonPress() {
+  String payload = "{";
+  payload += "\"tag_id\":\"" + String(DEVICE_ID) + "\",";
+  payload += "\"satellites\":" + String(gps.satellites.value()) + ",";
+  payload += "\"ip_address\":\"" + WiFi.localIP().toString() + "\"";
+
+  if (gpsFixed) {
+    payload += ",\"lat\":" + String(latestLat, 6) + ",";
+    payload += "\"lng\":" + String(latestLon, 6);
+  }
+
+  payload += "}";
+  postJson("/api/devices/button", payload);
 }
 
 
@@ -495,6 +511,7 @@ void createEmergencyEvent() {
   Serial.println();
   Serial.println("==============================");
   Serial.println("BUTTON PRESSED");
+  sendButtonPress();
 
   if (gpsFixed) {
     Serial.println("TANDAIN EVENT : READY");
