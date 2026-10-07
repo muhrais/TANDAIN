@@ -4,6 +4,7 @@ import TriageDistributionCard from "../components/dashboard/TriageDistributionCa
 import StatCard from "../components/dashboard/StatCard";
 import RegistrationSummaryRow from "../components/dashboard/RegistrationSummaryRow";
 import MapPanel from "../components/dashboard/MapPanel";
+import DeviceStatusCard from "../components/dashboard/DeviceStatusCard";
 import PriorityQueueCard from "../components/dashboard/PriorityQueueCard";
 import RecentActivityCard from "../components/dashboard/RecentActivityCard";
 import ActivityTab from "../components/activity/ActivityTab";
@@ -18,6 +19,7 @@ import {
   getRecentActivity,
   getIncidentInfo,
   getMapMarkers,
+  getDeviceStatuses,
 } from "../services/dashboardService";
 
 export default function DashboardPage() {
@@ -37,15 +39,25 @@ export default function DashboardPage() {
       getPriorityQueue(),
       getRecentActivity(),
       getMapMarkers(),
+      getDeviceStatuses(),
       getAlerts(),
-    ]).then(([incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, alertList]) => {
+    ]).then(([incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, devices, alertList]) => {
       if (cancelled) return;
-      setData({ incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map });
+      setData({ incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, devices });
       setAlerts(alertList);
     });
 
+    const timer = window.setInterval(() => {
+      Promise.all([getMapMarkers(), getDeviceStatuses()]).then(([map, devices]) => {
+        if (!cancelled) {
+          setData((current) => (current ? { ...current, map, devices } : current));
+        }
+      });
+    }, 5000);
+
     return () => {
       cancelled = true;
+      window.clearInterval(timer);
     };
   }, []);
 
@@ -106,6 +118,8 @@ export default function DashboardPage() {
             <PriorityQueueCard items={data.priorityQueue} />
             <RecentActivityCard items={data.recentActivity} />
           </div>
+
+          <DeviceStatusCard devices={data.devices} />
         </div>
       )}
 

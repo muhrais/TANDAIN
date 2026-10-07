@@ -5,6 +5,7 @@ const victimRoutes = require("./victimRoutes");
 const tagRoutes = require("./tagRoutes");
 const dashboardRoutes = require("./dashboardRoutes");
 const poskoRoutes = require("./poskoRoutes");
+const deviceRoutes = require("./deviceRoutes");
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.use("/victims", victimRoutes);
 router.use("/tags", tagRoutes);
 router.use("/dashboard", dashboardRoutes); // Week 5: FR-BE-06
 router.use("/posko", poskoRoutes); // Week 5: FR-BE-07
+router.use("/devices", deviceRoutes);
 
 module.exports = router;

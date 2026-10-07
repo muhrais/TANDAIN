@@ -2,3 +2,4 @@ node_modules/
 .env
 README.md
 .claude
+firmware/**/secrets.h
