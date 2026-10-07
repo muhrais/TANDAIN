@@ -36,8 +36,8 @@ const unsigned long locationUploadInterval = 5000;
 
 #define GPS_RX_PIN 4
 #define BUTTON_PIN 25
-#define LED_RED 6
-#define LED_GREEN 10
+#define LED_RED 26
+#define LED_GREEN 27
 
 
 // ==============================
