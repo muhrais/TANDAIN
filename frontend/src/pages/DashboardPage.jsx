@@ -18,7 +18,7 @@ import {
   getPriorityQueue,
   getRecentActivity,
   getIncidentInfo,
-  getMapMarkers,
+  buildMapMarkers,
   getDeviceStatuses,
 } from "../services/dashboardService";
 
@@ -38,26 +38,37 @@ export default function DashboardPage() {
       getRegistrationStatus(),
       getPriorityQueue(),
       getRecentActivity(),
-      getMapMarkers(),
       getDeviceStatuses(),
       getAlerts(),
-    ]).then(([incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, devices, alertList]) => {
+    ]).then(([incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, devices, alertList]) => {
       if (cancelled) return;
+      const map = buildMapMarkers(devices);
       setData({ incidentInfo, triage, evacuation, registration, priorityQueue, recentActivity, map, devices });
       setAlerts(alertList);
     });
 
-    const timer = window.setInterval(() => {
-      Promise.all([getMapMarkers(), getDeviceStatuses()]).then(([map, devices]) => {
+    let timer;
+
+    async function refreshDevices() {
+      try {
+        const devices = await getDeviceStatuses();
+
         if (!cancelled) {
+          const map = buildMapMarkers(devices);
           setData((current) => (current ? { ...current, map, devices } : current));
         }
-      });
-    }, 5000);
+      } finally {
+        if (!cancelled) {
+          timer = window.setTimeout(refreshDevices, 2000);
+        }
+      }
+    }
+
+    timer = window.setTimeout(refreshDevices, 2000);
 
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      window.clearTimeout(timer);
     };
   }, []);
 

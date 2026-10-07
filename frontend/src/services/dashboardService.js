@@ -43,8 +43,7 @@ export async function getIncidentInfo() {
   return mockIncidentInfo;
 }
 
-export async function getMapMarkers() {
-  const devices = await apiClient.get("/api/devices");
+export function buildMapMarkers(devices) {
   const victims = devices
     .filter(
       (device) =>
@@ -63,6 +62,11 @@ export async function getMapMarkers() {
     }));
 
   return { victims, posko: mockPoskoUtama };
+}
+
+export async function getMapMarkers() {
+  const devices = await apiClient.get("/api/devices");
+  return buildMapMarkers(devices);
 }
 
 export async function getDeviceStatuses() {

@@ -26,8 +26,8 @@ const unsigned long wifiRetryDelay = 3000;
 
 unsigned long lastHeartbeat = 0;
 unsigned long lastLocationUpload = 0;
-const unsigned long heartbeatInterval = 5000;
-const unsigned long locationUploadInterval = 10000;
+const unsigned long heartbeatInterval = 3000;
+const unsigned long locationUploadInterval = 5000;
 
 
 // ==============================
