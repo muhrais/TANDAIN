@@ -127,18 +127,35 @@ const receiveButtonPress = asyncHandler(async (req, res) => {
   });
 });
 
+function victimSummary(victim) {
+  if (!victim) return null;
+  const { victim_id, nama, kategori_triase, status_korban } = victim;
+  return { victim_id, nama, kategori_triase, status_korban };
+}
+
 // Daftar perangkat untuk dashboard. Online dihitung dari heartbeat 30 detik terakhir.
 const listDevices = asyncHandler(async (_req, res) => {
   // Hanya tag yang pernah berkomunikasi (heartbeat/lokasi/tombol). Tag yang
   // cuma dibuat lewat scan NFC atau seed bukan perangkat GPS aktif.
-  const tags = await Tag.find({ last_seen: { $ne: null } }).sort({ tag_id: 1 }).lean();
+  const [tags, activeVictims] = await Promise.all([
+    Tag.find({ last_seen: { $ne: null } }).sort({ tag_id: 1 }).lean(),
+    Victim.find({ status_korban: { $ne: "arrived" } }).sort({ created_at: -1 }).lean(),
+  ]);
   const now = Date.now();
+
+  // Korban aktif per gelang, untuk halaman Perangkat (gelang terpakai/bebas).
+  const victimByTag = new Map();
+  for (const v of activeVictims) {
+    if (!victimByTag.has(v.tag_id)) victimByTag.set(v.tag_id, v);
+  }
 
   const devices = tags.map((tag) => ({
     tag_id: tag.tag_id,
     status_tag: tag.status_tag,
     nfc_uid: tag.nfc_uid ?? null,
     paired: Boolean(tag.nfc_uid),
+    identify_until: tag.identify_until ?? null,
+    victim: victimSummary(victimByTag.get(tag.tag_id)),
     online: Boolean(
       tag.last_seen && now - new Date(tag.last_seen).getTime() <= ONLINE_WINDOW_MS
     ),
