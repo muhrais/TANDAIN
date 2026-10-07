@@ -1,4 +1,5 @@
 const Tag = require("../models/Tag");
+const Victim = require("../models/Victim");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
@@ -8,7 +9,33 @@ const GPS_STATUSES = ["no_data", "searching", "fixed", "unknown"];
 // backend tidak menerima heartbeat selama 30 detik (sekitar 6 heartbeat).
 const ONLINE_WINDOW_MS = 30 * 1000;
 
+/**
+ * Perintah untuk perangkat, dikirim balik di respons heartbeat (pairing
+ * NFC <-> GPS, tahap 2). Firmware tidak perlu tahu data korban; cukup:
+ * - assignment: korban aktif yang memakai gelang ini (null = gelang bebas)
+ * - identify:   koordinator sedang mencari gelang ini (LED berkedip)
+ * - led:        mode LED final, sudah diprioritaskan di server:
+ *               identify > warna triase > none. Tombol darurat tetap
+ *               ditangani firmware sendiri (prioritas tertinggi, lokal).
+ */
+async function buildDeviceCommand(tag, now = new Date()) {
+  const victim = await Victim.findOne({ tag_id: tag.tag_id, status_korban: { $ne: "arrived" } })
+    .sort({ created_at: -1 })
+    .lean();
+
+  const assignment = victim ? { victim_id: victim.victim_id, kategori_triase: victim.kategori_triase } : null;
+  const identify = Boolean(tag.identify_until && new Date(tag.identify_until) > now);
+
+  let led = "none";
+  if (identify) led = "identify";
+  else if (assignment) led = assignment.kategori_triase;
+
+  return { assignment, identify, led };
+}
+
 // Dipanggil firmware walaupun GPS belum fix, sehingga koneksi perangkat tetap terlihat.
+// Respons membawa perintah LED (lihat buildDeviceCommand), jadi perubahan
+// triase/pairing sampai ke perangkat paling lambat satu interval heartbeat.
 const receiveHeartbeat = asyncHandler(async (req, res) => {
   const {
     tag_id,
@@ -44,6 +71,7 @@ const receiveHeartbeat = asyncHandler(async (req, res) => {
   return sendSuccess(res, 200, {
     tag_id: tag.tag_id,
     received_at: tag.last_seen,
+    ...(await buildDeviceCommand(tag, tag.last_seen)),
   });
 });
 
@@ -109,6 +137,8 @@ const listDevices = asyncHandler(async (_req, res) => {
   const devices = tags.map((tag) => ({
     tag_id: tag.tag_id,
     status_tag: tag.status_tag,
+    nfc_uid: tag.nfc_uid ?? null,
+    paired: Boolean(tag.nfc_uid),
     online: Boolean(
       tag.last_seen && now - new Date(tag.last_seen).getTime() <= ONLINE_WINDOW_MS
     ),
