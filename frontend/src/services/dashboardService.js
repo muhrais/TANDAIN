@@ -80,6 +80,11 @@ export async function getIncidentInfo() {
   };
 }
 
+// Status armada ESP32 dari heartbeat (GET /api/devices, deviceController).
+export async function getDeviceStatuses() {
+  return apiClient.get("/api/devices");
+}
+
 export async function getMapMarkers() {
   const [locations, posko] = await Promise.all([
     getLatestLocations(),

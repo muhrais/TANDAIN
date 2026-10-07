@@ -5,6 +5,7 @@ import TriageDistributionCard from "../components/dashboard/TriageDistributionCa
 import StatCard from "../components/dashboard/StatCard";
 import RegistrationSummaryRow from "../components/dashboard/RegistrationSummaryRow";
 import MapPanel from "../components/dashboard/MapPanel";
+import DeviceStatusCard from "../components/dashboard/DeviceStatusCard";
 import PriorityQueueCard from "../components/dashboard/PriorityQueueCard";
 import RecentActivityCard from "../components/dashboard/RecentActivityCard";
 import ActivityTab from "../components/activity/ActivityTab";
@@ -50,6 +51,8 @@ export default function DashboardPage() {
         // Satu grid 12 kolom: baris atas 6/6 (lebar sama), baris bawah 8/4 (peta lebih lebar).
         // Tinggi tiap baris mengikuti kolom tertinggi sehingga tepi bawah kartu selalu rata.
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+          <DeviceStatusCard devices={data.devices} />
+
           <TriageDistributionCard data={data.triage} className="xl:col-span-6" />
 
           <div className="flex flex-col gap-5 xl:col-span-6">
