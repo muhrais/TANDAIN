@@ -1,10 +1,10 @@
 const express = require("express");
 const { listPosko, getPoskoDetail } = require("../controllers/poskoController");
-const { authenticate } = require("../middleware/auth");
+const { authenticate, requireRole, ROLES } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.use(authenticate);
+router.use(authenticate, requireRole(...ROLES.STAFF_MEDIS));
 
 // GET /api/posko (Auth: Ya) - FR-BE-07
 router.get("/", listPosko);

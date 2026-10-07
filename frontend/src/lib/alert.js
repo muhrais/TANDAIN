@@ -5,6 +5,8 @@ export const MERAH_WAIT_LIMIT_MIN = 10;
 export const GPS_SILENT_LIMIT_MIN = 5;
 export const BATTERY_LOW_PCT = 20;
 export const CAPACITY_WARN_PCT = 80;
+// Tombol darurat dianggap masih aktif selama ini setelah ditekan.
+export const EMERGENCY_WINDOW_MIN = 10;
 
 export const ALERT_TYPES = {
   darurat: {
@@ -73,9 +75,6 @@ export function countAlerts(alerts) {
 // `alert_id` deterministik (`${jenis}:${subjek}`) supaya status "ditangani"
 // yang disimpan terpisah (lihat alertService) tetap nempel ke alert yang
 // sama walau daftar ini diturunkan ulang tiap siklus polling.
-//
-// Catatan: alert `merah_menunggu` baru akurat setelah bug B1 diperbaiki di
-// backend (waktu_update_terakhir saat ini masih ketimpa tiap ping GPS).
 export function deriveAlerts({ summary, posko = [], locations, now = new Date() }) {
   const alerts = [];
   const MENUNGGU_STATUSES = ["registered", "triaged", "waiting_transfer"];
@@ -113,6 +112,26 @@ export function deriveAlerts({ summary, posko = [], locations, now = new Date() 
   }
 
   for (const item of locations?.markers ?? []) {
+    if (item.last_button_pressed_at) {
+      const pressedMinutes = (now - new Date(item.last_button_pressed_at)) / 60000;
+      if (pressedMinutes <= EMERGENCY_WINDOW_MIN) {
+        alerts.push({
+          // Waktu tekan ikut di id: tekanan baru setelah alert "ditangani"
+          // memunculkan alert baru, bukan tertutup status lama.
+          alert_id: `darurat:${item.tag_id}:${item.last_button_pressed_at}`,
+          jenis: "darurat",
+          severity: "kritis",
+          status: "aktif",
+          subjek: item.tag_id,
+          kategori_triase: item.victim?.kategori_triase,
+          waktu: item.last_button_pressed_at,
+          detail: item.victim
+            ? `Tombol darurat ditekan pada tag ${item.victim.nama || item.tag_id}.`
+            : "Tombol darurat ditekan pada tag yang belum diregistrasi.",
+        });
+      }
+    }
+
     const silentMinutes = (now - new Date(item.received_at)) / 60000;
     if (item.gps_fix === false || silentMinutes > GPS_SILENT_LIMIT_MIN) {
       alerts.push({

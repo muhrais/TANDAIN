@@ -30,6 +30,13 @@ const locationSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+    // Waktu server menerima data. `timestamp` adalah jam perangkat (bisa
+    // kosong/meleset kalau ESP32 belum sinkron), jadi latensi tag -> dashboard
+    // (uji P-03) diukur dari field ini.
+    received_at: {
+      type: Date,
+      default: Date.now,
+    },
     battery_pct: {
       type: Number,
       default: null,
@@ -44,5 +51,6 @@ const locationSchema = new mongoose.Schema(
 );
 
 locationSchema.index({ tag_id: 1, timestamp: -1 });
+locationSchema.index({ tag_id: 1, received_at: -1 });
 
 module.exports = mongoose.model("Location", locationSchema);

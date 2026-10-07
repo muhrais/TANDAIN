@@ -46,7 +46,12 @@ const tagSchema = new mongoose.Schema(
     latest_location: {
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },
-      timestamp: { type: Date, default: null },
+      timestamp: { type: Date, default: null }, // jam perangkat
+      received_at: { type: Date, default: null }, // jam server
+    },
+    battery_pct: {
+      type: Number,
+      default: null,
     },
     created_at: {
       type: Date,

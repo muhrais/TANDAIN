@@ -60,4 +60,12 @@ function requireRole(...allowedRoles) {
   };
 }
 
-module.exports = { authenticate, requireRole };
+// Matriks akses FR-BE-08 (PLANNING_WEEK6_SOFTWARE.md §3.5):
+// - KOORDINATOR: dashboard, peta, armada perangkat (pemantauan menyeluruh)
+// - STAFF_MEDIS: operasional korban (scan, registrasi, ubah status, posko)
+const ROLES = {
+  KOORDINATOR: ["koordinator"],
+  STAFF_MEDIS: ["koordinator", "petugas_pos_medis"],
+};
+
+module.exports = { authenticate, requireRole, ROLES };

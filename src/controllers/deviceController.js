@@ -29,13 +29,14 @@ const receiveHeartbeat = asyncHandler(async (req, res) => {
     { tag_id },
     {
       $set: {
-        status_tag: "active",
         last_seen: new Date(),
         gps_status,
         satellites: Number.isFinite(satellites) ? satellites : 0,
         ip_address,
       },
-      $setOnInsert: { tag_id },
+      // status_tag hanya diisi saat tag baru, supaya tanda "damaged" /
+      // "inactive" dari koordinator tidak tertimpa heartbeat.
+      $setOnInsert: { tag_id, status_tag: "active" },
     },
     { upsert: true, new: true }
   );
@@ -70,7 +71,6 @@ const receiveButtonPress = asyncHandler(async (req, res) => {
 
   const pressedAt = new Date();
   const fields = {
-    status_tag: "active",
     last_seen: pressedAt,
     last_button_pressed_at: pressedAt,
     satellites: Number.isFinite(satellites) ? satellites : 0,
@@ -79,7 +79,7 @@ const receiveButtonPress = asyncHandler(async (req, res) => {
 
   if (hasLocation) {
     fields.gps_status = "fixed";
-    fields.latest_location = { lat, lng, timestamp: pressedAt };
+    fields.latest_location = { lat, lng, timestamp: pressedAt, received_at: pressedAt };
   }
 
   const tag = await Tag.findOneAndUpdate(
@@ -87,7 +87,7 @@ const receiveButtonPress = asyncHandler(async (req, res) => {
     {
       $set: fields,
       $inc: { button_press_count: 1 },
-      $setOnInsert: { tag_id },
+      $setOnInsert: { tag_id, status_tag: "active" },
     },
     { upsert: true, new: true }
   );
@@ -101,7 +101,9 @@ const receiveButtonPress = asyncHandler(async (req, res) => {
 
 // Daftar perangkat untuk dashboard. Online dihitung dari heartbeat 30 detik terakhir.
 const listDevices = asyncHandler(async (_req, res) => {
-  const tags = await Tag.find().sort({ tag_id: 1 }).lean();
+  // Hanya tag yang pernah berkomunikasi (heartbeat/lokasi/tombol). Tag yang
+  // cuma dibuat lewat scan NFC atau seed bukan perangkat GPS aktif.
+  const tags = await Tag.find({ last_seen: { $ne: null } }).sort({ tag_id: 1 }).lean();
   const now = Date.now();
 
   const devices = tags.map((tag) => ({
