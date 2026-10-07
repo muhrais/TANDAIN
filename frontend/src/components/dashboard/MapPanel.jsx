@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { MapContainer, TileLayer, CircleMarker, Tooltip, Marker, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Tooltip, Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -18,30 +17,6 @@ const poskoIcon = L.divIcon({
   iconAnchor: [-10, 30],
 });
 
-function DeviceViewport({ victims, fallbackCenter }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (victims.length === 0) {
-      map.setView(fallbackCenter, 16);
-      return;
-    }
-
-    const points = victims.map((victim) => [
-      victim.lokasi_terakhir.lat,
-      victim.lokasi_terakhir.lng,
-    ]);
-
-    if (points.length === 1) {
-      map.setView(points[0], 17);
-    } else {
-      map.fitBounds(points, { padding: [40, 40], maxZoom: 17 });
-    }
-  }, [fallbackCenter, map, victims]);
-
-  return null;
-}
-
 export default function MapPanel({ victims, posko, className = "" }) {
   const center = [posko.lokasi.lat, posko.lokasi.lng];
 
@@ -53,7 +28,6 @@ export default function MapPanel({ victims, posko, className = "" }) {
         scrollWheelZoom={false}
         className="absolute inset-0 h-full w-full"
       >
-        <DeviceViewport victims={victims} fallbackCenter={center} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
