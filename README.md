@@ -92,7 +92,38 @@ npm run dev
 ```
 Buka `http://localhost:5173`.
 
-> Backend harus sudah jalan (lihat Setup Backend) supaya login, Scan NFC, dan registrasi korban berfungsi. Dashboard Overview/Aktivitas/Alert masih pakai **data mock** (`frontend/src/mocks/`), belum tersambung ke backend.
+> Backend harus sudah jalan (lihat Setup Backend). Semua halaman membaca data backend asli; tidak ada lagi data mock di frontend.
+
+### Halaman & akses per role
+
+| Halaman | Path | Koordinator | Petugas Pos Medis | Isi |
+|---|---|---|---|---|
+| Dashboard | `/` | ✅ | – | Overview, tab Alert, tab Aktivitas, tombol **Ekspor CSV** |
+| Maps | `/maps` | ✅ | – | Peta layar penuh + daftar tag, filter kategori |
+| Scan NFC | `/scan` | ✅ | ✅ | Scan / input manual `tag_id`, registrasi korban, ubah status |
+| Evakuasi | `/evakuasi` | ✅ | ✅ | Antrian prioritas, ubah status satu langkah, pilih posko tujuan |
+
+Petugas yang membuka halaman khusus koordinator diarahkan ke `/forbidden`. Setelah login, koordinator masuk ke `/`, petugas ke `/scan`.
+
+Catatan perilaku:
+- Dashboard, Maps, dan Evakuasi **polling tiap 5 detik** (ubah lewat `VITE_POLL_INTERVAL_MS`). Polling berhenti saat tab browser disembunyikan.
+- Marker abu-abu bergaris putus = tag belum diregistrasi; marker pudar = tidak ada update lokasi > 60 detik. Klik marker korban untuk membukanya di halaman Evakuasi.
+- Tombol status hanya menawarkan langkah berikutnya (Registered → Triaged → Waiting Pickup → In Transit → Arrived), sesuai validasi backend.
+- **Ekspor CSV** saat ini disusun di frontend dari `GET /api/victims` (satu baris per korban + ringkasan per kategori dan status).
+- Peta masih membaca lokasi dari `GET /api/victims` (`lokasi_terakhir`). Tag yang belum diregistrasi baru muncul setelah endpoint `GET /api/locations/latest` tersedia di backend.
+
+### Panel metrik pengujian (`?debug=1`)
+
+Buka halaman mana pun dengan `?debug=1` (contoh `http://localhost:5173/scan?debug=1`) untuk memunculkan panel metrik di pojok layar. Panel mencatat:
+
+| ID uji | Yang diukur |
+|---|---|
+| P-01 | Waktu scan (manual / NFC) sampai data tampil |
+| S-11 | Berhasil / gagal baca Web NFC |
+| P-03 | Jeda lokasi diterima server sampai marker tampil di peta |
+| P-poll | Durasi tiap siklus polling dashboard |
+
+Data tersimpan di `localStorage` browser itu dan bisa diunduh sebagai CSV dari panel. Tekan "Reset" sebelum tiap sesi uji.
 
 ### Testing Scan NFC di HP (opsional)
 
