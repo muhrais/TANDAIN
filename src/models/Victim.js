@@ -66,9 +66,17 @@ const victimSchema = new mongoose.Schema(
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },
     },
+    // Waktu perubahan terakhir oleh PETUGAS (registrasi, triase, status).
+    // Dipakai antrian prioritas & alert "merah menunggu", jadi ping GPS
+    // tidak boleh mengubahnya (bug B1, Pekan 6).
     waktu_update_terakhir: {
       type: Date,
       default: Date.now,
+    },
+    // Waktu server menerima lokasi terakhir dari tag korban ini.
+    lokasi_update_terakhir: {
+      type: Date,
+      default: null,
     },
     created_at: {
       type: Date,
