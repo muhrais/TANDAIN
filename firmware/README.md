@@ -1,13 +1,21 @@
 # Firmware tiga GPS TANDAIN
 
-Ketiga sketch menggunakan konfigurasi jaringan lokal pada file `secrets.h` masing-masing.
-Salin `secrets.h.example` menjadi `secrets.h`, lalu sesuaikan:
+Konfigurasi jaringan berada langsung di bagian atas masing-masing file `.ino`, sehingga
+sketch dapat langsung dibuka di Arduino IDE tanpa file tambahan. Sesuaikan:
 
 - `WIFI_SSID`
 - `WIFI_PASSWORD`
 - `BACKEND_BASE_URL`
 
-File `secrets.h` diabaikan Git agar kredensial hotspot tidak masuk repository.
+Contoh:
+
+```cpp
+const char* WIFI_SSID = "apasi";
+const char* WIFI_PASSWORD = "GANTI_DENGAN_PASSWORD_HOTSPOT";
+const char* BACKEND_BASE_URL = "http://192.168.137.1:3000";
+```
+
+Jangan commit password hotspot asli ke repository publik.
 
 Folder dan identitas perangkat:
 

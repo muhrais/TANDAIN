@@ -3,7 +3,6 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <HTTPClient.h>
-#include "secrets.h"
 
 
 // ==============================
@@ -11,8 +10,9 @@
 // ==============================
 
 const char* DEVICE_ID = "GPS-003";
-
-// WIFI_SSID, WIFI_PASSWORD, dan BACKEND_BASE_URL berasal dari secrets.h.
+const char* WIFI_SSID = "apasi";
+const char* WIFI_PASSWORD = "GANTI_DENGAN_PASSWORD_HOTSPOT";
+const char* BACKEND_BASE_URL = "http://192.168.137.1:3000";
 
 WebServer server(80);
 
