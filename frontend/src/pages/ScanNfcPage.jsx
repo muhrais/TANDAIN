@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Nfc, CircleCheck, CircleAlert, Radar } from "lucide-react";
 import { scanTag } from "../services/tagService";
 import { ApiClientError } from "../lib/apiClient";
 import VictimRegistrationForm from "../components/scan/VictimRegistrationForm";
+import StatusActionButton from "../components/evacuation/StatusActionButton";
+import { listPosko } from "../services/poskoService";
 import { record, detectNetwork } from "../lib/metrics";
 
 // Web NFC API: cuma jalan di Chrome Android + secure context (HTTPS/localhost).
@@ -29,6 +31,15 @@ export default function ScanNfcPage() {
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
   const [nfcListening, setNfcListening] = useState(false);
+  const [posko, setPosko] = useState([]);
+
+  // Dipakai dropdown posko tujuan di tombol status. Gagal dimuat bukan
+  // masalah fatal: halaman scan tetap jalan, dropdown cuma kosong.
+  useEffect(() => {
+    listPosko()
+      .then(setPosko)
+      .catch(() => setPosko([]));
+  }, []);
 
   async function performScan(rawId, mode = "manual") {
     const trimmed = rawId.trim();
@@ -217,13 +228,21 @@ export default function ScanNfcPage() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={reset}
-            className="text-sm font-semibold text-brand hover:text-brand-dark"
-          >
-            Scan tag lain
-          </button>
+          <div className="flex flex-col-reverse gap-3 border-t border-black/5 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              type="button"
+              onClick={reset}
+              className="self-start text-sm font-semibold text-brand hover:text-brand-dark"
+            >
+              Scan tag lain
+            </button>
+            <StatusActionButton
+              key={result.status_korban}
+              victim={result}
+              posko={posko}
+              onUpdated={(victim) => setResult({ status: "registered", ...victim })}
+            />
+          </div>
         </div>
       )}
 
@@ -236,14 +255,7 @@ export default function ScanNfcPage() {
           <VictimRegistrationForm
             tagId={result.tag_id}
             onRegistered={(victim) =>
-              setResult({
-                status: "registered",
-                nama: victim.nama,
-                kategori_triase: victim.kategori_triase,
-                status_korban: victim.status_korban,
-                posko_asal: victim.posko_asal,
-                posko_tujuan: victim.posko_tujuan,
-              })
+              setResult({ status: "registered", ...victim })
             }
           />
         </>
