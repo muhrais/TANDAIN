@@ -1,4 +1,6 @@
-import { TriangleAlert, Bell, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { TriangleAlert, Bell, RefreshCw, Download } from "lucide-react";
+import { exportVictimsCsv } from "../../services/reportService";
 
 const TABS = ["Overview", "Alert", "Aktivitas"];
 
@@ -20,6 +22,20 @@ export default function Topbar({
   onRefresh,
 }) {
   const isLive = Boolean(lastUpdated) && !pollError;
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
+
+  async function handleExport() {
+    setExportError("");
+    setExporting(true);
+    try {
+      await exportVictimsCsv();
+    } catch (err) {
+      setExportError(err.message || "Gagal mengekspor data.");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   return (
     <div>
@@ -35,7 +51,21 @@ export default function Topbar({
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting}
+            title={exportError || "Unduh data seluruh korban (CSV)"}
+            className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-60 ${
+              exportError
+                ? "border-triase-merah/40 text-triase-merah"
+                : "border-black/10 text-ink hover:bg-white"
+            }`}
+          >
+            <Download size={14} />
+            {exporting ? "Mengekspor..." : exportError ? "Ekspor gagal, coba lagi" : "Ekspor CSV"}
+          </button>
           {alertCounts.kritis > 0 && (
             <button
               type="button"
