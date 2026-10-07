@@ -5,12 +5,12 @@ const {
   listVictims,
   getVictimDetail,
 } = require("../controllers/victimController");
-const { authenticate } = require("../middleware/auth");
+const { authenticate, requireRole, ROLES } = require("../middleware/auth");
 
 const router = express.Router();
 
 // Seluruh endpoint korban mewajibkan autentikasi (Auth: Ya pada PRD bagian 6).
-router.use(authenticate);
+router.use(authenticate, requireRole(...ROLES.STAFF_MEDIS));
 
 router.get("/", listVictims); // GET /api/victims
 router.get("/:id", getVictimDetail); // GET /api/victims/:id
