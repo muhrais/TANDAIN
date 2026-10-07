@@ -13,6 +13,21 @@ const tagSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    // UID NFC gelang yang dipasangkan ke perangkat ini (pairing saat persiapan
+    // alat). Identitas kanonik tetap `tag_id` (= device_id ESP32 = stiker).
+    // Tanpa default: index unique+sparse hanya melewati dokumen yang TIDAK
+    // punya field ini, bukan yang bernilai null.
+    nfc_uid: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
+    // Selama waktu ini belum lewat, heartbeat menyuruh LED berkedip supaya
+    // koordinator bisa memastikan gelang fisik yang dipilih (tahap 2).
+    identify_until: {
+      type: Date,
+      default: null,
+    },
     status_tag: {
       type: String,
       enum: ["active", "inactive", "damaged"],
@@ -62,5 +77,6 @@ const tagSchema = new mongoose.Schema(
 );
 
 tagSchema.index({ last_seen: -1 });
+tagSchema.index({ nfc_uid: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model("Tag", tagSchema);

@@ -29,14 +29,30 @@ function isValidTransition(from, to) {
  * Petugas Pos Medis melakukan scan NFC. FR-BE-02.
  * Mengembalikan data korban aktif jika tag sudah terdaftar (Registered),
  * atau status "not_registered" jika tag belum punya korban aktif.
+ *
+ * `:tag_id` boleh berisi UID NFC gelang atau tag_id kanonik (stiker,
+ * mis. GPS-002, untuk input manual). UID dicari lewat pairing (nfc_uid)
+ * dulu, lalu sebagai tag_id (tag lama yang didaftarkan pakai UID).
+ * Respons selalu memakai tag_id kanonik.
+ *
+ * Body opsional: { source: "nfc" } dari frontend saat tag dibaca Web NFC.
+ * UID NFC yang belum di-pairing -> status "not_paired" (bukan 404), supaya
+ * petugas diarahkan ke koordinator, bukan ke form registrasi.
  */
 const scanTag = asyncHandler(async (req, res) => {
-  const { tag_id } = req.params;
+  const scanned = req.params.tag_id.trim();
+  const fromNfc = req.body?.source === "nfc";
 
-  const tag = await Tag.findOne({ tag_id });
+  const tag =
+    (await Tag.findOne({ nfc_uid: scanned.toLowerCase() })) || (await Tag.findOne({ tag_id: scanned }));
+
   if (!tag) {
+    if (fromNfc) {
+      return sendSuccess(res, 200, { status: "not_paired", nfc_uid: scanned.toLowerCase() });
+    }
     throw new ApiError(404, "TAG_NOT_FOUND", "tag_id tidak terdaftar pada koleksi tags.");
   }
+  const { tag_id } = tag;
 
   const victim = await Victim.findOne({
     tag_id,
