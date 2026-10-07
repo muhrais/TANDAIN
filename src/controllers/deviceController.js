@@ -4,9 +4,9 @@ const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
 
 const GPS_STATUSES = ["no_data", "searching", "fixed", "unknown"];
-// Heartbeat firmware dikirim setiap 5 detik. Beri toleransi 90 detik agar
-// gangguan hotspot singkat tidak langsung membuat perangkat tampak offline.
-const ONLINE_WINDOW_MS = 90 * 1000;
+// Heartbeat firmware dikirim setiap 5 detik. Perangkat dianggap offline jika
+// backend tidak menerima heartbeat selama 30 detik (sekitar 6 heartbeat).
+const ONLINE_WINDOW_MS = 30 * 1000;
 
 // Dipanggil firmware walaupun GPS belum fix, sehingga koneksi perangkat tetap terlihat.
 const receiveHeartbeat = asyncHandler(async (req, res) => {
@@ -46,7 +46,7 @@ const receiveHeartbeat = asyncHandler(async (req, res) => {
   });
 });
 
-// Daftar perangkat untuk dashboard. Online dihitung dari heartbeat 90 detik terakhir.
+// Daftar perangkat untuk dashboard. Online dihitung dari heartbeat 30 detik terakhir.
 const listDevices = asyncHandler(async (_req, res) => {
   const tags = await Tag.find().sort({ tag_id: 1 }).lean();
   const now = Date.now();

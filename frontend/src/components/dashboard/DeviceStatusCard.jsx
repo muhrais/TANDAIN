@@ -11,7 +11,7 @@ export default function DeviceStatusCard({ devices }) {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-base font-bold text-ink">Perangkat GPS</h2>
-          <p className="text-xs text-muted">Status platform dari heartbeat ESP32; toleransi offline 90 detik</p>
+          <p className="text-xs text-muted">Status platform dari heartbeat ESP32; toleransi offline 30 detik</p>
         </div>
         <span className="text-sm font-semibold text-ink">
           {devices.filter((device) => device.online).length}/{devices.length} online
