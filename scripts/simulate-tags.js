@@ -26,6 +26,9 @@
  *
  * Log CSV per kiriman: tag_id, seq, kind, sent_at, status_code, latency_ms, items.
  * kind: location | heartbeat | batch | buffered | dropped
+ * Untuk heartbeat, kolom items berisi mode LED dari server (none | merah |
+ * kuning | hijau | identify). Setiap perubahan LED juga dicetak ke konsol,
+ * jadi alur pairing -> registrasi -> LED bisa diuji tanpa hardware.
  */
 const { parseArgs, stats, writeCsv, defaultOutPath } = require("./lib/util");
 
@@ -83,6 +86,7 @@ function createTag(index) {
     battery: 100 - Math.floor(Math.random() * 30),
     seq: 0,
     buffer: [],
+    led: null,
   };
 }
 
@@ -131,7 +135,13 @@ async function sendHeartbeat(tag) {
     satellites: 6 + Math.floor(Math.random() * 5),
     ip_address: null,
   });
-  log(tag, "heartbeat", r.status, r.latency);
+  const led = r.json?.data?.led ?? "";
+  log(tag, "heartbeat", r.status, r.latency, led);
+  if (led && led !== tag.led) {
+    const victim = r.json.data.assignment?.victim_id;
+    console.log(`[${new Date().toLocaleTimeString("id-ID")}] ${tag.tag_id} LED: ${tag.led ?? "-"} -> ${led}${victim ? ` (${victim})` : ""}`);
+    tag.led = led;
+  }
 }
 
 function summarize() {

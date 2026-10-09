@@ -1,15 +1,12 @@
 import { useEffect, useState } from "react";
-import { Nfc, CircleCheck, CircleAlert, Radar } from "lucide-react";
+import { Nfc, CircleCheck, CircleAlert, Radar, Link2Off } from "lucide-react";
 import { scanTag } from "../services/tagService";
 import { ApiClientError } from "../lib/apiClient";
 import VictimRegistrationForm from "../components/scan/VictimRegistrationForm";
 import StatusActionButton from "../components/evacuation/StatusActionButton";
 import { listPosko } from "../services/poskoService";
+import { NFC_SUPPORTED } from "../lib/nfc";
 import { record, detectNetwork } from "../lib/metrics";
-
-// Web NFC API: cuma jalan di Chrome Android + secure context (HTTPS/localhost).
-// Browser lain (Safari iOS, desktop) ga punya window.NDEFReader sama sekali.
-const NFC_SUPPORTED = typeof window !== "undefined" && "NDEFReader" in window;
 
 const TRIASE_LABEL = { merah: "Merah", kuning: "Kuning", hijau: "Hijau" };
 const TRIASE_BADGE_CLASS = {
@@ -51,8 +48,11 @@ export default function ScanNfcPage() {
     setResult(null);
     setLoading(true);
     try {
-      const data = await scanTag(trimmed);
+      const data = await scanTag(trimmed, { source: mode === "nfc" ? "nfc" : undefined });
       setResult(data);
+      // UID NFC diganti tag_id gelang (= stiker, mis. GPS-002) supaya petugas
+      // melihat identitas yang sama dengan yang tertempel di gelang.
+      if (data.tag_id) setTagId(data.tag_id);
       // t1 diambil setelah commit render (requestAnimationFrame), bukan
       // langsung setelah fetch selesai - P-01 mengukur "sampai tampil", bukan
       // "sampai response datang".
@@ -175,7 +175,7 @@ export default function ScanNfcPage() {
               type="text"
               value={tagId}
               onChange={(event) => setTagId(event.target.value)}
-              placeholder="mis. TAG-0001"
+              placeholder="mis. GPS-001 (lihat stiker gelang)"
               autoFocus
               className="w-full rounded-lg border border-neutral-200 py-2.5 pl-10 pr-3.5 text-sm text-ink outline-none focus:border-brand focus:ring-1 focus:ring-brand"
             />
@@ -243,6 +243,19 @@ export default function ScanNfcPage() {
               onUpdated={(victim) => setResult({ status: "registered", ...victim })}
             />
           </div>
+        </div>
+      )}
+
+      {result?.status === "not_paired" && (
+        <div role="alert" className="space-y-1 rounded-lg bg-triase-kuning-soft px-4 py-3 text-sm text-triase-kuning-dark">
+          <p className="flex items-center gap-2 font-semibold">
+            <Link2Off size={18} />
+            Gelang ini belum di-pairing
+          </p>
+          <p>
+            NFC <span className="font-mono">{result.nfc_uid}</span> belum dipasangkan ke perangkat GPS mana pun. Minta
+            koordinator melakukan pairing di menu Perangkat, atau ketik ID di stiker gelang (mis. GPS-002) secara manual.
+          </p>
         </div>
       )}
 

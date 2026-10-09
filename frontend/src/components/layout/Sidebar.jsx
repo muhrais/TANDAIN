@@ -7,6 +7,7 @@ import {
   CirclePlus,
   Database,
   Settings,
+  Watch,
   LogOut,
   X,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { label: "Evakuasi", icon: ArrowLeftRight, path: "/evakuasi", roles: ["koordinator", "petugas_pos_medis"] },
   { label: "Medis", icon: CirclePlus },
   { label: "Data Pasien", icon: Database },
+  { label: "Perangkat", icon: Watch, path: "/perangkat", roles: ["koordinator"] },
   { label: "Pengaturan", icon: Settings },
 ];
 

@@ -8,6 +8,7 @@ import ScanNfcPage from "./pages/ScanNfcPage";
 import ForbiddenPage from "./pages/ForbiddenPage";
 import MapsPage from "./pages/MapsPage";
 import EvakuasiPage from "./pages/EvakuasiPage";
+import PerangkatPage from "./pages/PerangkatPage";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <Route element={<RequireRole roles={["koordinator"]} />}>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/maps" element={<MapsPage />} />
+            <Route path="/perangkat" element={<PerangkatPage />} />
           </Route>
           <Route path="/scan" element={<ScanNfcPage />} />
           <Route path="/evakuasi" element={<EvakuasiPage />} />
