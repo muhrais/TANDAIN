@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Check } from "lucide-react";
-import FilterChip from "../common/FilterChip";
+import LevelFilter from "../common/LevelFilter";
+import SegmentedFilter from "../common/SegmentedFilter";
 import { ALERT_TYPES, SEVERITY, sortAlerts } from "../../lib/alert";
 import { formatTime } from "../../lib/activity";
 
@@ -11,15 +12,15 @@ const TEXT_COLOR = {
 };
 
 const STATUS_FILTERS = [
+  { key: "semua", label: "Semua" },
   { key: "aktif", label: "Aktif" },
   { key: "ditangani", label: "Ditangani" },
-  { key: "semua", label: "Semua" },
 ];
 
 const SEVERITY_FILTERS = [
   { key: "semua", label: "Semua" },
-  { key: "kritis", label: "Kritis" },
-  { key: "peringatan", label: "Peringatan" },
+  { key: "kritis", label: "Kritis", tone: "merah" },
+  { key: "peringatan", label: "Peringatan", tone: "kuning" },
 ];
 
 function AlertRow({ alert, onResolve }) {
@@ -98,21 +99,9 @@ export default function AlertListCard({ alerts, onResolve, className = "" }) {
         <span className="text-sm text-muted">{visible.length} alert</span>
       </div>
 
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter status alert">
-          {STATUS_FILTERS.map(({ key, label }) => (
-            <FilterChip key={key} active={status === key} onClick={() => setStatus(key)}>
-              {label}
-            </FilterChip>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter tingkat alert">
-          {SEVERITY_FILTERS.map(({ key, label }) => (
-            <FilterChip key={key} active={severity === key} onClick={() => setSeverity(key)}>
-              {label}
-            </FilterChip>
-          ))}
-        </div>
+      <div className="mb-2 space-y-3">
+        <LevelFilter label="Tingkat" options={SEVERITY_FILTERS} value={severity} onChange={setSeverity} />
+        <SegmentedFilter label="Status" options={STATUS_FILTERS} value={status} onChange={setStatus} />
       </div>
 
       {visible.length === 0 ? (
