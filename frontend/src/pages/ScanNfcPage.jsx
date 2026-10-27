@@ -7,19 +7,13 @@ import StatusActionButton from "../components/evacuation/StatusActionButton";
 import { listPosko } from "../services/poskoService";
 import { NFC_SUPPORTED } from "../lib/nfc";
 import { record, detectNetwork } from "../lib/metrics";
+import { STATUS_LABEL } from "../lib/activity";
 
 const TRIASE_LABEL = { merah: "Merah", kuning: "Kuning", hijau: "Hijau" };
 const TRIASE_BADGE_CLASS = {
   merah: "bg-triase-merah-soft text-triase-merah",
   kuning: "bg-triase-kuning-soft text-triase-kuning-dark",
   hijau: "bg-triase-hijau-soft text-triase-hijau",
-};
-const STATUS_LABEL = {
-  registered: "Terdaftar",
-  triaged: "Sudah Ditriase",
-  waiting_transfer: "Menunggu Evakuasi",
-  in_transit: "Sedang Dievakuasi",
-  arrived: "Sudah Tiba",
 };
 
 export default function ScanNfcPage() {
@@ -37,6 +31,12 @@ export default function ScanNfcPage() {
       .then(setPosko)
       .catch(() => setPosko([]));
   }, []);
+
+  // Tampilkan nama posko (D14); jatuh ke ID kalau daftar posko gagal dimuat.
+  function poskoName(poskoId) {
+    if (!poskoId) return "-";
+    return posko.find((p) => p.posko_id === poskoId)?.nama_posko ?? poskoId;
+  }
 
   async function performScan(rawId, mode = "manual") {
     const trimmed = rawId.trim();
@@ -223,7 +223,7 @@ export default function ScanNfcPage() {
             <div>
               <div className="text-muted">Posko Asal / Tujuan</div>
               <div className="font-semibold text-ink">
-                {result.posko_asal ?? "-"} / {result.posko_tujuan ?? "-"}
+                {poskoName(result.posko_asal)} / {poskoName(result.posko_tujuan)}
               </div>
             </div>
           </div>

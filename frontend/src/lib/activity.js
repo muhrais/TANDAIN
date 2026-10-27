@@ -1,11 +1,11 @@
 export const STATUS_ORDER = ["registered", "triaged", "waiting_transfer", "in_transit", "arrived"];
 
 export const STATUS_LABEL = {
-  registered: "Registered",
-  triaged: "Triaged",
-  waiting_transfer: "Waiting Pickup",
-  in_transit: "In Transit",
-  arrived: "Arrived",
+  registered: "Terdaftar",
+  triaged: "Sudah ditriase",
+  waiting_transfer: "Menunggu jemputan",
+  in_transit: "Dalam perjalanan",
+  arrived: "Tiba di posko",
 };
 
 const timeFormatter = new Intl.DateTimeFormat("en-GB", {
