@@ -1,3 +1,5 @@
+import { reportConnection } from "./connection";
+
 // String kosong ("") sengaja valid: artinya pakai path relatif lewat proxy
 // Vite (lihat vite.config.js), makanya pengecekan pakai ?? bukan ||.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
@@ -38,6 +40,7 @@ async function request(path, { method = "GET", body, headers = {} } = {}) {
       signal: controller.signal,
     });
   } catch (err) {
+    reportConnection(false);
     if (err.name === "AbortError") {
       throw new ApiClientError(0, "TIMEOUT", "Permintaan ke server memakan waktu terlalu lama.");
     }
@@ -46,6 +49,7 @@ async function request(path, { method = "GET", body, headers = {} } = {}) {
     clearTimeout(timeoutId);
   }
 
+  reportConnection(true);
   const json = await res.json().catch(() => null);
 
   if (!res.ok) {
