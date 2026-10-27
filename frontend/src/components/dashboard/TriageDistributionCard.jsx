@@ -41,10 +41,13 @@ function DonutChart({ data }) {
   );
 }
 
+// Korban jiwa tidak masuk donut (bukan korban aktif), tapi tampil dengan
+// format baris yang sama di legenda.
 const LEGEND_ROWS = [
   { key: "merah", label: "Merah", color: "bg-triase-merah" },
-  { key: "hijau", label: "Hijau", color: "bg-triase-hijau" },
   { key: "kuning", label: "Kuning", color: "bg-triase-kuning" },
+  { key: "hijau", label: "Hijau", color: "bg-triase-hijau" },
+  { key: "korban_jiwa", label: "Korban Jiwa", color: "bg-ink" },
 ];
 
 export default function TriageDistributionCard({ data, className = "" }) {
@@ -69,17 +72,10 @@ export default function TriageDistributionCard({ data, className = "" }) {
                 <span className={`h-2.5 w-2.5 rounded-full ${color}`} />
                 {label}
               </span>
-              <span className="font-semibold text-ink">{data[key]}</span>
+              <span className="font-semibold tabular-nums text-ink">{data[key]}</span>
             </li>
           ))}
         </ul>
-        <div className="mt-3 flex items-center justify-between rounded-lg border border-black/10 px-3 py-2 text-sm">
-          <span className="flex items-center gap-2 text-ink/80">
-            <span className="h-2.5 w-2.5 rounded-full bg-ink" />
-            Korban Jiwa
-          </span>
-          <span className="font-semibold text-ink">{data.korban_jiwa}</span>
-        </div>
       </div>
     </div>
   );

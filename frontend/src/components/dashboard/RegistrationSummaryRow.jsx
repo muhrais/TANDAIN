@@ -5,8 +5,9 @@ import { ChevronRight } from "lucide-react";
 // tidak ada tombol yang tidak melakukan apa-apa.
 export default function RegistrationSummaryRow({ value, label, to }) {
   const content = (
+    // Lebar angka tetap supaya label di kedua baris mulai di posisi yang sama.
     <span className="flex items-baseline gap-3">
-      <span className="text-2xl font-extrabold text-ink">{value}</span>
+      <span className="w-10 text-2xl font-extrabold tabular-nums text-ink">{value}</span>
       <span className="text-sm font-medium text-ink/80">{label}</span>
     </span>
   );

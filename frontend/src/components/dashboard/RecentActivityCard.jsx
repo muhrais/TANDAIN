@@ -21,7 +21,7 @@ export default function RecentActivityCard({ items, onShowAll, className = "" })
         {items.map((item, index) => (
           <li key={`${item.time}-${index}`} className="flex items-center gap-3 py-2.5 text-[13px]">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted/60" />
-            <span className="shrink-0 text-muted">{item.time}</span>
+            <span className="w-10 shrink-0 tabular-nums text-muted">{item.time}</span>
             <span className="shrink-0 text-muted/50">—</span>
             <span className="min-w-0 text-ink/80">{item.message}</span>
           </li>
