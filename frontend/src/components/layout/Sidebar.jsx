@@ -12,6 +12,16 @@ import {
   X,
 } from "lucide-react";
 import { getCurrentUser, logout } from "../../services/authService";
+import { apiClient } from "../../lib/apiClient";
+import { useConnectionStatus } from "../../lib/connection";
+
+const pingHealth = () => apiClient.get("/api/health");
+
+const CONNECTION_INDICATOR = {
+  online: { label: "Server Online", dot: "bg-logo-green" },
+  offline: { label: "Server Terputus", dot: "bg-triase-merah" },
+  unknown: { label: "Memeriksa server...", dot: "bg-neutral-500" },
+};
 
 // `roles` cuma relevan untuk item yang punya `path` (halaman sungguhan).
 // Item tanpa `path` (Medis/Data Pasien/Pengaturan belum ada halamannya)
@@ -91,6 +101,7 @@ function NavItem({ label, icon: Icon, path, onNavigate }) {
 export default function Sidebar({ open = false, onClose }) {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const connection = CONNECTION_INDICATOR[useConnectionStatus(pingHealth)];
   const visibleItems = NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(user?.role));
 
   function handleLogout() {
@@ -135,9 +146,9 @@ export default function Sidebar({ open = false, onClose }) {
       </nav>
 
       <div className="border-t border-neutral-700 px-5 py-4">
-        <div className="mb-3 flex items-center gap-2 text-[11px] text-neutral-300">
-          <span className="h-2 w-2 rounded-full bg-logo-green" />
-          Server Online
+        <div role="status" className="mb-3 flex items-center gap-2 text-[11px] text-neutral-300">
+          <span className={`h-2 w-2 rounded-full ${connection.dot}`} />
+          {connection.label}
         </div>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">

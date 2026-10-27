@@ -2,7 +2,7 @@ import { useState } from "react";
 import { TriangleAlert, Bell, RefreshCw, Download } from "lucide-react";
 import { exportVictimsCsv } from "../../services/reportService";
 
-const TABS = ["Overview", "Alert", "Aktivitas"];
+const TABS = ["Ringkasan", "Alert", "Aktivitas"];
 
 const clockFormatter = new Intl.DateTimeFormat("en-GB", {
   hour: "2-digit",

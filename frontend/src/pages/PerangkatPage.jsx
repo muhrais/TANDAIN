@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { RefreshCw, Lightbulb, Link2, Unlink, Radar, X } from "lucide-react";
 import FilterChip from "../components/common/FilterChip";
 import { usePolling } from "../hooks/usePolling";
@@ -290,7 +291,12 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
 
 export default function PerangkatPage() {
   const { data: devices, error, refresh } = usePolling(listDevices);
-  const [filter, setFilter] = useState("semua");
+  // Filter awal boleh dari URL, mis. tautan dashboard /perangkat?filter=bebas (D5).
+  const [searchParams] = useSearchParams();
+  const [filter, setFilter] = useState(() => {
+    const fromUrl = searchParams.get("filter");
+    return FILTERS.some((f) => f.key === fromUrl) ? fromUrl : "semua";
+  });
   const [message, setMessage] = useState(null);
 
   const rows = useMemo(() => (devices ?? []).filter((d) => matchesFilter(d, filter)), [devices, filter]);

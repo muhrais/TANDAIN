@@ -94,7 +94,7 @@ export default function ActivityTimelineCard({ activities, className = "" }) {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Cari tag, mis. TDN-004"
+              placeholder="Cari tag, mis. TND-DEMO-04 atau GPS-002"
               aria-label="Cari aktivitas berdasarkan tag"
               className="h-9 w-full rounded-lg border border-black/10 bg-white pl-9 pr-3 text-sm placeholder:text-muted focus:border-ink focus:outline-none"
             />
