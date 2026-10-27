@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search, RefreshCw } from "lucide-react";
-import FilterChip from "../components/common/FilterChip";
+import LevelFilter, { TRIASE_OPTIONS } from "../components/common/LevelFilter";
+import SegmentedFilter from "../components/common/SegmentedFilter";
 import StatusActionButton from "../components/evacuation/StatusActionButton";
 import { usePolling } from "../hooks/usePolling";
 import { listVictims } from "../services/victimService";
@@ -9,19 +10,17 @@ import { listPosko } from "../services/poskoService";
 import { sortByPriority } from "../lib/evacuation";
 import { STATUS_ORDER, STATUS_LABEL, formatElapsed } from "../lib/activity";
 
-const TRIASE_FILTERS = [
-  { key: "semua", label: "Semua" },
-  { key: "merah", label: "Merah" },
-  { key: "kuning", label: "Kuning" },
-  { key: "hijau", label: "Hijau" },
-];
-
 // "aktif" = belum tiba (default, ini antrian kerja yang sebenarnya).
 const STATUS_FILTERS = [
+  { key: "semua", label: "Semua" },
   { key: "aktif", label: "Aktif" },
   ...STATUS_ORDER.map((status) => ({ key: status, label: STATUS_LABEL[status] })),
-  { key: "semua", label: "Semua" },
 ];
+
+// Satu template kolom untuk header dan semua baris. Kolom aksi lebarnya tetap
+// (bukan `auto`), karena isinya beda per status (tombol saja vs dropdown +
+// tombol); dengan `auto` kolom lain ikut bergeser dan baris tidak sejajar.
+const ROW_GRID = "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.3fr)_22rem]";
 
 const DOT_COLOR = {
   merah: "bg-triase-merah",
@@ -120,21 +119,8 @@ export default function EvakuasiPage() {
             className="w-full rounded-lg border border-neutral-200 py-2 pl-9 pr-3 text-sm text-ink outline-none focus:border-brand focus:ring-1 focus:ring-brand"
           />
         </div>
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter kategori triase">
-          {TRIASE_FILTERS.map((f) => (
-            <FilterChip key={f.key} active={triase === f.key} onClick={() => setTriase(f.key)}>
-              {f.key !== "semua" && <span className={`h-2 w-2 rounded-full ${DOT_COLOR[f.key]}`} />}
-              {f.label}
-            </FilterChip>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter status">
-          {STATUS_FILTERS.map((f) => (
-            <FilterChip key={f.key} active={status === f.key} onClick={() => setStatus(f.key)}>
-              {f.label}
-            </FilterChip>
-          ))}
-        </div>
+        <LevelFilter label="Triase" options={TRIASE_OPTIONS} value={triase} onChange={setTriase} />
+        <SegmentedFilter label="Status" options={STATUS_FILTERS} value={status} onChange={setStatus} />
       </div>
 
       <div className="rounded-xl bg-white shadow-sm">
@@ -144,11 +130,20 @@ export default function EvakuasiPage() {
           <p className="p-5 text-sm text-muted">Tidak ada korban yang cocok dengan filter.</p>
         ) : (
           <ul className="divide-y divide-black/5">
+            <li
+              aria-hidden="true"
+              className={`hidden gap-4 px-5 py-2.5 text-xs font-medium text-muted lg:grid ${ROW_GRID}`}
+            >
+              <span>Tag & nama</span>
+              <span>Status</span>
+              <span>Posko tujuan</span>
+              <span className="text-right">Aksi</span>
+            </li>
             {rows.map((v) => (
               <li
                 key={v.victim_id}
                 id={`victim-${v.victim_id}`}
-                className={`grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] md:items-center md:px-5 ${
+                className={`grid grid-cols-1 gap-3 px-4 py-4 lg:items-center lg:gap-4 lg:px-5 ${ROW_GRID} ${
                   v.victim_id === focusVictimId ? "bg-brand/5" : ""
                 }`}
               >
@@ -165,9 +160,18 @@ export default function EvakuasiPage() {
                   <div className="text-muted">{formatElapsed(v.waktu_update_terakhir)} sejak update</div>
                 </div>
 
-                <div className="text-[13px] text-muted">
-                  {poskoNameById.get(v.posko_asal) ?? v.posko_asal ?? "-"} →{" "}
-                  <span className="text-ink">{poskoNameById.get(v.posko_tujuan) ?? v.posko_tujuan ?? "-"}</span>
+                {/* Dua baris seperti kolom lain: tujuan di atas, asal di bawah. */}
+                <div className="min-w-0 text-[13px]">
+                  {v.posko_tujuan ? (
+                    <div className="truncate font-semibold text-ink">
+                      {poskoNameById.get(v.posko_tujuan) ?? v.posko_tujuan}
+                    </div>
+                  ) : (
+                    <div className="text-muted">Tujuan belum dipilih</div>
+                  )}
+                  <div className="truncate text-muted">
+                    {v.posko_asal ? `dari ${poskoNameById.get(v.posko_asal) ?? v.posko_asal}` : "Asal tidak tercatat"}
+                  </div>
                 </div>
 
                 <StatusActionButton
@@ -175,6 +179,7 @@ export default function EvakuasiPage() {
                   key={`${v.victim_id}:${v.status_korban}`}
                   victim={v}
                   posko={data.posko}
+                  variant="secondary"
                   onUpdated={refresh}
                   onError={refresh}
                 />

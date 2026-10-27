@@ -2,19 +2,13 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 import MapPanel from "../components/dashboard/MapPanel";
-import FilterChip from "../components/common/FilterChip";
+import LevelFilter, { TRIASE_OPTIONS } from "../components/common/LevelFilter";
 import { usePolling } from "../hooks/usePolling";
 import { getMapMarkers } from "../services/dashboardService";
 import { STATUS_LABEL } from "../lib/activity";
 import { STALE_THRESHOLD_MS, formatAgo } from "../lib/map";
 
-const FILTERS = [
-  { key: "semua", label: "Semua" },
-  { key: "merah", label: "Merah" },
-  { key: "kuning", label: "Kuning" },
-  { key: "hijau", label: "Hijau" },
-  { key: "belum", label: "Belum registrasi" },
-];
+const FILTERS = [...TRIASE_OPTIONS, { key: "belum", label: "Belum registrasi", tone: "abu" }];
 
 const DOT_COLOR = {
   merah: "bg-triase-merah",
@@ -71,14 +65,7 @@ export default function MapsPage() {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter tag">
-        {FILTERS.map((f) => (
-          <FilterChip key={f.key} active={filter === f.key} onClick={() => setFilter(f.key)}>
-            {DOT_COLOR[f.key] && <span className={`h-2 w-2 rounded-full ${DOT_COLOR[f.key]}`} />}
-            {f.label}
-          </FilterChip>
-        ))}
-      </div>
+      <LevelFilter label="Triase" options={FILTERS} value={filter} onChange={setFilter} />
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <MapPanel

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
-import FilterChip from "../common/FilterChip";
+import LevelFilter, { TRIASE_OPTIONS } from "../common/LevelFilter";
+import SegmentedFilter from "../common/SegmentedFilter";
 import { STATUS_ORDER, STATUS_LABEL, formatTime } from "../../lib/activity";
 
 const DOT_COLOR = {
@@ -22,13 +23,6 @@ const NEUTRAL_TEXT = "text-ink";
 const STATUS_FILTERS = [
   { key: "semua", label: "Semua" },
   ...STATUS_ORDER.map((key) => ({ key, label: STATUS_LABEL[key] })),
-];
-
-const TRIASE_FILTERS = [
-  { key: "semua", label: "Semua" },
-  { key: "merah", label: "Merah" },
-  { key: "kuning", label: "Kuning" },
-  { key: "hijau", label: "Hijau" },
 ];
 
 function TimelineRow({ activity, isFirst, isLast }) {
@@ -82,13 +76,12 @@ export default function ActivityTimelineCard({ activities, className = "" }) {
   return (
     <div className={`flex flex-col rounded-2xl bg-white p-6 shadow-sm ${className}`}>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-semibold text-ink">Activity Timeline</h3>
+        <h3 className="font-semibold text-ink">Linimasa Aktivitas</h3>
         <span className="text-sm text-muted">{filtered.length} aktivitas</span>
       </div>
 
       <div className="mb-4 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="relative w-full max-w-[260px]">
+        <div className="relative w-full max-w-[320px]">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
               type="search"
@@ -98,26 +91,9 @@ export default function ActivityTimelineCard({ activities, className = "" }) {
               aria-label="Cari aktivitas berdasarkan tag"
               className="h-9 w-full rounded-lg border border-black/10 bg-white pl-9 pr-3 text-sm placeholder:text-muted focus:border-ink focus:outline-none"
             />
-          </div>
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter kategori triase">
-            {TRIASE_FILTERS.map(({ key, label }) => (
-              <FilterChip key={key} active={triase === key} onClick={() => setTriase(key)}>
-                {key !== "semua" && (
-                  <span className={`h-2 w-2 rounded-full ${DOT_COLOR[key]}`} />
-                )}
-                {label}
-              </FilterChip>
-            ))}
-          </div>
         </div>
-
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter status">
-          {STATUS_FILTERS.map(({ key, label }) => (
-            <FilterChip key={key} active={status === key} onClick={() => setStatus(key)}>
-              {label}
-            </FilterChip>
-          ))}
-        </div>
+        <LevelFilter label="Triase" options={TRIASE_OPTIONS} value={triase} onChange={setTriase} />
+        <SegmentedFilter label="Status" options={STATUS_FILTERS} value={status} onChange={setStatus} />
       </div>
 
       {filtered.length === 0 ? (

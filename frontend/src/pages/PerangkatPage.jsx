@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { RefreshCw, Lightbulb, Link2, Unlink, Radar, X } from "lucide-react";
-import FilterChip from "../components/common/FilterChip";
+import SegmentedFilter from "../components/common/SegmentedFilter";
 import { usePolling } from "../hooks/usePolling";
 import { listDevices, pairDevice, unpairDevice, identifyDevice } from "../services/deviceService";
 import { ApiClientError } from "../lib/apiClient";
@@ -21,6 +21,10 @@ const DOT_COLOR = {
   kuning: "bg-triase-kuning",
   hijau: "bg-triase-hijau",
 };
+
+// Template kolom bersama header dan baris; kolom aksi lebar tetap supaya
+// baris dengan dua atau tiga tombol tetap sejajar (lihat EvakuasiPage).
+const ROW_GRID = "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.3fr)_21rem]";
 
 const FILTERS = [
   { key: "semua", label: "Semua" },
@@ -195,7 +199,7 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
 
   return (
     <li className="px-4 py-4 md:px-5">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] md:items-center">
+      <div className={`grid grid-cols-1 gap-3 lg:items-center lg:gap-4 ${ROW_GRID}`}>
         <div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-ink">{device.tag_id}</span>
@@ -217,31 +221,39 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
           </div>
         </div>
 
-        <div className="text-[13px]">
+        {/* Setiap kolom dua baris (utama + keterangan) supaya tingginya seragam. */}
+        <div className="min-w-0 text-[13px]">
           {device.paired ? (
             <>
               <div className="font-semibold text-ink">NFC terpasang</div>
               <div className="truncate font-mono text-xs text-muted">{device.nfc_uid}</div>
             </>
           ) : (
-            <div className="font-semibold text-triase-kuning-dark">Belum di-pairing</div>
+            <>
+              <div className="font-semibold text-triase-kuning-dark">Belum di-pairing</div>
+              <div className="text-muted">Pasang NFC sebelum dipakai</div>
+            </>
           )}
         </div>
 
         <div className="min-w-0 text-[13px]">
           {device.victim ? (
-            <div className="flex items-center gap-2">
-              <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${DOT_COLOR[device.victim.kategori_triase]}`} />
-              <span className="truncate text-ink">
-                {device.victim.nama || "(tanpa nama)"} · {STATUS_LABEL[device.victim.status_korban]}
-              </span>
-            </div>
+            <>
+              <div className="flex items-center gap-2">
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${DOT_COLOR[device.victim.kategori_triase]}`} />
+                <span className="truncate font-semibold text-ink">{device.victim.nama || "(tanpa nama)"}</span>
+              </div>
+              <div className="truncate pl-[18px] text-muted">{STATUS_LABEL[device.victim.status_korban]}</div>
+            </>
           ) : (
-            <span className="text-muted">Bebas, belum dipakai korban</span>
+            <>
+              <div className="font-semibold text-ink">Bebas</div>
+              <div className="text-muted">Belum dipakai korban</div>
+            </>
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2 md:justify-end">
+        <div className="flex flex-wrap gap-2 lg:justify-end">
           <button
             type="button"
             onClick={() => run(() => identifyDevice(device.tag_id), `LED ${device.tag_id} berkedip ±15 detik.`)}
@@ -255,10 +267,14 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
             type="button"
             onClick={openPairing}
             disabled={busy || pairing}
-            className="flex items-center gap-1.5 rounded-md bg-brand px-2.5 py-1.5 text-[13px] font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+            // Aksi per baris: gaya sekunder (lihat StatusActionButton).
+            className="flex w-[10.5rem] items-center justify-start gap-1.5 rounded-md border border-brand/30 bg-white px-3 py-1.5 text-[13px] font-semibold text-brand transition-colors hover:border-brand hover:bg-brand/5 disabled:opacity-50"
           >
-            <Link2 size={14} /> {device.paired ? "Pairing ulang" : "Pairing NFC"}
+            <Link2 size={14} />
+            {device.paired ? "Pairing ulang" : "Pairing NFC"}
           </button>
+          {/* Slot kosong selebar tombol lepas pairing, supaya tombol lain tetap sejajar. */}
+          {!device.paired && <span aria-hidden="true" className="hidden w-8 lg:block" />}
           {device.paired && (
             <button
               type="button"
@@ -266,7 +282,7 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
               disabled={busy}
               aria-label={`Lepas pairing ${device.tag_id}`}
               title="Lepas pairing"
-              className="flex items-center rounded-md border border-black/10 px-2 py-1.5 text-muted hover:bg-page hover:text-triase-merah disabled:opacity-50"
+              className="flex w-8 items-center justify-center rounded-md border border-black/10 py-1.5 text-muted hover:bg-page hover:text-triase-merah disabled:opacity-50"
             >
               <Unlink size={14} />
             </button>
@@ -340,13 +356,7 @@ export default function PerangkatPage() {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter perangkat">
-        {FILTERS.map((f) => (
-          <FilterChip key={f.key} active={filter === f.key} onClick={() => setFilter(f.key)}>
-            {f.label}
-          </FilterChip>
-        ))}
-      </div>
+      <SegmentedFilter label="Status" options={FILTERS} value={filter} onChange={setFilter} />
 
       {message && (
         <p
@@ -373,6 +383,15 @@ export default function PerangkatPage() {
           </p>
         ) : (
           <ul className="divide-y divide-black/5">
+            <li
+              aria-hidden="true"
+              className={`hidden gap-4 px-5 py-2.5 text-xs font-medium text-muted lg:grid ${ROW_GRID}`}
+            >
+              <span>Gelang</span>
+              <span>NFC</span>
+              <span>Dipakai oleh</span>
+              <span className="text-right">Aksi</span>
+            </li>
             {rows.map((device) => (
               <DeviceRow key={device.tag_id} device={device} now={now} onChanged={refresh} onMessage={showMessage} />
             ))}

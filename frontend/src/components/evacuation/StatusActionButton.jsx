@@ -20,7 +20,15 @@ function errorMessage(err) {
   return err instanceof ApiClientError ? err.message : "Gagal terhubung ke server.";
 }
 
-export default function StatusActionButton({ victim, posko = [], onUpdated, onError }) {
+// "primary" (merah solid) untuk aksi utama halaman, mis. hasil Scan NFC.
+// "secondary" untuk aksi per baris di daftar, supaya belasan tombol tidak
+// semuanya terlihat sama mendesak.
+const VARIANT_CLASS = {
+  primary: "bg-brand text-white hover:bg-brand-dark",
+  secondary: "border border-brand/30 bg-white text-brand hover:border-brand hover:bg-brand/5",
+};
+
+export default function StatusActionButton({ victim, posko = [], onUpdated, onError, variant = "primary" }) {
   const next = nextStatus(victim.status_korban);
   const needsPosko = next === STATUS_NEEDS_POSKO;
   const tujuanOptions = posko.filter((p) => p.jenis !== "utama");
@@ -86,10 +94,12 @@ export default function StatusActionButton({ victim, posko = [], onUpdated, onEr
           type="button"
           onClick={handleClick}
           disabled={loading}
-          className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-brand px-3 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
+          // Lebar tetap: label beda per status, tombol tetap sama besar di semua baris.
+          // Teks rata kiri, panah menempel di kanan.
+          className={`relative flex w-[10.5rem] items-center justify-start whitespace-nowrap rounded-md pl-3 pr-7 py-1.5 text-[13px] font-semibold transition-colors disabled:opacity-60 ${VARIANT_CLASS[variant]}`}
         >
           {loading ? "Menyimpan..." : NEXT_ACTION_LABEL[next]}
-          {!loading && <ArrowRight size={14} />}
+          {!loading && <ArrowRight size={14} className="absolute right-2.5" />}
         </button>
       </div>
       {error && (
