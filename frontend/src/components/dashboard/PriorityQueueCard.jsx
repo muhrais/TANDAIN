@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 
 const DOT_COLOR = {
@@ -16,9 +17,14 @@ export default function PriorityQueueCard({ items, className = "" }) {
   return (
     <div className={`flex flex-col rounded-2xl bg-white p-5 shadow-sm ${className}`}>
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="font-semibold text-ink">Priority Queue</h3>
-        <ChevronRight size={18} className="text-muted" />
+        <h3 className="font-semibold text-ink">Antrian Prioritas</h3>
+        <Link to="/evakuasi" aria-label="Buka halaman Evakuasi" className="text-muted hover:text-ink">
+          <ChevronRight size={18} />
+        </Link>
       </div>
+      {items.length === 0 && (
+        <p className="py-6 text-center text-sm text-muted">Tidak ada korban aktif.</p>
+      )}
       <ul className="divide-y divide-black/5">
         {items.map((item) => (
           <li

@@ -16,7 +16,7 @@ import { useDashboardData } from "../hooks/useDashboardData";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("Overview");
+  const [activeTab, setActiveTab] = useState("Ringkasan");
   const { data, error, lastUpdated, refresh } = useDashboardData();
 
   async function handleResolveAlert(alertId) {
@@ -47,7 +47,7 @@ export default function DashboardPage() {
         onRefresh={refresh}
       />
 
-      {activeTab === "Overview" && (
+      {activeTab === "Ringkasan" && (
         // Satu grid 12 kolom: baris atas 6/6 (lebar sama), baris bawah 8/4 (peta lebih lebar).
         // Tinggi tiap baris mengikuti kolom tertinggi sehingga tepi bawah kartu selalu rata.
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
@@ -58,27 +58,32 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-5 xl:col-span-6">
             <div className="grid grid-cols-3 gap-2 sm:gap-5">
               <StatCard
-                label="Waiting Pickup"
+                label="Menunggu"
                 value={data.evacuation.waiting_pickup}
-                caption="Belum di Evakuasi"
+                caption="Menunggu jemputan"
                 color="merah"
               />
               <StatCard
-                label="In Transit"
+                label="Perjalanan"
                 value={data.evacuation.in_transit}
-                caption="Sedang di Evakuasi"
+                caption="Dalam perjalanan"
                 color="kuning"
               />
               <StatCard
-                label="Arrived"
+                label="Tiba"
                 value={data.evacuation.arrived}
-                caption="Sudah di Evakuasi"
-                color="kuning"
+                caption="Tiba di posko"
+                color="hijau"
               />
             </div>
             <div className="grid flex-1 grid-rows-2 gap-5">
-              <RegistrationSummaryRow value={data.registration.not_registered} label="Not registered" />
-              <RegistrationSummaryRow value={data.registration.registered} label="Registered" />
+              <RegistrationSummaryRow
+                value={data.registration.not_registered}
+                label="Tag belum terdaftar"
+                to="/perangkat?filter=bebas"
+              />
+              {/* Tautan ke /pasien diaktifkan setelah halaman Data Pasien ada (T7). */}
+              <RegistrationSummaryRow value={data.registration.registered} label="Tag terdaftar" />
             </div>
           </div>
 
@@ -94,7 +99,7 @@ export default function DashboardPage() {
 
           <div className="grid grid-rows-2 gap-5 xl:col-span-4">
             <PriorityQueueCard items={data.priorityQueue} />
-            <RecentActivityCard items={data.recentActivity} />
+            <RecentActivityCard items={data.recentActivity} onShowAll={() => setActiveTab("Aktivitas")} />
           </div>
         </div>
       )}
