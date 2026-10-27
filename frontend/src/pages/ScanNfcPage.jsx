@@ -3,6 +3,7 @@ import { Nfc, CircleCheck, CircleAlert, Radar, Link2Off } from "lucide-react";
 import { scanTag } from "../services/tagService";
 import { ApiClientError } from "../lib/apiClient";
 import VictimRegistrationForm from "../components/scan/VictimRegistrationForm";
+import VictimEditSection from "../components/scan/VictimEditSection";
 import StatusActionButton from "../components/evacuation/StatusActionButton";
 import { listPosko } from "../services/poskoService";
 import { NFC_SUPPORTED } from "../lib/nfc";
@@ -227,6 +228,12 @@ export default function ScanNfcPage() {
               </div>
             </div>
           </div>
+
+          <VictimEditSection
+            key={result.victim_id}
+            victim={result}
+            onUpdated={(victim) => setResult({ status: "registered", ...victim })}
+          />
 
           <div className="flex flex-col-reverse gap-3 border-t border-black/5 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <button
