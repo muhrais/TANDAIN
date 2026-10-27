@@ -21,11 +21,14 @@ export function getSummary() {
 
 export async function getTriageDistribution() {
   const summary = await getSummary();
+  const { merah, kuning, hijau } = summary.triase_distribution;
   return {
-    total_tags: summary.tags_summary.total,
-    merah: summary.triase_distribution.merah,
-    kuning: summary.triase_distribution.kuning,
-    hijau: summary.triase_distribution.hijau,
+    // Angka tengah donut = jumlah legenda, supaya selalu cocok (D3).
+    // tags_summary.total ikut menghitung tag tanpa korban dan perangkat GPS.
+    total_aktif: merah + kuning + hijau,
+    merah,
+    kuning,
+    hijau,
     // Belum ada konsep korban jiwa di backend saat ini.
     korban_jiwa: 0,
   };

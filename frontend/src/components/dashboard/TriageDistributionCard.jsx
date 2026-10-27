@@ -55,13 +55,13 @@ export default function TriageDistributionCard({ data, className = "" }) {
       <div className="relative shrink-0">
         <DonutChart data={data} />
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-extrabold text-ink">{data.total_tags}</span>
-          <span className="text-xs text-muted">Tags</span>
+          <span className="text-3xl font-extrabold text-ink">{data.total_aktif}</span>
+          <span className="text-xs text-muted">korban aktif</span>
         </div>
       </div>
 
       <div className="min-w-[220px] max-w-[320px] flex-1">
-        <h3 className="mb-3 font-semibold text-ink">Triage Distribution</h3>
+        <h3 className="mb-3 font-semibold text-ink">Distribusi Triase</h3>
         <ul className="space-y-2 text-sm">
           {LEGEND_ROWS.map(({ key, label, color }) => (
             <li key={key} className="flex items-center justify-between gap-6">
