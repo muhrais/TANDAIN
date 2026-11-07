@@ -4,6 +4,7 @@ const StatusHistory = require("../models/StatusHistory");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
+const { getUserNameMap } = require("../utils/userNames");
 
 const TRIASE_CATEGORIES = ["merah", "kuning", "hijau"];
 
@@ -154,6 +155,7 @@ const createVictim = asyncHandler(async (req, res) => {
     posko_tujuan: posko_tujuan || null,
     lokasi_terakhir: lokasi_terakhir || { lat: null, lng: null },
     status_korban: "registered",
+    triase_updated_at: new Date(),
   });
 
   await StatusHistory.create({
@@ -169,57 +171,109 @@ const createVictim = asyncHandler(async (req, res) => {
   return sendSuccess(res, 201, victim);
 });
 
+// Field identitas/kondisi yang perubahannya dicatat sebagai riwayat jenis "data".
+const DATA_FIELDS = ["nama", "usia", "jenis_kelamin", "kondisi_klinis"];
+const JENIS_KELAMIN = ["L", "P", "tidak_diketahui"];
+
+function normalizeDataField(field, value) {
+  if (field === "nama" || field === "kondisi_klinis") {
+    if (typeof value !== "string") {
+      throw new ApiError(422, "VALIDATION_ERROR", `${field} harus berupa teks.`);
+    }
+    return value.trim();
+  }
+  if (field === "usia") {
+    if (value === null || value === "") return null;
+    if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+      throw new ApiError(422, "VALIDATION_ERROR", "usia harus angka 0 atau lebih.");
+    }
+    return value;
+  }
+  if (!JENIS_KELAMIN.includes(value)) {
+    throw new ApiError(422, "VALIDATION_ERROR", "jenis_kelamin harus L, P, atau tidak_diketahui.");
+  }
+  return value;
+}
+
 /**
  * PUT /api/victims/:id (Auth: Ya)
- * Memperbarui kategori triase, kondisi klinis, status perpindahan,
- * dan posko tujuan korban. FR-BE-04, FR-BE-05.
+ * Memperbarui kategori triase, identitas & kondisi klinis, status
+ * perpindahan, dan posko tujuan korban. FR-BE-04, FR-BE-05.
+ *
+ * Setiap perubahan yang benar-benar mengubah nilai dicatat di status_history
+ * beserta pengubahnya: jenis "status", "triase", dan satu entri "data" per
+ * request untuk field identitas/kondisi.
  */
 const updateVictim = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { kategori_triase, kondisi_klinis, status_korban, posko_tujuan, nama, usia } = req.body;
+  const { kategori_triase, status_korban, posko_tujuan } = req.body;
+  const diubah_oleh = req.user ? req.user.user_id : null;
 
   const victim = await Victim.findOne({ victim_id: id });
   if (!victim) {
     throw new ApiError(404, "VICTIM_NOT_FOUND", "Data korban dengan ID tersebut tidak ditemukan.");
   }
 
-  if (kategori_triase !== undefined) {
-    if (!TRIASE_CATEGORIES.includes(kategori_triase)) {
-      throw new ApiError(
-        422,
-        "INVALID_TRIASE_CATEGORY",
-        "Nilai kategori_triase di luar Merah/Kuning/Hijau."
-      );
-    }
-    victim.kategori_triase = kategori_triase;
+  // Validasi semua input dulu, baru catat riwayat, supaya request yang
+  // ditolak tidak meninggalkan entri riwayat setengah jadi.
+  if (kategori_triase !== undefined && !TRIASE_CATEGORIES.includes(kategori_triase)) {
+    throw new ApiError(422, "INVALID_TRIASE_CATEGORY", "Nilai kategori_triase di luar Merah/Kuning/Hijau.");
   }
 
-  if (kondisi_klinis !== undefined) victim.kondisi_klinis = kondisi_klinis;
-  if (posko_tujuan !== undefined) victim.posko_tujuan = posko_tujuan;
-  if (nama !== undefined) victim.nama = nama;
-  if (usia !== undefined) victim.usia = usia;
+  const statusChanged = status_korban !== undefined && status_korban !== victim.status_korban;
+  if (statusChanged && !isValidTransition(victim.status_korban, status_korban)) {
+    throw new ApiError(
+      422,
+      "INVALID_STATUS_TRANSITION",
+      `Perubahan status dari '${victim.status_korban}' ke '${status_korban}' tidak mengikuti urutan yang diizinkan.`
+    );
+  }
 
-  if (status_korban !== undefined && status_korban !== victim.status_korban) {
-    if (!isValidTransition(victim.status_korban, status_korban)) {
-      throw new ApiError(
-        422,
-        "INVALID_STATUS_TRANSITION",
-        `Perubahan status dari '${victim.status_korban}' ke '${status_korban}' tidak mengikuti urutan yang diizinkan.`
-      );
+  const dataLama = {};
+  const dataBaru = {};
+  for (const field of DATA_FIELDS) {
+    if (req.body[field] === undefined) continue;
+    const next = normalizeDataField(field, req.body[field]);
+    const prev = victim[field] ?? null;
+    if (next !== prev) {
+      dataLama[field] = prev;
+      dataBaru[field] = next;
     }
+  }
 
-    await StatusHistory.create({
-      victim_id: victim.victim_id,
-      status_lama: victim.status_korban,
-      status_baru: status_korban,
-      diubah_oleh: req.user ? req.user.user_id : null,
-    });
+  const now = new Date();
+  const history = [];
 
+  if (kategori_triase !== undefined && kategori_triase !== victim.kategori_triase) {
+    history.push({ jenis: "triase", nilai_lama: victim.kategori_triase, nilai_baru: kategori_triase });
+    victim.kategori_triase = kategori_triase;
+    victim.triase_updated_at = now;
+  }
+
+  if (Object.keys(dataBaru).length > 0) {
+    history.push({ jenis: "data", nilai_lama: dataLama, nilai_baru: dataBaru });
+    Object.assign(victim, dataBaru);
+  }
+
+  if (posko_tujuan !== undefined) victim.posko_tujuan = posko_tujuan;
+
+  if (statusChanged) {
+    history.push({ jenis: "status", status_lama: victim.status_korban, status_baru: status_korban });
     victim.status_korban = status_korban;
   }
 
-  victim.waktu_update_terakhir = new Date();
+  // waktu_update_terakhir = waktu tunggu di antrian & alert "merah menunggu",
+  // jadi hanya maju untuk perubahan status/triase, bukan koreksi data.
+  if (history.some((h) => h.jenis !== "data")) {
+    victim.waktu_update_terakhir = now;
+  }
+
   await victim.save();
+  if (history.length > 0) {
+    await StatusHistory.insertMany(
+      history.map((h) => ({ ...h, victim_id: victim.victim_id, diubah_oleh, waktu_perubahan: now }))
+    );
+  }
 
   return sendSuccess(res, 200, victim);
 });
@@ -252,10 +306,14 @@ const getVictimDetail = asyncHandler(async (req, res) => {
   }
 
   const history = await StatusHistory.find({ victim_id: id }).sort({ waktu_perubahan: 1 });
+  const nameById = await getUserNameMap(history.map((h) => h.diubah_oleh));
 
   return sendSuccess(res, 200, {
     ...victim.toObject(),
-    status_history: history,
+    status_history: history.map((h) => ({
+      ...h.toJSON(),
+      diubah_oleh_nama: h.diubah_oleh ? nameById.get(h.diubah_oleh) ?? null : null,
+    })),
   });
 });
 

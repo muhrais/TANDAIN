@@ -4,6 +4,7 @@ const StatusHistory = require("../models/StatusHistory");
 const Posko = require("../models/Posko");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
+const { getUserNameMap } = require("../utils/userNames");
 
 const TRIASE_CATEGORIES = ["merah", "kuning", "hijau"];
 const STATUS_ORDER = [
@@ -27,10 +28,30 @@ const RECENT_ACTIVITY_LIMIT = 10;
  * dipakai pada kartu "Recent Activity" di dashboard Overview/Aktivitas.
  * Contoh: "Budi terdaftar di Pos Triase Utama".
  */
-function describeActivity(entry, victim, poskoNameById) {
+const DATA_FIELD_LABEL = {
+  nama: "nama",
+  usia: "usia",
+  jenis_kelamin: "jenis kelamin",
+  kondisi_klinis: "kondisi klinis",
+};
+
+function describeActivity(entry, victim, poskoNameById, pengubah) {
+  const base = describeChange(entry, victim, poskoNameById);
+  return pengubah ? `${base} oleh ${pengubah}` : base;
+}
+
+function describeChange(entry, victim, poskoNameById) {
   const label = (victim && (victim.nama || victim.tag_id)) || entry.victim_id;
   const poskoAsalNama = victim && victim.posko_asal ? poskoNameById.get(victim.posko_asal) || victim.posko_asal : null;
   const poskoTujuanNama = victim && victim.posko_tujuan ? poskoNameById.get(victim.posko_tujuan) || victim.posko_tujuan : null;
+
+  if (entry.jenis === "triase") {
+    return `${label} diubah triase ${entry.nilai_lama} → ${entry.nilai_baru}`;
+  }
+  if (entry.jenis === "data") {
+    const fields = Object.keys(entry.nilai_baru || {}).map((f) => DATA_FIELD_LABEL[f] || f);
+    return `Data ${label} diperbarui (${fields.join(", ")})`;
+  }
 
   switch (entry.status_baru) {
     case "registered":
@@ -119,15 +140,23 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
   // --- recent_activity: entri status_history terbaru, dilengkapi info korban ---
   const recentHistory = await StatusHistory.find({}).sort({ waktu_perubahan: -1 }).limit(RECENT_ACTIVITY_LIMIT);
   const victimById = new Map(allVictims.map((v) => [v.victim_id, v]));
+  const nameById = await getUserNameMap(recentHistory.map((entry) => entry.diubah_oleh));
   const recent_activity = recentHistory.map((entry) => {
     const victim = victimById.get(entry.victim_id);
+    const pengubah = entry.diubah_oleh ? nameById.get(entry.diubah_oleh) ?? null : null;
     return {
+      history_id: entry.history_id,
       victim_id: entry.victim_id,
       tag_id: victim ? victim.tag_id : null,
+      kategori_triase: victim ? victim.kategori_triase : null,
+      jenis: entry.jenis,
       status_lama: entry.status_lama,
       status_baru: entry.status_baru,
+      nilai_lama: entry.nilai_lama,
+      nilai_baru: entry.nilai_baru,
+      diubah_oleh_nama: pengubah,
       waktu_perubahan: entry.waktu_perubahan,
-      description: describeActivity(entry, victim, poskoNameById),
+      description: describeActivity(entry, victim, poskoNameById, pengubah),
     };
   });
 

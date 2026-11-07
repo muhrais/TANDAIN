@@ -73,6 +73,13 @@ const victimSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    // Waktu kategori_triase terakhir ditetapkan (registrasi atau ubah triase).
+    // Acuan latensi sinkron LED gelang (PAIR-02). Default null (bukan
+    // Date.now) supaya korban lama tidak tampak "baru diubah" saat dibaca.
+    triase_updated_at: {
+      type: Date,
+      default: null,
+    },
     // Waktu server menerima lokasi terakhir dari tag korban ini.
     lokasi_update_terakhir: {
       type: Date,
