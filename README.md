@@ -195,6 +195,8 @@ npm run sim -- --count 10 --interval 10 --duration 600
 | Offline buffer (R-01s) | `npm run sim -- --count 5 --offline 60-180 --batch-on-reconnect` |
 | Paket hilang | tambah `--drop-rate 0.05` |
 
+Payload heartbeat simulator mengikuti kontrak v2 di [`docs/DEVICE_API.md`](docs/DEVICE_API.md) (telemetri + `led_state`). Tambah `--fw-legacy` untuk meniru firmware v1 yang belum mengirim telemetri.
+
 Opsi lain: `--prefix` (default `SIM`), `--center LAT,LNG`, `--heartbeat 0` (matikan heartbeat), `--base http://IP:3000`. Daftar lengkap ada di komentar `scripts/simulate-tags.js`.
 
 **Benchmark API (P-02)** memanggil tiap endpoint utama N kali berurutan sebagai koordinator, lalu menampilkan avg/min/p50/p95/max per endpoint (target rata-rata ≤ 500 ms):

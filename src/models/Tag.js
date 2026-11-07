@@ -68,6 +68,21 @@ const tagSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    // Telemetri heartbeat v2 (docs/DEVICE_API.md). Semua opsional: firmware
+    // lama tidak mengirimnya dan nilainya tetap null.
+    fw_version: { type: String, default: null },
+    hdop: { type: Number, default: null },
+    fix_age_ms: { type: Number, default: null },
+    ttff_ms: { type: Number, default: null },
+    uptime_ms: { type: Number, default: null },
+    rssi: { type: Number, default: null },
+    buffered_count: { type: Number, default: null },
+    // Mode LED yang sedang ditampilkan perangkat (laporan balik firmware).
+    led_state: {
+      type: String,
+      enum: ["none", "identify", "merah", "kuning", "hijau", null],
+      default: null,
+    },
     created_at: {
       type: Date,
       default: Date.now,
