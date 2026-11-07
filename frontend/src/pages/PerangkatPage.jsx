@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { RefreshCw, Lightbulb, Link2, Unlink, Radar, X } from "lucide-react";
+import { RefreshCw, Lightbulb, Link2, Unlink, Radar, X, BatteryMedium, Wifi, Satellite, Timer, Cpu } from "lucide-react";
 import SegmentedFilter from "../components/common/SegmentedFilter";
 import { usePolling } from "../hooks/usePolling";
 import { listDevices, pairDevice, unpairDevice, identifyDevice } from "../services/deviceService";
@@ -38,6 +38,95 @@ function matchesFilter(device, filter) {
   if (filter === "terpakai") return Boolean(device.victim);
   if (filter === "bebas") return device.paired && !device.victim;
   return true;
+}
+
+const LED_LABEL = {
+  none: "Mati",
+  identify: "Berkedip",
+  merah: "Merah",
+  kuning: "Kuning",
+  hijau: "Hijau",
+};
+
+function formatDuration(ms) {
+  if (ms === null || ms === undefined) return "-";
+  const s = Math.round(ms / 1000);
+  if (s < 60) return `${s} dtk`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} mnt ${s % 60} dtk`;
+  return `${Math.floor(m / 60)} j ${m % 60} mnt`;
+}
+
+// Kekuatan Wi-Fi dari RSSI (dBm), kategori kasar untuk petugas.
+function rssiLabel(rssi) {
+  if (rssi >= -60) return "kuat";
+  if (rssi >= -72) return "sedang";
+  return "lemah";
+}
+
+function TelemetryItem({ icon: Icon, label, value, tone = "text-ink" }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <Icon size={13} className="shrink-0 text-muted" />
+      <span className="text-muted">{label}</span>
+      <span className={`font-semibold ${tone}`}>{value}</span>
+    </span>
+  );
+}
+
+// Telemetri heartbeat v2 (docs/DEVICE_API.md). Firmware v1 belum mengirimnya,
+// jadi baris ini hanya muncul bila minimal satu nilai ada.
+function TelemetryRow({ device }) {
+  const hasTelemetry = [
+    device.battery_pct,
+    device.rssi,
+    device.hdop,
+    device.ttff_ms,
+    device.uptime_ms,
+    device.fw_version,
+    device.led_state,
+  ].some((v) => v !== null && v !== undefined);
+
+  if (!hasTelemetry) {
+    return <p className="mt-3 text-xs text-muted">Telemetri belum dikirim (firmware v1).</p>;
+  }
+
+  const lowBattery = device.battery_pct !== null && device.battery_pct <= 20;
+  const ledMismatch = device.led_command && device.led_state && device.led_state !== device.led_command;
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 rounded-lg bg-page px-3 py-2 text-xs">
+      <TelemetryItem
+        icon={BatteryMedium}
+        label="Baterai"
+        value={device.battery_pct === null ? "-" : `${device.battery_pct}%`}
+        tone={lowBattery ? "text-triase-merah" : "text-ink"}
+      />
+      <TelemetryItem
+        icon={Wifi}
+        label="Wi-Fi"
+        value={device.rssi === null ? "-" : `${device.rssi} dBm (${rssiLabel(device.rssi)})`}
+      />
+      <TelemetryItem
+        icon={Satellite}
+        label="HDOP"
+        value={device.hdop === null ? "-" : `${device.hdop} · ${device.satellites} sat`}
+      />
+      <TelemetryItem icon={Timer} label="TTFF" value={formatDuration(device.ttff_ms)} />
+      <TelemetryItem icon={Timer} label="Uptime" value={formatDuration(device.uptime_ms)} />
+      <TelemetryItem
+        icon={Lightbulb}
+        label="LED"
+        value={
+          ledMismatch
+            ? `${LED_LABEL[device.led_state] ?? device.led_state} (menunggu ${LED_LABEL[device.led_command] ?? device.led_command})`
+            : `${LED_LABEL[device.led_state] ?? "-"}${device.led_sync_ms !== null ? ` · sinkron ${(device.led_sync_ms / 1000).toFixed(1)} dtk` : ""}`
+        }
+        tone={ledMismatch ? "text-triase-kuning-dark" : "text-ink"}
+      />
+      <TelemetryItem icon={Cpu} label="FW" value={device.fw_version ?? "-"} />
+    </div>
+  );
 }
 
 function errorText(err) {
@@ -289,6 +378,8 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
           )}
         </div>
       </div>
+
+      <TelemetryRow device={device} />
 
       {pairing && (
         <PairingPanel
