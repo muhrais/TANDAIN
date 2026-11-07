@@ -7,7 +7,7 @@ const TRIASE_LABEL = { merah: "Merah", kuning: "Kuning", hijau: "Hijau" };
 export default function ActivityTab({ activities }) {
   const byStatus = STATUS_ORDER.map((status) => ({
     label: STATUS_LABEL[status],
-    count: activities.filter((a) => a.status_baru === status).length,
+    count: activities.filter((a) => a.jenis === "status" && a.status_baru === status).length,
   }));
 
   const byTriase = Object.entries(TRIASE_LABEL).map(([key, label]) => ({

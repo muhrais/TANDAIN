@@ -20,15 +20,36 @@ const TEXT_COLOR = {
 const NEUTRAL_DOT = "bg-neutral-300";
 const NEUTRAL_TEXT = "text-ink";
 
+const TRIASE_LABEL = { merah: "Merah", kuning: "Kuning", hijau: "Hijau" };
+
+// "perubahan" = entri riwayat selain perpindahan status (ubah triase / data).
 const STATUS_FILTERS = [
   { key: "semua", label: "Semua" },
   ...STATUS_ORDER.map((key) => ({ key, label: STATUS_LABEL[key] })),
+  { key: "perubahan", label: "Ubah triase & data" },
 ];
 
-function TimelineRow({ activity, isFirst, isLast }) {
-  const transition = activity.status_lama
+function matchesStatusFilter(activity, filter) {
+  if (filter === "semua") return true;
+  if (filter === "perubahan") return activity.jenis !== "status";
+  return activity.jenis === "status" && activity.status_baru === filter;
+}
+
+// Label ringkas di kanan baris: transisi status, transisi triase, atau "Data diperbarui".
+function transitionLabel(activity) {
+  if (activity.jenis === "triase") {
+    return `Triase ${TRIASE_LABEL[activity.nilai_lama] ?? activity.nilai_lama} → ${
+      TRIASE_LABEL[activity.nilai_baru] ?? activity.nilai_baru
+    }`;
+  }
+  if (activity.jenis === "data") return "Data diperbarui";
+  return activity.status_lama
     ? `${STATUS_LABEL[activity.status_lama]} → ${STATUS_LABEL[activity.status_baru]}`
     : STATUS_LABEL[activity.status_baru];
+}
+
+function TimelineRow({ activity, isFirst, isLast }) {
+  const transition = transitionLabel(activity);
   const dotColor = DOT_COLOR[activity.kategori_triase] ?? NEUTRAL_DOT;
   const textColor = TEXT_COLOR[activity.kategori_triase] ?? NEUTRAL_TEXT;
 
@@ -67,7 +88,7 @@ export default function ActivityTimelineCard({ activities, className = "" }) {
     const q = query.trim().toLowerCase();
     return activities.filter(
       (a) =>
-        (status === "semua" || a.status_baru === status) &&
+        matchesStatusFilter(a, status) &&
         (triase === "semua" || a.kategori_triase === triase) &&
         (!q || (a.tag_id ?? "").toLowerCase().includes(q))
     );
