@@ -100,14 +100,15 @@ Buka `http://localhost:5173`.
 
 ### Halaman & akses per role
 
-| Halaman | Path | Koordinator | Petugas Pos Medis | Isi |
-|---|---|---|---|---|
-| Dashboard | `/` | ✅ | – | Overview, tab Alert, tab Aktivitas, tombol **Ekspor CSV** |
-| Maps | `/maps` | ✅ | – | Peta layar penuh + daftar tag, filter kategori |
-| Scan NFC | `/scan` | ✅ | ✅ | Scan / input manual `tag_id`, registrasi korban, ubah status |
-| Evakuasi | `/evakuasi` | ✅ | ✅ | Antrian prioritas, ubah status satu langkah, pilih posko tujuan |
+| Halaman | Path | Koordinator | Petugas Pos Medis | Tenaga Medis Lapangan | Isi |
+|---|---|---|---|---|---|
+| Dashboard | `/` | ✅ | – | – | Overview, tab Alert, tab Aktivitas, tombol **Ekspor CSV** |
+| Maps | `/maps` | ✅ | – | – | Peta layar penuh + daftar tag, filter kategori |
+| Scan NFC | `/scan` | ✅ | ✅ | ✅ | Scan / input manual `tag_id`, registrasi korban, ubah status, triase, dan data |
+| Evakuasi | `/evakuasi` | ✅ | ✅ | ✅ | Antrian prioritas, ubah status satu langkah, pilih posko tujuan |
+| Perangkat | `/perangkat` | ✅ | – | – | Pairing NFC, identifikasi gelang, telemetri perangkat |
 
-Petugas yang membuka halaman khusus koordinator diarahkan ke `/forbidden`. Setelah login, koordinator masuk ke `/`, petugas ke `/scan`.
+Role selain koordinator yang membuka halaman khusus koordinator diarahkan ke `/forbidden`. Setelah login, koordinator masuk ke `/`, petugas pos medis dan tenaga medis lapangan ke `/scan`.
 
 Catatan perilaku:
 - Dashboard, Maps, dan Evakuasi **polling tiap 5 detik** (ubah lewat `VITE_POLL_INTERVAL_MS`). Polling berhenti saat tab browser disembunyikan.
@@ -159,13 +160,13 @@ MongoDB (kalau pakai Docker) harus sudah `docker start tandain-mongo` sebelum te
 |---|---|---|
 | Koordinator | `koordinator1` | `koordinator123` |
 | Petugas Pos Medis | `petugas1` | `petugas123` |
-| Koordinator (testing) | `rais123` | `123` |
+| Tenaga Medis Lapangan | `medis1` | `medis123` |
 
 Login via `POST /api/auth/login` (`{ "username", "password" }`), lalu kirim token sebagai header `Authorization: Bearer <token>`.
 
 ## Akses API per Role
 
-| Endpoint | Koordinator | Petugas Pos Medis | Tanpa token |
+| Endpoint | Koordinator | Petugas Pos Medis / Tenaga Medis Lapangan | Tanpa token |
 |---|---|---|---|
 | `GET /api/dashboard/summary` | ✅ | 403 | 401 |
 | `GET /api/locations/latest` | ✅ | 403 | 401 |

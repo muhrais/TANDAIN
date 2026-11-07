@@ -62,10 +62,14 @@ function requireRole(...allowedRoles) {
 
 // Matriks akses FR-BE-08 (PLANNING_WEEK6_SOFTWARE.md §3.5):
 // - KOORDINATOR: dashboard, peta, armada perangkat (pemantauan menyeluruh)
-// - STAFF_MEDIS: operasional korban (scan, registrasi, ubah status, posko)
+// - STAFF_MEDIS: operasional korban (scan, registrasi, ubah status, posko),
+//   termasuk tenaga medis lapangan yang menandai korban di titik kejadian
+// - PENCATAT_KORBAN_JIWA: boleh mencatat korban jiwa (koordinator dan
+//   tenaga medis lapangan; petugas pos medis hanya menerima korban hidup)
 const ROLES = {
   KOORDINATOR: ["koordinator"],
-  STAFF_MEDIS: ["koordinator", "petugas_pos_medis"],
+  STAFF_MEDIS: ["koordinator", "petugas_pos_medis", "tenaga_medis_lapangan"],
+  PENCATAT_KORBAN_JIWA: ["koordinator", "tenaga_medis_lapangan"],
 };
 
 module.exports = { authenticate, requireRole, ROLES };
