@@ -9,7 +9,8 @@
     "dev": "nodemon server.js",
     "seed": "node src/seed/seed.js",
     "sim": "node scripts/simulate-tags.js",
-    "bench": "node scripts/bench-api.js"
+    "bench": "node scripts/bench-api.js",
+    "gps-report": "node scripts/gps-report.js"
   },
   "keywords": [
     "tandain",

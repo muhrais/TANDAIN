@@ -1,5 +1,6 @@
 const Tag = require("../models/Tag");
 const Victim = require("../models/Victim");
+const DeviceTelemetry = require("../models/DeviceTelemetry");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
@@ -61,7 +62,38 @@ async function buildDeviceCommand(tag, now = new Date()) {
   if (identify) led = "identify";
   else if (assignment) led = assignment.kategori_triase;
 
-  return { assignment, identify, led };
+  return { assignment, identify, led, triaseUpdatedAt: victim ? victim.triase_updated_at ?? null : null };
+}
+
+const TRIASE_LEDS = ["merah", "kuning", "hijau"];
+
+/**
+ * Pelacakan sinkron LED untuk uji PAIR-02 (triase diubah -> LED gelang ikut).
+ * - led_command berubah: catat kapan perintah itu "berlaku". Untuk warna
+ *   triase, acuannya waktu triase ditetapkan (registrasi / ubah triase),
+ *   bukan waktu heartbeat, supaya latensi mencakup jeda sampai heartbeat
+ *   berikutnya. Acuan lama (sebelum perintah sebelumnya) diabaikan, mis.
+ *   saat mode identify selesai dan gelang kembali ke warna triase lama.
+ * - led_state dari firmware sama dengan perintah: catat led_synced_at sekali.
+ * Mengembalikan $set untuk Tag, atau null bila tidak ada perubahan.
+ */
+function ledSyncUpdate(tag, command, ledState, now) {
+  if (command.led !== tag.led_command) {
+    const prevSince = tag.led_command_since ? new Date(tag.led_command_since) : new Date(0);
+    const triaseAt = command.triaseUpdatedAt ? new Date(command.triaseUpdatedAt) : null;
+    const since =
+      TRIASE_LEDS.includes(command.led) && triaseAt && triaseAt > prevSince && triaseAt <= now ? triaseAt : now;
+    return { led_command: command.led, led_command_since: since, led_synced_at: null };
+  }
+  if (ledState && ledState === tag.led_command && !tag.led_synced_at) {
+    return { led_synced_at: now };
+  }
+  return null;
+}
+
+function ledSyncMs(tag) {
+  if (!tag.led_synced_at || !tag.led_command_since) return null;
+  return new Date(tag.led_synced_at).getTime() - new Date(tag.led_command_since).getTime();
 }
 
 // Dipanggil firmware walaupun GPS belum fix, sehingga koneksi perangkat tetap terlihat.
@@ -105,10 +137,27 @@ const receiveHeartbeat = asyncHandler(async (req, res) => {
     { upsert: true, new: true }
   );
 
+  const now = tag.last_seen;
+  const { triaseUpdatedAt, ...command } = await buildDeviceCommand(tag, now);
+
+  const sync = ledSyncUpdate(tag, { ...command, triaseUpdatedAt }, telemetry.led_state, now);
+  if (sync) await Tag.updateOne({ tag_id }, { $set: sync });
+
+  // Log telemetri untuk alat uji. Tidak di-await: kegagalan menulis log
+  // tidak boleh memperlambat atau menggagalkan heartbeat.
+  DeviceTelemetry.create({
+    tag_id,
+    received_at: now,
+    gps_status,
+    satellites: tag.satellites,
+    ...telemetry,
+    led_command: command.led,
+  }).catch((err) => console.warn(`[telemetry] gagal simpan ${tag_id}: ${err.message}`));
+
   return sendSuccess(res, 200, {
     tag_id: tag.tag_id,
-    received_at: tag.last_seen,
-    ...(await buildDeviceCommand(tag, tag.last_seen)),
+    received_at: now,
+    ...command,
   });
 });
 
@@ -211,6 +260,10 @@ const listDevices = asyncHandler(async (_req, res) => {
     rssi: tag.rssi ?? null,
     buffered_count: tag.buffered_count ?? null,
     led_state: tag.led_state ?? null,
+    led_command: tag.led_command ?? null,
+    led_command_since: tag.led_command_since ?? null,
+    led_synced_at: tag.led_synced_at ?? null,
+    led_sync_ms: ledSyncMs(tag),
     latest_location: tag.latest_location || {
       lat: null,
       lng: null,

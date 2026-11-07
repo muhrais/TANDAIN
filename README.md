@@ -205,6 +205,27 @@ npm run bench -- --n 50
 
 Jalankan `npm run seed -- --reset` sebelum tiap sesi uji supaya data simulator dan data lama tidak tercampur.
 
+## Sesi Uji GPS & Telemetri
+
+Setiap heartbeat disimpan ke koleksi `device_telemetry` (dihapus otomatis setelah 14 hari). Sesi uji menandai rentang waktu uji lapangan, lalu backend merangkum data lokasi dan telemetri di rentang itu per gelang.
+
+```bash
+# mulai sesi, titik acuan diisi untuk menghitung galat GPS (S-02)
+npm run gps-report -- --start "S-02 titik A" --id-uji S-02 --acuan -6.3612,106.8249 --tags GPS-001,GPS-002,GPS-003 --catatan "luar ruangan, USB"
+
+# hentikan sesi, ringkasan tercetak dan tersimpan di scripts/out/gps_<session_id>.csv
+npm run gps-report -- --stop TS-xxxxxxxx
+
+npm run gps-report -- --report TS-xxxxxxxx   # ringkasan saat sesi masih berjalan
+npm run gps-report -- --list                 # daftar sesi
+```
+
+Ringkasan per gelang: titik lokasi diterima vs diharapkan (kontinuitas, jeda terpanjang), galat rata-rata/p50/p95/maks ke titik acuan, TTFF, HDOP dan satelit rata-rata, baterai awal/akhir, uptime, dan jumlah reboot.
+
+API (koordinator): `POST /api/test-sessions`, `POST /api/test-sessions/:id/stop`, `GET /api/test-sessions`, `GET /api/test-sessions/:id/summary`.
+
+Sinkron LED untuk uji PAIR-02 tercatat di setiap gelang: `led_command` (perintah server), `led_state` (laporan firmware), dan `led_sync_ms` (jeda dari triase ditetapkan sampai firmware melaporkan warna yang sama). Halaman **Perangkat** menampilkan telemetri dan status LED ini di bawah tiap gelang.
+
 ## Script
 
 | Lokasi | Script | Fungsi |
@@ -214,6 +235,7 @@ Jalankan `npm run seed -- --reset` sebelum tiap sesi uji supaya data simulator d
 | root | `npm run seed` | Isi user, posko, dan korban contoh (`-- --reset` untuk mengosongkan dulu) |
 | root | `npm run sim` | Simulator tag virtual |
 | root | `npm run bench` | Benchmark latensi API |
+| root | `npm run gps-report` | Sesi uji GPS dan rekap CSV |
 | `frontend/` | `npm run dev` | Dev server Vite |
 | `frontend/` | `npm run build` | Build produksi ke `frontend/dist` |
 | `frontend/` | `npm run lint` | Lint dengan oxlint |

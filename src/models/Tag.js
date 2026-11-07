@@ -83,6 +83,11 @@ const tagSchema = new mongoose.Schema(
       enum: ["none", "identify", "merah", "kuning", "hijau", null],
       default: null,
     },
+    // Sinkron LED (uji PAIR-02): perintah terakhir dari server, sejak kapan
+    // berlaku, dan kapan firmware pertama kali melaporkan led_state yang sama.
+    led_command: { type: String, default: null },
+    led_command_since: { type: Date, default: null },
+    led_synced_at: { type: Date, default: null },
     created_at: {
       type: Date,
       default: Date.now,
