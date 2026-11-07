@@ -5,6 +5,37 @@ const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
 
 const GPS_STATUSES = ["no_data", "searching", "fixed", "unknown"];
+const LED_STATES = ["none", "identify", "merah", "kuning", "hijau"];
+
+// Field telemetri opsional heartbeat v2 -> validator. Nilai yang tipenya
+// salah disimpan null, bukan ditolak 400, supaya satu field rusak dari
+// firmware tidak membuat perangkat tampak offline.
+const isNum = (min, max) => (v) => typeof v === "number" && Number.isFinite(v) && v >= min && v <= max;
+const TELEMETRY_FIELDS = {
+  fw_version: (v) => typeof v === "string" && v.length > 0 && v.length <= 32,
+  hdop: isNum(0, 100),
+  fix_age_ms: isNum(0, Number.MAX_SAFE_INTEGER),
+  ttff_ms: isNum(0, Number.MAX_SAFE_INTEGER),
+  uptime_ms: isNum(0, Number.MAX_SAFE_INTEGER),
+  rssi: isNum(-150, 0),
+  battery_pct: isNum(0, 100),
+  buffered_count: isNum(0, 100000),
+  led_state: (v) => LED_STATES.includes(v),
+};
+
+/**
+ * Ambil field telemetri yang DIKIRIM saja. Field yang tidak ada di body
+ * tidak disentuh (firmware lama tidak menghapus nilai yang sudah ada);
+ * field yang ada tapi tidak valid disimpan null.
+ */
+function parseTelemetry(body) {
+  const telemetry = {};
+  for (const [field, isValid] of Object.entries(TELEMETRY_FIELDS)) {
+    if (body[field] === undefined) continue;
+    telemetry[field] = isValid(body[field]) ? body[field] : null;
+  }
+  return telemetry;
+}
 // Heartbeat firmware dikirim setiap 5 detik. Perangkat dianggap offline jika
 // backend tidak menerima heartbeat selama 30 detik (sekitar 6 heartbeat).
 const ONLINE_WINDOW_MS = 30 * 1000;
@@ -34,6 +65,9 @@ async function buildDeviceCommand(tag, now = new Date()) {
 }
 
 // Dipanggil firmware walaupun GPS belum fix, sehingga koneksi perangkat tetap terlihat.
+// Heartbeat v2 boleh membawa telemetri opsional (lihat TELEMETRY_FIELDS dan
+// docs/DEVICE_API.md); payload lama (tag_id, gps_status, satellites,
+// ip_address) tetap diterima apa adanya.
 // Respons membawa perintah LED (lihat buildDeviceCommand), jadi perubahan
 // triase/pairing sampai ke perangkat paling lambat satu interval heartbeat.
 const receiveHeartbeat = asyncHandler(async (req, res) => {
@@ -52,6 +86,8 @@ const receiveHeartbeat = asyncHandler(async (req, res) => {
     throw new ApiError(400, "VALIDATION_ERROR", "gps_status tidak valid.");
   }
 
+  const telemetry = parseTelemetry(req.body);
+
   const tag = await Tag.findOneAndUpdate(
     { tag_id },
     {
@@ -60,6 +96,7 @@ const receiveHeartbeat = asyncHandler(async (req, res) => {
         gps_status,
         satellites: Number.isFinite(satellites) ? satellites : 0,
         ip_address,
+        ...telemetry,
       },
       // status_tag hanya diisi saat tag baru, supaya tanda "damaged" /
       // "inactive" dari koordinator tidak tertimpa heartbeat.
@@ -165,6 +202,15 @@ const listDevices = asyncHandler(async (_req, res) => {
     ip_address: tag.ip_address,
     button_press_count: tag.button_press_count || 0,
     last_button_pressed_at: tag.last_button_pressed_at,
+    fw_version: tag.fw_version ?? null,
+    battery_pct: tag.battery_pct ?? null,
+    hdop: tag.hdop ?? null,
+    fix_age_ms: tag.fix_age_ms ?? null,
+    ttff_ms: tag.ttff_ms ?? null,
+    uptime_ms: tag.uptime_ms ?? null,
+    rssi: tag.rssi ?? null,
+    buffered_count: tag.buffered_count ?? null,
+    led_state: tag.led_state ?? null,
     latest_location: tag.latest_location || {
       lat: null,
       lng: null,

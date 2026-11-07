@@ -23,6 +23,8 @@
  *   --offline A-B         detik ke-A s.d. B semua tag "offline": lokasi disimpan di buffer
  *   --batch-on-reconnect  kirim isi buffer lewat POST /api/locations/batch saat online lagi
  *   --out PATH            file CSV log (default scripts/out/sim_<waktu>.csv)
+ *   --fw-legacy           kirim payload heartbeat lama (tanpa telemetri v2),
+ *                         untuk memastikan firmware yang sudah ter-flash tetap diterima
  *
  * Log CSV per kiriman: tag_id, seq, kind, sent_at, status_code, latency_ms, items.
  * kind: location | heartbeat | batch | buffered | dropped
@@ -44,6 +46,8 @@ const DROP_RATE = Number(args["drop-rate"] ?? 0);
 const OFFLINE = args.offline ? String(args.offline).split("-").map((s) => Number(s) * 1000) : null;
 const BATCH_ON_RECONNECT = Boolean(args["batch-on-reconnect"]);
 const OUT = args.out ? String(args.out) : defaultOutPath("sim");
+const FW_LEGACY = Boolean(args["fw-legacy"]);
+const FW_VERSION = "sim-2.0";
 
 // ±5 m per langkah (1° lintang ≈ 111 km).
 const STEP_DEG = 5 / 111000;
@@ -87,6 +91,9 @@ function createTag(index) {
     seq: 0,
     buffer: [],
     led: null,
+    bootedAt: Date.now(),
+    // TTFF acak 25-60 dtk supaya kolom telemetri di dashboard terisi wajar.
+    ttffMs: 25000 + Math.floor(Math.random() * 35000),
   };
 }
 
@@ -129,12 +136,27 @@ async function sendLocation(tag) {
 
 async function sendHeartbeat(tag) {
   if (isOffline()) return;
-  const r = await post("/api/devices/heartbeat", {
+  const payload = {
     tag_id: tag.tag_id,
     gps_status: "fixed",
     satellites: 6 + Math.floor(Math.random() * 5),
     ip_address: null,
-  });
+  };
+  if (!FW_LEGACY) {
+    Object.assign(payload, {
+      fw_version: FW_VERSION,
+      hdop: Number((0.8 + Math.random() * 1.2).toFixed(1)),
+      fix_age_ms: Math.floor(Math.random() * 1500),
+      ttff_ms: tag.ttffMs,
+      uptime_ms: Date.now() - tag.bootedAt,
+      rssi: -45 - Math.floor(Math.random() * 30),
+      battery_pct: tag.battery,
+      buffered_count: tag.buffer.length,
+      // Firmware melaporkan LED yang sedang menyala = perintah heartbeat sebelumnya.
+      led_state: tag.led ?? "none",
+    });
+  }
+  const r = await post("/api/devices/heartbeat", payload);
   const led = r.json?.data?.led ?? "";
   log(tag, "heartbeat", r.status, r.latency, led);
   if (led && led !== tag.led) {
