@@ -4,7 +4,8 @@
  *             npm run seed -- --reset  (hapus korban/tag/lokasi/riwayat dulu)
  *
  * Membuat:
- * - 3 akun user (koordinator & petugas_pos_medis) dengan password default.
+ * - 3 akun user (koordinator, petugas_pos_medis, tenaga_medis_lapangan)
+ *   dengan password default.
  * - 4 posko dasar (utama, merah, kuning, hijau) beserta koordinatnya.
  * - 15 tag + korban contoh (macam-macam kategori triase & status) beserta
  *   lokasi dan riwayat statusnya, supaya dashboard, peta, dan antrian
@@ -45,7 +46,7 @@ async function seed() {
   const usersToSeed = [
     { nama: "Koordinator Posko", username: "koordinator1", password: "koordinator123", role: "koordinator" },
     { nama: "Petugas Pos Medis 1", username: "petugas1", password: "petugas123", role: "petugas_pos_medis" },
-    { nama: "Rais", username: "rais123", password: "123", role: "koordinator" },
+    { nama: "Medis Lapangan 1", username: "medis1", password: "medis123", role: "tenaga_medis_lapangan" },
   ];
 
   for (const u of usersToSeed) {

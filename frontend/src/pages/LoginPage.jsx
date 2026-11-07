@@ -4,7 +4,7 @@ import { login, isAuthenticated, getRole } from "../services/authService";
 import { ApiClientError } from "../lib/apiClient";
 
 // Dashboard ("/") khusus koordinator (lihat RequireRole di App.jsx); petugas
-// pos medis halaman utamanya Scan NFC.
+// pos medis dan tenaga medis lapangan halaman utamanya Scan NFC.
 function homePathForRole(role) {
   return role === "koordinator" ? "/" : "/scan";
 }
