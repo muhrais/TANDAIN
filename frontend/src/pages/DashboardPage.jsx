@@ -10,6 +10,7 @@ import PriorityQueueCard from "../components/dashboard/PriorityQueueCard";
 import RecentActivityCard from "../components/dashboard/RecentActivityCard";
 import ActivityTab from "../components/activity/ActivityTab";
 import AlertTab from "../components/alert/AlertTab";
+import KorbanJiwaForm from "../components/korbanJiwa/KorbanJiwaForm";
 import { resolveAlert } from "../services/alertService";
 import { countAlerts } from "../lib/alert";
 import { useDashboardData } from "../hooks/useDashboardData";
@@ -17,6 +18,7 @@ import { useDashboardData } from "../hooks/useDashboardData";
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Ringkasan");
+  const [catatKorbanJiwa, setCatatKorbanJiwa] = useState(false);
   const { data, error, lastUpdated, refresh } = useDashboardData();
 
   async function handleResolveAlert(alertId) {
@@ -53,7 +55,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
           <DeviceStatusCard devices={data.devices} />
 
-          <TriageDistributionCard data={data.triage} className="xl:col-span-6" />
+          <TriageDistributionCard
+            data={data.triage}
+            onCatatKorbanJiwa={() => setCatatKorbanJiwa(true)}
+            className="xl:col-span-6"
+          />
 
           <div className="flex flex-col gap-5 xl:col-span-6">
             <div className="grid grid-cols-3 gap-2 sm:gap-5">
@@ -107,6 +113,17 @@ export default function DashboardPage() {
       {activeTab === "Aktivitas" && <ActivityTab activities={data.activities} />}
 
       {activeTab === "Alert" && <AlertTab alerts={alerts} onResolve={handleResolveAlert} />}
+
+      {catatKorbanJiwa && (
+        <KorbanJiwaForm
+          posko={data.map.posko}
+          onClose={() => setCatatKorbanJiwa(false)}
+          onSaved={() => {
+            setCatatKorbanJiwa(false);
+            refresh();
+          }}
+        />
+      )}
     </div>
   );
 }

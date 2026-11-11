@@ -2,6 +2,7 @@ const Victim = require("../models/Victim");
 const Tag = require("../models/Tag");
 const StatusHistory = require("../models/StatusHistory");
 const Posko = require("../models/Posko");
+const KorbanJiwa = require("../models/KorbanJiwa");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
 const { getUserNameMap } = require("../utils/userNames");
@@ -137,11 +138,25 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
       waktu_update_terakhir: v.waktu_update_terakhir,
     }));
 
-  // --- recent_activity: entri status_history terbaru, dilengkapi info korban ---
-  const recentHistory = await StatusHistory.find({}).sort({ waktu_perubahan: -1 }).limit(RECENT_ACTIVITY_LIMIT);
+  // --- korban_jiwa: jumlah dari entri yang tidak dihapus (keputusan K1) ---
+  const [korbanJiwaEntries, recentHistory] = await Promise.all([
+    KorbanJiwa.find({ dihapus: false }).sort({ created_at: -1 }),
+    StatusHistory.find({}).sort({ waktu_perubahan: -1 }).limit(RECENT_ACTIVITY_LIMIT),
+  ]);
+  const korban_jiwa = {
+    total: korbanJiwaEntries.reduce((sum, e) => sum + e.jumlah, 0),
+    entri: korbanJiwaEntries.length,
+    entri_terakhir_at: korbanJiwaEntries[0]?.created_at ?? null,
+  };
+
+  // --- recent_activity: entri status_history + catatan korban jiwa terbaru ---
   const victimById = new Map(allVictims.map((v) => [v.victim_id, v]));
-  const nameById = await getUserNameMap(recentHistory.map((entry) => entry.diubah_oleh));
-  const recent_activity = recentHistory.map((entry) => {
+  const recentKorbanJiwa = korbanJiwaEntries.slice(0, RECENT_ACTIVITY_LIMIT);
+  const nameById = await getUserNameMap([
+    ...recentHistory.map((entry) => entry.diubah_oleh),
+    ...recentKorbanJiwa.map((entry) => entry.dicatat_oleh),
+  ]);
+  const historyActivity = recentHistory.map((entry) => {
     const victim = victimById.get(entry.victim_id);
     const pengubah = entry.diubah_oleh ? nameById.get(entry.diubah_oleh) ?? null : null;
     return {
@@ -159,6 +174,29 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
       description: describeActivity(entry, victim, poskoNameById, pengubah),
     };
   });
+  const korbanJiwaActivity = recentKorbanJiwa.map((entry) => {
+    const pencatat = entry.dicatat_oleh ? nameById.get(entry.dicatat_oleh) ?? null : null;
+    const tempat = entry.posko_id ? ` di ${poskoNameById.get(entry.posko_id) || entry.posko_id}` : "";
+    return {
+      history_id: entry.kj_id,
+      victim_id: null,
+      tag_id: null,
+      kategori_triase: null,
+      jenis: "korban_jiwa",
+      status_lama: null,
+      status_baru: null,
+      nilai_lama: null,
+      nilai_baru: entry.jumlah,
+      diubah_oleh_nama: pencatat,
+      // Waktu pencatatan (bukan waktu_ditemukan), supaya urutannya sama
+      // dengan kapan petugas benar-benar memasukkan data.
+      waktu_perubahan: entry.created_at,
+      description: `${entry.jumlah} korban jiwa dicatat${tempat}${pencatat ? ` oleh ${pencatat}` : ""}`,
+    };
+  });
+  const recent_activity = [...historyActivity, ...korbanJiwaActivity]
+    .sort((a, b) => new Date(b.waktu_perubahan) - new Date(a.waktu_perubahan))
+    .slice(0, RECENT_ACTIVITY_LIMIT);
 
   return sendSuccess(res, 200, {
     totals: {
@@ -170,6 +208,7 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
     tags_summary,
     priority_queue,
     recent_activity,
+    korban_jiwa,
   });
 });
 

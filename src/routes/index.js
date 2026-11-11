@@ -7,6 +7,7 @@ const dashboardRoutes = require("./dashboardRoutes");
 const poskoRoutes = require("./poskoRoutes");
 const deviceRoutes = require("./deviceRoutes");
 const testSessionRoutes = require("./testSessionRoutes");
+const korbanJiwaRoutes = require("./korbanJiwaRoutes");
 
 const router = express.Router();
 
@@ -23,5 +24,6 @@ router.use("/dashboard", dashboardRoutes); // Week 5: FR-BE-06
 router.use("/posko", poskoRoutes); // Week 5: FR-BE-07
 router.use("/devices", deviceRoutes);
 router.use("/test-sessions", testSessionRoutes);
+router.use("/korban-jiwa", korbanJiwaRoutes);
 
 module.exports = router;
