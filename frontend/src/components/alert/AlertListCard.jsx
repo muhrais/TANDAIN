@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import LevelFilter from "../common/LevelFilter";
 import SegmentedFilter from "../common/SegmentedFilter";
-import { ALERT_TYPES, SEVERITY, sortAlerts } from "../../lib/alert";
+import { ALERT_TYPES, SEVERITY, formatDurasi, sortAlerts } from "../../lib/alert";
 import { formatTime } from "../../lib/activity";
 
 const TEXT_COLOR = {
@@ -55,7 +55,7 @@ function AlertRow({ alert, onResolve }) {
         </div>
         <p className="mt-0.5 text-[13px] text-ink/70">{alert.detail}</p>
         <p className="mt-1 text-xs tabular-nums text-muted">
-          {formatTime(alert.waktu)} · {alert.usia_menit} mnt lalu
+          {formatTime(alert.waktu)} · {formatDurasi(alert.usia_menit)} lalu
         </p>
       </div>
 

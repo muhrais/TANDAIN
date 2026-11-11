@@ -2,7 +2,7 @@ export const STATUS_ORDER = ["registered", "triaged", "waiting_transfer", "in_tr
 
 export const STATUS_LABEL = {
   registered: "Terdaftar",
-  triaged: "Sudah ditriase",
+  triaged: "Ditriase",
   waiting_transfer: "Menunggu jemputan",
   in_transit: "Dalam perjalanan",
   arrived: "Tiba di posko",
