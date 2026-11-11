@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Nfc, CircleCheck, CircleAlert, Radar, Link2Off, Plus } from "lucide-react";
+import { Nfc, CircleCheck, CircleAlert, Radar, Link2Off } from "lucide-react";
 import { scanTag } from "../services/tagService";
 import { ApiClientError } from "../lib/apiClient";
 import VictimRegistrationForm from "../components/scan/VictimRegistrationForm";
@@ -9,11 +9,6 @@ import { listPosko } from "../services/poskoService";
 import { NFC_SUPPORTED } from "../lib/nfc";
 import { record, detectNetwork } from "../lib/metrics";
 import { STATUS_LABEL } from "../lib/activity";
-import KorbanJiwaForm from "../components/korbanJiwa/KorbanJiwaForm";
-import { getRole } from "../services/authService";
-
-// Sama dengan ROLES.PENCATAT_KORBAN_JIWA di backend (src/middleware/auth.js).
-const PENCATAT_KORBAN_JIWA = ["koordinator", "tenaga_medis_lapangan"];
 
 const TRIASE_LABEL = { merah: "Merah", kuning: "Kuning", hijau: "Hijau" };
 const TRIASE_BADGE_CLASS = {
@@ -29,9 +24,6 @@ export default function ScanNfcPage() {
   const [result, setResult] = useState(null);
   const [nfcListening, setNfcListening] = useState(false);
   const [posko, setPosko] = useState([]);
-  const [catatKorbanJiwa, setCatatKorbanJiwa] = useState(false);
-  const [kjNotice, setKjNotice] = useState("");
-  const bisaCatatKorbanJiwa = PENCATAT_KORBAN_JIWA.includes(getRole());
 
   // Dipakai dropdown posko tujuan di tombol status. Gagal dimuat bukan
   // masalah fatal: halaman scan tetap jalan, dropdown cuma kosong.
@@ -143,46 +135,14 @@ export default function ScanNfcPage() {
 
   return (
     <div className="min-w-0 flex-1 space-y-6 p-4 md:p-8">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-ink">Scan NFC</h1>
-          <p className="mt-1 text-sm text-muted">
-            {NFC_SUPPORTED
-              ? "Tempelkan tag NFC ke HP, atau masukkan tag_id manual di bawah."
-              : "Web NFC API tidak tersedia di browser ini (cuma Chrome Android). Masukkan tag_id manual."}
-          </p>
-        </div>
-        {bisaCatatKorbanJiwa && (
-          <button
-            type="button"
-            onClick={() => {
-              setKjNotice("");
-              setCatatKorbanJiwa(true);
-            }}
-            className="relative flex w-[10.5rem] items-center justify-start gap-1.5 whitespace-nowrap rounded-md border border-brand/30 bg-white px-3 py-1.5 text-[13px] font-semibold text-brand transition-colors hover:border-brand hover:bg-brand/5"
-          >
-            <Plus size={14} />
-            Catat korban jiwa
-          </button>
-        )}
-      </div>
-
-      {kjNotice && (
-        <p role="status" className="rounded-lg bg-triase-hijau-soft px-4 py-3 text-sm text-triase-hijau">
-          {kjNotice}
+      <div>
+        <h1 className="text-2xl font-bold text-ink">Scan NFC</h1>
+        <p className="mt-1 text-sm text-muted">
+          {NFC_SUPPORTED
+            ? "Tempelkan gelang ke bagian belakang ponsel, atau masukkan ID tag secara manual."
+            : "Web NFC hanya tersedia di Chrome Android. Masukkan ID tag secara manual."}
         </p>
-      )}
-
-      {catatKorbanJiwa && (
-        <KorbanJiwaForm
-          posko={posko}
-          onClose={() => setCatatKorbanJiwa(false)}
-          onSaved={(entry) => {
-            setCatatKorbanJiwa(false);
-            setKjNotice(`${entry.jumlah} korban jiwa tercatat. Koreksi lewat menu Data Pasien, tab Korban Jiwa.`);
-          }}
-        />
-      )}
+      </div>
 
       {NFC_SUPPORTED && (
         <div className="flex flex-col items-start gap-3 rounded-xl bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:gap-4 md:p-6">
@@ -196,7 +156,7 @@ export default function ScanNfcPage() {
             {nfcListening ? "Menunggu tag..." : "Scan pakai NFC"}
           </button>
           {nfcListening && (
-            <span className="text-sm text-muted">Tempelkan tag NFC ke bagian belakang HP.</span>
+            <span className="text-sm text-muted">Tempelkan gelang ke bagian belakang ponsel.</span>
           )}
         </div>
       )}
@@ -252,7 +212,7 @@ export default function ScanNfcPage() {
             <div>
               <div className="text-muted">Kategori Triase</div>
               <span
-                className={`mt-0.5 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${TRIASE_BADGE_CLASS[result.kategori_triase] ?? "bg-neutral-100 text-neutral-600"}`}
+                className={`mt-0.5 inline-block rounded-md px-2.5 py-0.5 text-xs font-semibold ${TRIASE_BADGE_CLASS[result.kategori_triase] ?? "bg-neutral-100 text-neutral-600"}`}
               >
                 {TRIASE_LABEL[result.kategori_triase] ?? result.kategori_triase}
               </span>

@@ -60,7 +60,8 @@ function TimelineRow({ activity, isFirst, isLast }) {
   const textColor = TEXT_COLOR[activity.kategori_triase] ?? NEUTRAL_TEXT;
 
   return (
-    <li className="grid grid-cols-[3rem_1rem_minmax(0,1fr)_auto] items-start gap-x-3 py-3 text-sm">
+    // Kolom label lebar tetap (bukan auto) supaya semua label sama lebar dan sejajar.
+    <li className="grid grid-cols-[3rem_1rem_minmax(0,1fr)_15rem] items-start gap-x-3 py-3 text-sm">
       <span className="tabular-nums text-muted">{formatTime(activity.waktu_perubahan)}</span>
 
       <span className="relative flex h-full justify-center self-stretch">
@@ -78,7 +79,7 @@ function TimelineRow({ activity, isFirst, isLast }) {
         <span className="text-ink/80">{activity.description}</span>
       </span>
 
-      <span className="whitespace-nowrap rounded-md bg-page px-2 py-1 text-xs text-muted">
+      <span title={transition} className="truncate rounded-md bg-page px-2 py-1 text-center text-xs text-muted">
         {transition}
       </span>
     </li>
@@ -114,7 +115,7 @@ export default function ActivityTimelineCard({ activities, className = "" }) {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Cari tag, mis. TND-DEMO-04 atau GPS-002"
+              placeholder="Cari tag, mis. GPS-002"
               aria-label="Cari aktivitas berdasarkan tag"
               className="h-9 w-full rounded-lg border border-black/10 bg-white pl-9 pr-3 text-sm placeholder:text-muted focus:border-ink focus:outline-none"
             />

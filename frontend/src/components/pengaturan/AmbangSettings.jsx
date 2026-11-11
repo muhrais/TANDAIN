@@ -87,7 +87,7 @@ export default function AmbangSettings({ incident, onSaved }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-semibold text-ink">Ambang Alert</h2>
-          <p className="text-sm text-muted">Batas yang memicu alert di tab Alert dashboard.</p>
+          <p className="text-sm text-muted">Batas nilai yang memicu alert pada tab Alert di dashboard.</p>
         </div>
         <button type="button" onClick={resetDefault} className="text-sm font-semibold text-brand hover:text-brand-dark">
           Kembalikan ke default

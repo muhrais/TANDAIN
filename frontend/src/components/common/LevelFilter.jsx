@@ -42,7 +42,7 @@ export default function LevelFilter({ label, options, value, onChange }) {
               type="button"
               aria-pressed={active}
               onClick={() => onChange(option.key)}
-              className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-[13px] font-semibold transition-colors ${
+              className={`flex items-center gap-1.5 rounded-md border px-3 py-1 text-[13px] font-semibold transition-colors ${
                 active ? tone.active : "border-black/10 bg-white text-ink/70 hover:border-black/20 hover:text-ink"
               }`}
             >

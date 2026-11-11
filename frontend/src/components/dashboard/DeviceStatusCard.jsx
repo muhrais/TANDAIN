@@ -27,7 +27,7 @@ export default function DeviceStatusCard({ devices, error = "" }) {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-base font-bold text-ink">Perangkat GPS</h2>
-          <p className="text-xs text-muted">Status platform dari heartbeat ESP32; toleransi offline 30 detik</p>
+          <p className="text-xs text-muted">Status perangkat berdasarkan heartbeat ESP32. Perangkat dianggap offline setelah 30 detik tanpa heartbeat.</p>
         </div>
         <span className="text-sm font-semibold text-ink">
           {devices.filter((device) => device.online).length}/{devices.length} online
@@ -51,7 +51,7 @@ export default function DeviceStatusCard({ devices, error = "" }) {
               <div className="flex items-center justify-between gap-3">
                 <strong className="text-sm text-ink">{device.tag_id}</strong>
                 <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                  className={`rounded-md px-2.5 py-1 text-xs font-semibold ${
                     device.online
                       ? "bg-triase-hijau-soft text-triase-hijau"
                       : "bg-triase-merah-soft text-triase-merah"

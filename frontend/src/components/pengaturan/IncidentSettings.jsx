@@ -60,7 +60,7 @@ export default function IncidentSettings({ incident, onSaved }) {
     <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-white p-4 shadow-sm md:p-6">
       <div>
         <h2 className="font-semibold text-ink">Identitas Insiden</h2>
-        <p className="text-sm text-muted">Tampil di baris atas dashboard: nama, lokasi, jumlah relawan dan nakes.</p>
+        <p className="text-sm text-muted">Nama insiden, lokasi, serta jumlah relawan dan tenaga kesehatan yang ditampilkan di bagian atas dashboard.</p>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <label className="block">

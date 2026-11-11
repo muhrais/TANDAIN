@@ -95,7 +95,7 @@ export default function Topbar({
             <button
               type="button"
               onClick={() => onTabChange("Alert")}
-              className="flex items-center gap-1.5 rounded-full bg-triase-merah-soft px-3 py-1 text-xs font-semibold text-triase-merah transition-colors hover:bg-triase-merah/15"
+              className="flex items-center gap-1.5 rounded-md bg-triase-merah-soft px-3 py-1 text-xs font-semibold text-triase-merah transition-colors hover:bg-triase-merah/15"
             >
               <TriangleAlert size={14} />
               {alertCounts.kritis} alert kritis

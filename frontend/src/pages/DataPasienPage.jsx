@@ -198,7 +198,7 @@ export default function DataPasienPage() {
         <div>
           <h1 className="text-xl font-bold text-ink md:text-2xl">Data Pasien</h1>
           <p className="mt-1 text-sm text-muted">
-            Semua korban termasuk yang sudah tiba, beserta riwayat perubahan dan catatan korban jiwa.
+            Data seluruh korban, termasuk yang sudah tiba di posko, beserta riwayat perubahan dan catatan korban jiwa.
           </p>
         </div>
         {tab === "korban" && (
@@ -208,7 +208,7 @@ export default function DataPasienPage() {
               onClick={() => setTick((t) => t + 1)}
               className={`flex items-center gap-1.5 text-sm font-medium ${error ? "text-triase-merah" : "text-muted hover:text-ink"}`}
             >
-              {error ? "Terputus" : "Muat ulang"}
+              {error ? "Terputus" : "Refresh"}
               <RefreshCw size={14} />
             </button>
             <button
@@ -254,7 +254,7 @@ export default function DataPasienPage() {
                   type="search"
                   value={searchText}
                   onChange={(event) => setSearchText(event.target.value)}
-                  placeholder="Cari tag_id atau nama, mis. TND-DEMO-04 atau Andi"
+                  placeholder="Cari ID tag atau nama korban, mis. GPS-002"
                   aria-label="Cari korban"
                   className="w-full rounded-lg border border-neutral-200 py-2 pl-9 pr-3 text-sm text-ink outline-none focus:border-brand focus:ring-1 focus:ring-brand"
                 />
@@ -308,7 +308,7 @@ export default function DataPasienPage() {
                     </div>
 
                     <div className="text-[13px]">
-                      <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${TRIASE_BADGE[v.kategori_triase]}`}>
+                      <span className={`inline-block rounded-md px-2 py-0.5 text-xs font-semibold ${TRIASE_BADGE[v.kategori_triase]}`}>
                         {TRIASE_LABEL[v.kategori_triase]}
                       </span>
                       <div className="mt-0.5 text-muted">

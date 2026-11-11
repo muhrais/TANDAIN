@@ -13,7 +13,7 @@ export default function ForbiddenPage() {
       <ShieldAlert size={40} className="text-triase-merah" />
       <h1 className="text-xl font-bold text-ink">Tidak punya akses</h1>
       <p className="max-w-sm text-sm text-muted">
-        Akun Anda tidak memiliki izin untuk membuka halaman ini. Hubungi koordinator kalau menurut Anda ini keliru.
+        Akun Anda tidak memiliki izin untuk membuka halaman ini. Hubungi koordinator apabila Anda memerlukan akses.
       </p>
       <Link to={homePath} className="mt-2 text-sm font-semibold text-brand hover:text-brand-dark">
         Kembali ke halaman utama

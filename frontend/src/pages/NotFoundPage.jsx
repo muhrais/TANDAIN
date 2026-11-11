@@ -10,7 +10,7 @@ export default function NotFoundPage() {
       <div className="max-w-xl space-y-2 rounded-xl bg-white p-5 shadow-sm">
         <h1 className="text-lg font-bold text-ink">Halaman tidak ditemukan</h1>
         <p className="text-sm text-muted">
-          Alamat ini tidak ada. Kalau baru saja ada pembaruan aplikasi, muat ulang halaman (Ctrl+Shift+R).
+          Halaman yang dituju tidak tersedia. Apabila aplikasi baru saja diperbarui, refresh halaman dengan Ctrl+Shift+R.
         </p>
         <Link to={home} className="inline-block text-sm font-semibold text-brand hover:text-brand-dark">
           Kembali ke halaman utama
