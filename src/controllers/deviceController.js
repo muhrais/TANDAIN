@@ -143,9 +143,11 @@ const receiveHeartbeat = asyncHandler(async (req, res) => {
   const sync = ledSyncUpdate(tag, { ...command, triaseUpdatedAt }, telemetry.led_state, now);
   if (sync) await Tag.updateOne({ tag_id }, { $set: sync });
 
-  // Log telemetri untuk alat uji. Tidak di-await: kegagalan menulis log
-  // tidak boleh memperlambat atau menggagalkan heartbeat.
-  DeviceTelemetry.create({
+  // Log telemetri untuk alat uji. Kegagalan menulis log tidak boleh
+  // menggagalkan heartbeat. Di server biasa tidak ditunggu (respons lebih
+  // cepat); di Vercel (serverless) ditunggu, karena proses bisa dibekukan
+  // begitu respons terkirim sehingga tulisan yang belum selesai hilang.
+  const telemetryWrite = DeviceTelemetry.create({
     tag_id,
     received_at: now,
     gps_status,
@@ -153,6 +155,7 @@ const receiveHeartbeat = asyncHandler(async (req, res) => {
     ...telemetry,
     led_command: command.led,
   }).catch((err) => console.warn(`[telemetry] gagal simpan ${tag_id}: ${err.message}`));
+  if (process.env.VERCEL) await telemetryWrite;
 
   return sendSuccess(res, 200, {
     tag_id: tag.tag_id,

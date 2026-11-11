@@ -184,7 +184,12 @@ Catatan:
 
 ## Deploy Cloud (Render + MongoDB Atlas)
 
-Untuk dashboard yang online tanpa laptop sebagai host: satu web service Render (API + dashboard) dan database MongoDB Atlas, keduanya gratis. Langkah lengkap, pengaturan domain `tandain.tech`, dan perubahan firmware (HTTPS + header `X-Device-Key`) ada di [`docs/DEPLOY_CLOUD.md`](docs/DEPLOY_CLOUD.md). Konfigurasi service ada di `render.yaml`.
+Untuk dashboard yang online tanpa laptop sebagai host. Dua pilihan, keduanya memakai MongoDB Atlas:
+
+- **Vercel** (gratis, tanpa kartu): dashboard di CDN, API sebagai Serverless Function (`api/index.js`, `vercel.json`). Langkah di [`docs/DEPLOY_VERCEL.md`](docs/DEPLOY_VERCEL.md).
+- **Render** (server biasa, perlu verifikasi kartu): satu web service API + dashboard (`render.yaml`).
+
+Untuk Render: Langkah lengkap, pengaturan domain `tandain.tech`, dan perubahan firmware (HTTPS + header `X-Device-Key`) ada di [`docs/DEPLOY_CLOUD.md`](docs/DEPLOY_CLOUD.md). Konfigurasi service ada di `render.yaml`.
 
 Pengamanan yang aktif lewat environment (berlaku juga di mode lapangan bila diisi):
 

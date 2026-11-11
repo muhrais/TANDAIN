@@ -5,7 +5,8 @@
  */
 const PLACEHOLDER_SECRET = "ganti_dengan_secret_key_yang_panjang_dan_acak";
 
-function checkEnv() {
+/** Kumpulkan masalah konfigurasi tanpa menghentikan proses. */
+function validateEnv() {
   const errors = [];
   const warnings = [];
   const isProd = process.env.NODE_ENV === "production";
@@ -26,6 +27,12 @@ function checkEnv() {
     }
   }
 
+  return { errors, warnings };
+}
+
+/** Server biasa (npm start): tampilkan peringatan, hentikan proses bila ada error. */
+function checkEnv() {
+  const { errors, warnings } = validateEnv();
   for (const w of warnings) console.warn(`[ENV] Peringatan: ${w}`);
   if (errors.length > 0) {
     for (const e of errors) console.error(`[ENV] ${e}`);
@@ -41,4 +48,4 @@ function corsOrigins() {
     .filter(Boolean);
 }
 
-module.exports = { checkEnv, corsOrigins };
+module.exports = { checkEnv, validateEnv, corsOrigins };
