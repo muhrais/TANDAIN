@@ -33,8 +33,15 @@ awal supaya service sudah bangun.
 Isi DB lokal (`tandain_db`) ke Atlas lewat container Mongo yang sudah ada:
 
 ```bash
-docker exec -e ATLAS_URI="<connection string Atlas>" tandain-mongo sh -c 'mongodump --db tandain_db --archive | mongorestore --uri "$ATLAS_URI" --archive --nsFrom "tandain_db.*" --nsTo "tandain.*"'
+docker exec -e ATLAS_URI="<connection string Atlas>" tandain-mongo sh -c 'mongodump --db tandain_db --archive | mongorestore --uri "${ATLAS_URI%/tandain*}" --archive --nsInclude "tandain_db.*" --nsFrom "tandain_db.*" --nsTo "tandain.*"'
 ```
+
+- `${ATLAS_URI%/tandain*}` membuang nama database dari URI. Bila URI masih memuat `/tandain`,
+  mongorestore menganggapnya `--db` dan hasilnya `0 document(s) restored`.
+- Jalankan di **Git Bash**. PowerShell 5.1 membuang tanda kutip ganda di argumen `docker`;
+  di PowerShell isi dulu `$env:ATLAS_URI = "..."`, lalu pakai `docker exec -e ATLAS_URI ...`
+  dengan perintah `sh -c` yang sama tanpa tanda kutip ganda.
+- Berhasil bila akhir output menampilkan `NNN document(s) restored successfully`.
 Tanpa migrasi, isi DB kosong lewat seed (langkah 3).
 
 ## 2. Render
