@@ -308,7 +308,7 @@ export default function DataPasienPage() {
                     </div>
 
                     <div className="text-[13px]">
-                      <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${TRIASE_BADGE[v.kategori_triase]}`}>
+                      <span className={`inline-block rounded-md px-2 py-0.5 text-xs font-semibold ${TRIASE_BADGE[v.kategori_triase]}`}>
                         {TRIASE_LABEL[v.kategori_triase]}
                       </span>
                       <div className="mt-0.5 text-muted">

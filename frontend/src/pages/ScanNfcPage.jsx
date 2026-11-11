@@ -252,7 +252,7 @@ export default function ScanNfcPage() {
             <div>
               <div className="text-muted">Kategori Triase</div>
               <span
-                className={`mt-0.5 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${TRIASE_BADGE_CLASS[result.kategori_triase] ?? "bg-neutral-100 text-neutral-600"}`}
+                className={`mt-0.5 inline-block rounded-md px-2.5 py-0.5 text-xs font-semibold ${TRIASE_BADGE_CLASS[result.kategori_triase] ?? "bg-neutral-100 text-neutral-600"}`}
               >
                 {TRIASE_LABEL[result.kategori_triase] ?? result.kategori_triase}
               </span>

@@ -51,7 +51,7 @@ export default function DeviceStatusCard({ devices, error = "" }) {
               <div className="flex items-center justify-between gap-3">
                 <strong className="text-sm text-ink">{device.tag_id}</strong>
                 <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                  className={`rounded-md px-2.5 py-1 text-xs font-semibold ${
                     device.online
                       ? "bg-triase-hijau-soft text-triase-hijau"
                       : "bg-triase-merah-soft text-triase-merah"

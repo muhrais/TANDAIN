@@ -35,7 +35,7 @@ function AlertRow({ alert, onResolve }) {
         resolved ? "opacity-60" : ""
       }`}
     >
-      <span className={`flex h-9 w-9 items-center justify-center rounded-full ${severity.icon}`}>
+      <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${severity.icon}`}>
         <Icon size={18} strokeWidth={1.75} />
       </span>
 
@@ -49,7 +49,7 @@ function AlertRow({ alert, onResolve }) {
             {alert.subjek}
           </span>
           <span className="text-sm font-semibold text-ink">{type.label}</span>
-          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${severity.pill}`}>
+          <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${severity.pill}`}>
             {severity.label}
           </span>
         </div>

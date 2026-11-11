@@ -309,14 +309,14 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-ink">{device.tag_id}</span>
             <span
-              className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+              className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${
                 device.online ? "bg-triase-hijau-soft text-triase-hijau" : "bg-triase-merah-soft text-triase-merah"
               }`}
             >
               {device.online ? "Online" : "Offline"}
             </span>
             {blinking && (
-              <span className="flex items-center gap-1 rounded-full bg-triase-kuning-soft px-2 py-0.5 text-[11px] font-semibold text-triase-kuning-dark">
+              <span className="flex items-center gap-1 rounded-md bg-triase-kuning-soft px-2 py-0.5 text-[11px] font-semibold text-triase-kuning-dark">
                 <Lightbulb size={12} className="animate-pulse" /> Berkedip
               </span>
             )}

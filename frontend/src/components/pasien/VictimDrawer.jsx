@@ -102,7 +102,7 @@ export default function VictimDrawer({ victimId, posko, onClose, onChanged }) {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono text-sm font-semibold text-ink">{detail.tag_id}</span>
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${TRIASE_BADGE[detail.kategori_triase]}`}>
+                <span className={`rounded-md px-2.5 py-0.5 text-xs font-semibold ${TRIASE_BADGE[detail.kategori_triase]}`}>
                   {TRIASE_LABEL[detail.kategori_triase]}
                 </span>
               </div>

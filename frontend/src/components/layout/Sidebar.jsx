@@ -75,7 +75,7 @@ function NavItem({ label, icon: Icon, path, onNavigate }) {
 
   const className = (active) =>
     `group relative flex h-10 items-center gap-2.5 pl-5 text-left text-[15px] font-semibold transition-colors ${
-      active ? "rounded-r-full bg-brand text-white" : "text-neutral-400 hover:text-white"
+      active ? "rounded-r-lg bg-brand text-white" : "text-neutral-400 hover:text-white"
     }`;
 
   return (

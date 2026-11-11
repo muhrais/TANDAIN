@@ -11,9 +11,9 @@ export default function BreakdownCard({ title, items, className = "" }) {
               <span className="text-ink/80">{item.label}</span>
               <span className="font-semibold text-ink">{item.count}</span>
             </div>
-            <div className="mt-1.5 h-1.5 rounded-full bg-black/5">
+            <div className="mt-1.5 h-1.5 rounded-sm bg-black/5">
               <div
-                className="h-full rounded-full bg-sidebar"
+                className="h-full rounded-sm bg-sidebar"
                 style={{ width: `${(item.count / max) * 100}%` }}
               />
             </div>
