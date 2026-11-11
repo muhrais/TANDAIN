@@ -47,8 +47,10 @@ export default function SegmentedFilter({ label, options, value, onChange }) {
   return (
     // Satu baris; kalau tidak muat (mis. di HP) bar digeser horizontal, bukan
     // turun baris, supaya tetap terbaca sebagai satu kontrol.
-    <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-3">
-      {label && <span className="shrink-0 text-xs font-medium text-muted sm:w-14 sm:pt-2">{label}</span>}
+    // Bar selalu satu baris, jadi label cukup di tengah vertikal bar (bukan
+    // padding manual yang meleset bila tinggi bar berubah).
+    <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+      {label && <span className="shrink-0 text-xs font-medium text-muted sm:w-14">{label}</span>}
       <div
         ref={trackRef}
         // Scrollbar disembunyikan (di Windows tampil tebal di bawah bar);

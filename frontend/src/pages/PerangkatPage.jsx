@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { RefreshCw, Lightbulb, Link2, Unlink, Radar, X, BatteryMedium, Wifi, Satellite, Timer, Cpu } from "lucide-react";
+import { RefreshCw, Search, Lightbulb, Link2, Unlink, Radar, X, BatteryMedium, Wifi, Satellite, Timer, Cpu } from "lucide-react";
 import SegmentedFilter from "../components/common/SegmentedFilter";
 import { usePolling } from "../hooks/usePolling";
 import { listDevices, pairDevice, unpairDevice, identifyDevice } from "../services/deviceService";
@@ -38,6 +38,15 @@ function matchesFilter(device, filter) {
   if (filter === "terpakai") return Boolean(device.victim);
   if (filter === "bebas") return device.paired && !device.victim;
   return true;
+}
+
+// Cari tag gelang (stiker, mis. GPS-002), UID NFC, atau nama korban pemakai.
+function matchesSearch(device, query) {
+  if (!query) return true;
+  const q = query.toLowerCase();
+  return [device.tag_id, device.nfc_uid, device.victim?.nama, device.victim?.tag_id].some((value) =>
+    (value ?? "").toLowerCase().includes(q)
+  );
 }
 
 const LED_LABEL = {
@@ -404,9 +413,13 @@ export default function PerangkatPage() {
     const fromUrl = searchParams.get("filter");
     return FILTERS.some((f) => f.key === fromUrl) ? fromUrl : "semua";
   });
+  const [query, setQuery] = useState("");
   const [message, setMessage] = useState(null);
 
-  const rows = useMemo(() => (devices ?? []).filter((d) => matchesFilter(d, filter)), [devices, filter]);
+  const rows = useMemo(
+    () => (devices ?? []).filter((d) => matchesFilter(d, filter) && matchesSearch(d, query.trim())),
+    [devices, filter, query]
+  );
   const now = new Date();
 
   function showMessage(text, isError = false) {
@@ -432,22 +445,21 @@ export default function PerangkatPage() {
         </button>
       </div>
 
-      {devices && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
-          <span>
-            <span className="font-semibold text-ink">{devices.length}</span> gelang
-          </span>
-          <span>
-            <span className="font-semibold text-ink">{devices.filter((d) => d.online).length}</span> online
-          </span>
-          <span>
-            <span className="font-semibold text-triase-kuning-dark">{devices.filter((d) => !d.paired).length}</span>{" "}
-            belum di-pairing
-          </span>
+      {/* Pencarian dan filter dalam satu kartu, sama dengan Data Pasien dan Evakuasi. */}
+      <div className="space-y-3 rounded-xl bg-white p-4 shadow-sm md:p-5">
+        <div className="relative">
+          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Cari tag gelang, UID NFC, atau nama korban, mis. GPS-002"
+            aria-label="Cari perangkat"
+            className="w-full rounded-lg border border-neutral-200 py-2 pl-9 pr-3 text-sm text-ink outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+          />
         </div>
-      )}
-
-      <SegmentedFilter label="Status" options={FILTERS} value={filter} onChange={setFilter} />
+        <SegmentedFilter label="Status" options={FILTERS} value={filter} onChange={setFilter} />
+      </div>
 
       {message && (
         <p
@@ -470,7 +482,7 @@ export default function PerangkatPage() {
           <p className="p-5 text-sm text-muted">
             {devices.length === 0
               ? "Belum ada perangkat. Nyalakan gelang supaya terdaftar lewat heartbeat."
-              : "Tidak ada perangkat untuk filter ini."}
+              : "Tidak ada perangkat yang cocok dengan pencarian atau filter."}
           </p>
         ) : (
           <ul className="divide-y divide-black/5">
