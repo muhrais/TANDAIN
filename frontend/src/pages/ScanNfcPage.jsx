@@ -239,7 +239,7 @@ export default function ScanNfcPage() {
             <button
               type="button"
               onClick={reset}
-              className="self-start text-sm font-semibold text-brand hover:text-brand-dark"
+              className="self-start text-sm font-semibold text-ink hover:underline"
             >
               Scan tag lain
             </button>

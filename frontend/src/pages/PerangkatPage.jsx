@@ -242,7 +242,7 @@ function PairingPanel({ device, onDone, onClose }) {
   }
 
   return (
-    <div className="mt-3 space-y-3 rounded-lg border border-brand/20 bg-brand/5 p-3 text-[13px]">
+    <div className="mt-3 space-y-3 rounded-lg border border-black/10 bg-page p-3 text-[13px]">
       <div className="flex items-start justify-between gap-2">
         <p className="text-ink">
           LED <span className="font-semibold">{device.tag_id}</span> sedang berkedip. Pastikan stiker gelang yang kamu
@@ -361,7 +361,7 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
             <span className="text-sm font-semibold text-ink">{device.tag_id}</span>
             <span
               className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${
-                device.online ? "bg-triase-hijau-soft text-triase-hijau" : "bg-triase-merah-soft text-triase-merah"
+                device.online ? "bg-triase-hijau-soft text-triase-hijau" : "bg-neutral-100 text-neutral-500"
               }`}
             >
               {device.online ? "Online" : "Offline"}
@@ -433,7 +433,7 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
             onClick={openPairing}
             disabled={busy || pairing}
             // Aksi per baris: gaya sekunder (lihat StatusActionButton).
-            className="flex w-[10.5rem] items-center justify-start gap-1.5 rounded-md border border-brand/30 bg-white px-3 py-1.5 text-[13px] font-semibold text-brand transition-colors hover:border-brand hover:bg-brand/5 disabled:opacity-50"
+            className="flex w-[10.5rem] items-center justify-start gap-1.5 rounded-md border border-black/10 bg-white px-3 py-1.5 text-[13px] font-semibold text-ink transition-colors hover:bg-page disabled:opacity-50"
           >
             <Link2 size={14} />
             {device.paired ? "Pairing ulang" : "Pairing NFC"}

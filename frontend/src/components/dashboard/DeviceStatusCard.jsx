@@ -23,7 +23,7 @@ export default function DeviceStatusCard({ devices, error = "" }) {
           {offline > 0 && (
             <>
               {" · "}
-              <span className="font-semibold tabular-nums text-triase-merah">{offline} offline</span>
+              <span className="font-semibold tabular-nums text-neutral-500">{offline} offline</span>
             </>
           )}
         </span>

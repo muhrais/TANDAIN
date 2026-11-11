@@ -89,7 +89,7 @@ export default function AmbangSettings({ incident, onSaved }) {
           <h2 className="font-semibold text-ink">Batas Alert</h2>
           <p className="text-sm text-muted">Batas nilai yang memicu alert pada tab Alert di dashboard.</p>
         </div>
-        <button type="button" onClick={resetDefault} className="text-sm font-semibold text-brand hover:text-brand-dark">
+        <button type="button" onClick={resetDefault} className="text-sm font-semibold text-ink hover:underline">
           Kembalikan ke default
         </button>
       </div>

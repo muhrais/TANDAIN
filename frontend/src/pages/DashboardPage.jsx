@@ -61,9 +61,9 @@ export default function DashboardPage() {
           <TriageDistributionCard data={data.triage} className="xl:col-span-6" />
 
           <div className="grid grid-cols-2 gap-2 sm:gap-5 xl:col-span-12 xl:grid-cols-4">
-            <StatCard label="Menunggu jemputan" value={data.evacuation.waiting_pickup} color="merah" />
-            <StatCard label="Dalam perjalanan" value={data.evacuation.in_transit} color="kuning" />
-            <StatCard label="Tiba di posko" value={data.evacuation.arrived} color="hijau" />
+            <StatCard label="Menunggu jemputan" value={data.evacuation.waiting_pickup} />
+            <StatCard label="Dalam perjalanan" value={data.evacuation.in_transit} />
+            <StatCard label="Tiba di posko" value={data.evacuation.arrived} />
             <div className="grid grid-rows-2 gap-2">
               <RegistrationSummaryRow
                 value={data.registration.not_registered}

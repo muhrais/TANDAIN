@@ -55,8 +55,9 @@ export const BTN_PRIMARY =
   "relative flex w-[10.5rem] items-center justify-start gap-1.5 whitespace-nowrap rounded-md bg-brand px-3 py-1.5 text-[13px] font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-60";
 export const BTN_SECONDARY =
   "relative flex w-[10.5rem] items-center justify-start gap-1.5 whitespace-nowrap rounded-md border border-black/10 bg-white px-3 py-1.5 text-[13px] font-semibold text-ink transition-colors hover:bg-page disabled:opacity-60";
-export const BTN_ROW =
-  "relative flex w-[10.5rem] items-center justify-start gap-1.5 whitespace-nowrap rounded-md border border-brand/30 bg-white px-3 py-1.5 text-[13px] font-semibold text-brand transition-colors hover:border-brand hover:bg-brand/5 disabled:opacity-60";
+// Aksi per baris: netral. Merah hanya untuk triase merah, kondisi kritis,
+// dan satu aksi utama per halaman, supaya baris triase merah tetap menonjol.
+export const BTN_ROW = BTN_SECONDARY;
 
 // Tombol footer dialog: teks di tengah, lebar menyesuaikan (minimal sama),
 // radius sama dengan input di dalam dialog. Di HP keduanya membagi lebar.

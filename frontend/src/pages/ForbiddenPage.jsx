@@ -15,7 +15,7 @@ export default function ForbiddenPage() {
       <p className="max-w-sm text-sm text-muted">
         Akun Anda tidak memiliki izin untuk membuka halaman ini. Hubungi koordinator apabila Anda memerlukan akses.
       </p>
-      <Link to={homePath} className="mt-2 text-sm font-semibold text-brand hover:text-brand-dark">
+      <Link to={homePath} className="mt-2 text-sm font-semibold text-ink hover:underline">
         Kembali ke halaman utama
       </Link>
     </div>
