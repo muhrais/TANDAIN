@@ -1,6 +1,6 @@
 /**
  * Validasi environment sebelum server start. Di produksi (NODE_ENV=production,
- * mis. Render) server menolak jalan dengan konfigurasi yang tidak aman,
+ * mis. Vercel) server menolak jalan dengan konfigurasi yang tidak aman,
  * daripada diam-diam memakai secret contoh.
  */
 const PLACEHOLDER_SECRET = "ganti_dengan_secret_key_yang_panjang_dan_acak";

@@ -182,14 +182,12 @@ Catatan:
 - Setelah mengubah kode frontend, jalankan ulang `npm run deploy` supaya hasil build diperbarui.
 - `SERVE_FRONTEND=false` mematikan penyajian dashboard dari backend (backend API saja).
 
-## Deploy Cloud (Render + MongoDB Atlas)
+## Deploy Cloud (Vercel + MongoDB Atlas)
 
-Untuk dashboard yang online tanpa laptop sebagai host. Dua pilihan, keduanya memakai MongoDB Atlas:
+Versi online di **https://tandain-35.vercel.app**, tanpa laptop sebagai host: dashboard di CDN Vercel, API sebagai Serverless Function (`api/index.js`, `vercel.json`), data di MongoDB Atlas. Keduanya gratis tanpa kartu.
 
-- **Vercel** (gratis, tanpa kartu): dashboard di CDN, API sebagai Serverless Function (`api/index.js`, `vercel.json`). Langkah di [`docs/DEPLOY_VERCEL.md`](docs/DEPLOY_VERCEL.md).
-- **Render** (server biasa, perlu verifikasi kartu): satu web service API + dashboard (`render.yaml`).
-
-Untuk Render: Langkah lengkap, pengaturan domain `tandain.tech`, dan perubahan firmware (HTTPS + header `X-Device-Key`) ada di [`docs/DEPLOY_CLOUD.md`](docs/DEPLOY_CLOUD.md). Konfigurasi service ada di `render.yaml`.
+- Langkah deploy: [`docs/DEPLOY_VERCEL.md`](docs/DEPLOY_VERCEL.md) (`npx vercel deploy --prod` dari laptop).
+- Atlas, migrasi data, domain `tandain.tech`, dan firmware HTTPS + header `X-Device-Key`: [`docs/DEPLOY_CLOUD.md`](docs/DEPLOY_CLOUD.md).
 
 Pengamanan yang aktif lewat environment (berlaku juga di mode lapangan bila diisi):
 

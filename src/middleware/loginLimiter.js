@@ -4,7 +4,7 @@ const ApiError = require("../utils/ApiError");
  * Batasi tebakan password di POST /api/auth/login (server publik).
  * Hitung login GAGAL per kombinasi IP + username dalam jendela waktu; login
  * sukses mereset hitungan. Disimpan di memori proses: cukup untuk satu
- * instance (Render free / laptop), hilang saat restart.
+ * instance (function Vercel / laptop), hilang saat restart.
  */
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_FAILURES = 10;

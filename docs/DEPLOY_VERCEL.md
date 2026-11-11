@@ -42,19 +42,19 @@ Semua perintah dijalankan dari folder `Work/TANDAIN`, di branch `feat/deploy-ver
    npx vercel env add JWT_EXPIRES_IN production    # isi: 8h
    ```
    Buat nilai acak dengan: `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`
-5. **Deploy:** `npx vercel --prod`. Catat alamatnya, mis. `https://tandain.vercel.app`.
+5. **Deploy:** `npx vercel --prod`. Catat alamatnya, mis. `https://tandain-35.vercel.app`.
 6. **CORS:** `npx vercel env add CORS_ORIGINS production` berisi alamat tadi, lalu `npx vercel --prod` sekali lagi.
-7. **Data awal** di Atlas (bila kosong): migrasi dari laptop atau seed, lihat `docs/DEPLOY_CLOUD.md` bagian 1 dan 3. Lalu ganti password akun bawaan di Pengaturan → Pengguna.
+7. **Data awal** di Atlas (bila kosong): migrasi dari laptop atau seed, lihat `docs/DEPLOY_CLOUD.md` bagian 1 dan 2. Lalu ganti password akun bawaan di Pengaturan → Pengguna.
 8. **Cek:** buka `<alamat>/api/health`, login, dan buka Data Pasien serta Pengaturan langsung lewat URL.
 
 ## Gelang
 
 Sama dengan deploy cloud lainnya: `BACKEND_BASE_URL` diganti alamat Vercel,
 header `X-Device-Key` berisi `DEVICE_API_KEY`, dan `WiFiClientSecure`.
-Contoh kode di `docs/DEPLOY_CLOUD.md` bagian 5. Uji tanpa gelang:
+Contoh kode di `docs/DEPLOY_CLOUD.md` bagian 4. Uji tanpa gelang:
 
 ```bash
-npm run sim -- --base https://tandain.vercel.app --device-key <DEVICE_API_KEY> --count 3 --duration 60
+npm run sim -- --base https://tandain-35.vercel.app --device-key <DEVICE_API_KEY> --count 3 --duration 60
 ```
 
 ## Domain `tandain.tech`
