@@ -115,7 +115,9 @@ export default function DashboardPage() {
 
       {activeTab === "Aktivitas" && <ActivityTab activities={data.activities} />}
 
-      {activeTab === "Alert" && <AlertTab alerts={alerts} onResolve={handleResolveAlert} />}
+      {activeTab === "Alert" && (
+        <AlertTab alerts={alerts} ambang={data.incidentInfo.ambang} onResolve={handleResolveAlert} />
+      )}
 
       {catatKorbanJiwa && (
         <KorbanJiwaForm

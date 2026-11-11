@@ -1,38 +1,46 @@
 import { Siren, Timer, Users, MapPinOff, BatteryLow } from "lucide-react";
 
-// Ambang batas awal (asumsi sementara, belum diatur di PRD).
-export const MERAH_WAIT_LIMIT_MIN = 10;
-export const GPS_SILENT_LIMIT_MIN = 5;
-export const BATTERY_LOW_PCT = 20;
-export const CAPACITY_WARN_PCT = 80;
+// Ambang default, sama dengan DEFAULT_AMBANG di backend (models/Incident.js).
+// Nilai yang dipakai dibaca dari insiden aktif (Pengaturan > Ambang Alert);
+// default ini hanya cadangan kalau field-nya belum ada.
+export const DEFAULT_AMBANG = {
+  merah_menunggu_mnt: 10,
+  gps_diam_mnt: 5,
+  baterai_rendah_pct: 20,
+  kapasitas_peringatan_pct: 80,
+};
 // Tombol darurat dianggap masih aktif selama ini setelah ditekan.
 export const EMERGENCY_WINDOW_MIN = 10;
+
+export function resolveAmbang(ambang) {
+  return { ...DEFAULT_AMBANG, ...(ambang ?? {}) };
+}
 
 export const ALERT_TYPES = {
   darurat: {
     label: "Tombol darurat ditekan",
     icon: Siren,
-    rule: "Langsung kritis",
+    rule: () => "Langsung kritis",
   },
   merah_menunggu: {
     label: "Korban merah menunggu jemputan",
     icon: Timer,
-    rule: `> ${MERAH_WAIT_LIMIT_MIN} menit`,
+    rule: (a) => `> ${a.merah_menunggu_mnt} menit`,
   },
   kapasitas_posko: {
     label: "Kapasitas posko hampir penuh",
     icon: Users,
-    rule: `≥ ${CAPACITY_WARN_PCT}% · penuh = kritis`,
+    rule: (a) => `≥ ${a.kapasitas_peringatan_pct}% · penuh = kritis`,
   },
   sinyal_gps: {
     label: "Sinyal GPS hilang",
     icon: MapPinOff,
-    rule: `> ${GPS_SILENT_LIMIT_MIN} menit tanpa update`,
+    rule: (a) => `> ${a.gps_diam_mnt} menit tanpa update`,
   },
   baterai_rendah: {
     label: "Baterai tag rendah",
     icon: BatteryLow,
-    rule: `< ${BATTERY_LOW_PCT}%`,
+    rule: (a) => `< ${a.baterai_rendah_pct}%`,
   },
 };
 
@@ -75,7 +83,8 @@ export function countAlerts(alerts) {
 // `alert_id` deterministik (`${jenis}:${subjek}`) supaya status "ditangani"
 // yang disimpan terpisah (lihat alertService) tetap nempel ke alert yang
 // sama walau daftar ini diturunkan ulang tiap siklus polling.
-export function deriveAlerts({ summary, posko = [], locations, now = new Date() }) {
+export function deriveAlerts({ summary, posko = [], locations, now = new Date(), ambang }) {
+  const a = resolveAmbang(ambang);
   const alerts = [];
   const MENUNGGU_STATUSES = ["registered", "triaged", "waiting_transfer"];
 
@@ -83,7 +92,7 @@ export function deriveAlerts({ summary, posko = [], locations, now = new Date() 
     if (item.kategori_triase !== "merah") continue;
     if (!MENUNGGU_STATUSES.includes(item.status_korban)) continue;
     const waitMinutes = (now - new Date(item.waktu_update_terakhir)) / 60000;
-    if (waitMinutes <= MERAH_WAIT_LIMIT_MIN) continue;
+    if (waitMinutes <= a.merah_menunggu_mnt) continue;
     alerts.push({
       alert_id: `merah_menunggu:${item.tag_id}`,
       jenis: "merah_menunggu",
@@ -92,14 +101,14 @@ export function deriveAlerts({ summary, posko = [], locations, now = new Date() 
       subjek: item.tag_id,
       kategori_triase: item.kategori_triase,
       waktu: item.waktu_update_terakhir,
-      detail: `Menunggu jemputan ${Math.round(waitMinutes)} menit, melewati batas ${MERAH_WAIT_LIMIT_MIN} menit.`,
+      detail: `Menunggu jemputan ${Math.round(waitMinutes)} menit, melewati batas ${a.merah_menunggu_mnt} menit.`,
     });
   }
 
   for (const p of posko) {
     if (!p.kapasitas_maksimum) continue;
     const pct = (p.jumlah_korban_saat_ini / p.kapasitas_maksimum) * 100;
-    if (pct < CAPACITY_WARN_PCT) continue;
+    if (pct < a.kapasitas_peringatan_pct) continue;
     alerts.push({
       alert_id: `kapasitas_posko:${p.posko_id}`,
       jenis: "kapasitas_posko",
@@ -133,7 +142,7 @@ export function deriveAlerts({ summary, posko = [], locations, now = new Date() 
     }
 
     const silentMinutes = (now - new Date(item.received_at)) / 60000;
-    if (item.gps_fix === false || silentMinutes > GPS_SILENT_LIMIT_MIN) {
+    if (item.gps_fix === false || silentMinutes > a.gps_diam_mnt) {
       alerts.push({
         alert_id: `sinyal_gps:${item.tag_id}`,
         jenis: "sinyal_gps",
@@ -146,7 +155,7 @@ export function deriveAlerts({ summary, posko = [], locations, now = new Date() 
       });
     }
 
-    if (item.battery_pct != null && item.battery_pct < BATTERY_LOW_PCT) {
+    if (item.battery_pct != null && item.battery_pct < a.baterai_rendah_pct) {
       alerts.push({
         alert_id: `baterai_rendah:${item.tag_id}`,
         jenis: "baterai_rendah",
@@ -155,13 +164,13 @@ export function deriveAlerts({ summary, posko = [], locations, now = new Date() 
         subjek: item.tag_id,
         kategori_triase: item.victim?.kategori_triase,
         waktu: item.received_at,
-        detail: `Baterai tag tersisa ${item.battery_pct}%, di bawah batas ${BATTERY_LOW_PCT}%.`,
+        detail: `Baterai tag tersisa ${item.battery_pct}%, di bawah batas ${a.baterai_rendah_pct}%.`,
       });
     }
   }
 
-  return alerts.map((a) => ({
-    ...a,
-    usia_menit: Math.max(0, Math.round((now - new Date(a.waktu)) / 60000)),
+  return alerts.map((alert) => ({
+    ...alert,
+    usia_menit: Math.max(0, Math.round((now - new Date(alert.waktu)) / 60000)),
   }));
 }

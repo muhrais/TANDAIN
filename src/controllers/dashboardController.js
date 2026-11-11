@@ -3,6 +3,7 @@ const Tag = require("../models/Tag");
 const StatusHistory = require("../models/StatusHistory");
 const Posko = require("../models/Posko");
 const KorbanJiwa = require("../models/KorbanJiwa");
+const { getActiveIncident } = require("../models/Incident");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
 const { getUserNameMap } = require("../utils/userNames");
@@ -139,8 +140,9 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
     }));
 
   // --- korban_jiwa: jumlah dari entri yang tidak dihapus (keputusan K1) ---
-  const [korbanJiwaEntries, recentHistory] = await Promise.all([
+  const [korbanJiwaEntries, incident, recentHistory] = await Promise.all([
     KorbanJiwa.find({ dihapus: false }).sort({ created_at: -1 }),
+    getActiveIncident(),
     StatusHistory.find({}).sort({ waktu_perubahan: -1 }).limit(RECENT_ACTIVITY_LIMIT),
   ]);
   const korban_jiwa = {
@@ -209,6 +211,7 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
     priority_queue,
     recent_activity,
     korban_jiwa,
+    incident: incident.toJSON(),
   });
 });
 

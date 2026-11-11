@@ -25,7 +25,8 @@ function saveResolved(map) {
 
 export async function getAlerts({ summary, posko, locations, now }) {
   const resolved = loadResolved();
-  return deriveAlerts({ summary, posko, locations, now }).map((alert) => ({
+  // Ambang dari insiden aktif (Pengaturan > Ambang Alert), ikut di summary.
+  return deriveAlerts({ summary, posko, locations, now, ambang: summary?.incident?.ambang }).map((alert) => ({
     ...alert,
     ...(resolved[alert.alert_id] ?? {}),
   }));

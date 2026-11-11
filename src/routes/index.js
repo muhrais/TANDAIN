@@ -8,6 +8,8 @@ const poskoRoutes = require("./poskoRoutes");
 const deviceRoutes = require("./deviceRoutes");
 const testSessionRoutes = require("./testSessionRoutes");
 const korbanJiwaRoutes = require("./korbanJiwaRoutes");
+const incidentRoutes = require("./incidentRoutes");
+const userRoutes = require("./userRoutes");
 
 const router = express.Router();
 
@@ -25,5 +27,7 @@ router.use("/posko", poskoRoutes); // Week 5: FR-BE-07
 router.use("/devices", deviceRoutes);
 router.use("/test-sessions", testSessionRoutes);
 router.use("/korban-jiwa", korbanJiwaRoutes);
+router.use("/incident", incidentRoutes);
+router.use("/users", userRoutes);
 
 module.exports = router;
