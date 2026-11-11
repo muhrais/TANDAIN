@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ChevronDown, RefreshCw, Search, Lightbulb, Link2, Unlink, Radar, X, BatteryMedium, Wifi, Satellite, Timer, Cpu } from "lucide-react";
+import RefreshButton from "../components/common/RefreshButton";
+import { ChevronDown, Search, Lightbulb, Link2, Unlink, Radar, X, BatteryMedium, Wifi, Satellite, Timer, Cpu } from "lucide-react";
 import SegmentedFilter from "../components/common/SegmentedFilter";
 import { usePolling } from "../hooks/usePolling";
 import { listDevices, pairDevice, unpairDevice, identifyDevice } from "../services/deviceService";
@@ -502,14 +503,7 @@ export default function PerangkatPage() {
             Pairing NFC gelang dengan modul GPS dilakukan satu kali saat persiapan alat. Setelah itu, petugas lapangan cukup memindai NFC gelang.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={refresh}
-          className={`flex items-center gap-1.5 text-sm font-medium ${error ? "text-triase-merah" : "text-muted hover:text-ink"}`}
-        >
-          {error ? "Terputus" : "Refresh"}
-          <RefreshCw size={14} />
-        </button>
+        <RefreshButton onClick={refresh} error={Boolean(error)} />
       </div>
 
       {/* Pencarian dan filter dalam satu kartu, sama dengan Data Pasien dan Evakuasi. */}

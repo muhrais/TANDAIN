@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, RefreshCw } from "lucide-react";
+import { Search } from "lucide-react";
+import RefreshButton from "../components/common/RefreshButton";
 import LevelFilter, { TRIASE_OPTIONS } from "../components/common/LevelFilter";
 import StatusActionButton from "../components/evacuation/StatusActionButton";
 import { usePolling } from "../hooks/usePolling";
@@ -86,16 +87,7 @@ export default function EvakuasiPage() {
           <h1 className="text-xl font-bold text-ink md:text-2xl">Evakuasi</h1>
           <p className="mt-1 text-sm text-muted">Antrean kerja per tahap, korban merah lebih dulu.</p>
         </div>
-        <button
-          type="button"
-          onClick={refresh}
-          className={`flex items-center gap-1.5 text-sm font-medium ${
-            error ? "text-triase-merah" : "text-muted hover:text-ink"
-          }`}
-        >
-          {error ? "Terputus" : "Refresh"}
-          <RefreshCw size={14} />
-        </button>
+        <RefreshButton onClick={refresh} error={Boolean(error)} />
       </div>
 
       <div className="space-y-3 rounded-xl bg-white p-4 shadow-sm md:p-5">
