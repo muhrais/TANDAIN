@@ -179,7 +179,7 @@ export default function ScanNfcPage() {
           onClose={() => setCatatKorbanJiwa(false)}
           onSaved={(entry) => {
             setCatatKorbanJiwa(false);
-            setKjNotice(`${entry.jumlah} korban jiwa tercatat.`);
+            setKjNotice(`${entry.jumlah} korban jiwa tercatat. Koreksi lewat menu Data Pasien, tab Korban Jiwa.`);
           }}
         />
       )}

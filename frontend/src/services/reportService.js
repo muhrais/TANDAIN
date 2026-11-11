@@ -39,22 +39,24 @@ function countBy(victims, key, values) {
   return values.map((value) => [value, victims.filter((v) => v[key] === value).length]);
 }
 
-// Belum ada GET /api/report/export (T-BE-7), jadi CSV disusun di FE dari
-// GET /api/victims. Isinya sama dengan yang dipakai dashboard, jadi angka
-// ringkasan konsisten dengan tampilan (PRD #7). Ringkasan ikut memuat total
-// korban jiwa (koleksi korban_jiwa).
-export async function exportVictimsCsv() {
+// CSV disusun di FE dari GET /api/victims (filter yang sama dengan tampilan),
+// jadi angka ringkasan konsisten dengan yang terlihat di layar (PRD #7).
+// `filter` opsional: kategori_triase, status_korban, posko, q - dipakai
+// tombol ekspor di Data Pasien supaya file mengikuti filter aktif.
+export async function exportVictimsCsv(filter = {}) {
   const [victims, korbanJiwa] = await Promise.all([
-    listVictims(),
+    listVictims(filter),
     listKorbanJiwa().catch(() => null),
   ]);
   const exportedAt = new Date();
+  const activeFilters = Object.entries(filter).filter(([, value]) => value != null && value !== "");
 
   const rows = [
     COLUMNS,
     ...victims.map(victimRow),
     [],
     ["Ringkasan", `diekspor ${exportedAt.toISOString()}`],
+    ...(activeFilters.length > 0 ? [["filter", activeFilters.map(([k, v]) => `${k}=${v}`).join("; ")]] : []),
     ["total_korban", victims.length],
     ...countBy(victims, "kategori_triase", ["merah", "kuning", "hijau"]),
     ...countBy(victims, "status_korban", STATUS_ORDER),

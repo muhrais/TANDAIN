@@ -97,5 +97,6 @@ const victimSchema = new mongoose.Schema(
 victimSchema.index({ tag_id: 1 });
 victimSchema.index({ kategori_triase: 1 });
 victimSchema.index({ status_korban: 1 });
+victimSchema.index({ waktu_update_terakhir: -1 });
 
 module.exports = mongoose.model("Victim", victimSchema);

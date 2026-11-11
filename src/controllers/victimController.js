@@ -1,6 +1,7 @@
 const Tag = require("../models/Tag");
 const Victim = require("../models/Victim");
 const StatusHistory = require("../models/StatusHistory");
+const Location = require("../models/Location");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
@@ -278,19 +279,131 @@ const updateVictim = asyncHandler(async (req, res) => {
   return sendSuccess(res, 200, victim);
 });
 
-/**
- * GET /api/victims (Auth: Ya)
- * Daftar seluruh korban untuk dashboard, mendukung filter kategori & status.
- * Query params opsional: ?kategori_triase=merah&status_korban=registered
- */
-const listVictims = asyncHandler(async (req, res) => {
-  const { kategori_triase, status_korban } = req.query;
+// Kolom yang boleh dipakai `sort`. Triase & status diurutkan menurut makna
+// (merah dulu; registered -> arrived), bukan abjad.
+const SORT_FIELDS = {
+  waktu_update_terakhir: "waktu_update_terakhir",
+  created_at: "created_at",
+  nama: "nama",
+  tag_id: "tag_id",
+  usia: "usia",
+  kategori_triase: "_triase_rank",
+  status_korban: "_status_rank",
+};
+const MAX_LIMIT = 100;
+
+function escapeRegex(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildVictimFilter(query) {
+  const { kategori_triase, status_korban, posko, q } = query;
   const filter = {};
   if (kategori_triase) filter.kategori_triase = kategori_triase;
-  if (status_korban) filter.status_korban = status_korban;
+  if (status_korban === "aktif") filter.status_korban = { $ne: "arrived" };
+  else if (status_korban) filter.status_korban = status_korban;
+  const and = [];
+  if (posko) and.push({ $or: [{ posko_asal: posko }, { posko_tujuan: posko }] });
+  const search = typeof q === "string" ? q.trim() : "";
+  if (search) {
+    const pattern = new RegExp(escapeRegex(search), "i");
+    and.push({ $or: [{ tag_id: pattern }, { nama: pattern }] });
+  }
+  if (and.length > 0) filter.$and = and;
+  return filter;
+}
 
-  const victims = await Victim.find(filter).sort({ created_at: -1 });
-  return sendSuccess(res, 200, victims);
+/**
+ * GET /api/victims (Auth: Ya)
+ * Daftar korban. FR-DASH-03 (pencarian).
+ *
+ * Query opsional: kategori_triase, status_korban ("aktif" = belum tiba),
+ * posko (asal atau tujuan), q (cari tag_id/nama, tidak peka huruf besar).
+ *
+ * Tanpa `page`: array semua korban yang cocok (dipakai Evakuasi, CSV, dll).
+ * Dengan `page`: { items, total, page, limit } + `sort` (mis.
+ * "-waktu_update_terakhir", "kategori_triase", "nama").
+ */
+const listVictims = asyncHandler(async (req, res) => {
+  const filter = buildVictimFilter(req.query);
+
+  if (req.query.page === undefined) {
+    const victims = await Victim.find(filter).sort({ created_at: -1 });
+    return sendSuccess(res, 200, victims);
+  }
+
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(req.query.limit, 10) || 25));
+  const sortParam = typeof req.query.sort === "string" ? req.query.sort : "-waktu_update_terakhir";
+  const desc = sortParam.startsWith("-");
+  const sortKey = SORT_FIELDS[sortParam.replace(/^-/, "")];
+  if (!sortKey) {
+    throw new ApiError(422, "VALIDATION_ERROR", `sort harus salah satu dari: ${Object.keys(SORT_FIELDS).join(", ")}.`);
+  }
+  const direction = desc ? -1 : 1;
+
+  const [result] = await Victim.aggregate([
+    { $match: filter },
+    {
+      $addFields: {
+        _triase_rank: { $indexOfArray: [TRIASE_CATEGORIES, "$kategori_triase"] },
+        _status_rank: { $indexOfArray: [STATUS_ORDER, "$status_korban"] },
+      },
+    },
+    // victim_id sebagai pemecah seri supaya urutan antar-halaman stabil.
+    { $sort: { [sortKey]: direction, victim_id: 1 } },
+    {
+      $facet: {
+        items: [{ $skip: (page - 1) * limit }, { $limit: limit }, { $project: { _id: 0, _triase_rank: 0, _status_rank: 0 } }],
+        total: [{ $count: "n" }],
+      },
+    },
+  ]);
+
+  return sendSuccess(res, 200, {
+    items: result.items,
+    total: result.total[0]?.n ?? 0,
+    page,
+    limit,
+  });
+});
+
+/**
+ * GET /api/victims/:id/locations?limit=200 (Auth: Ya) - FR-DB-02
+ * Jejak lokasi korban dari koleksi `locations`: titik dari tag korban
+ * sejak korban didaftarkan sampai tiba (gelang bisa dipakai korban lain
+ * sesudahnya). Diurutkan lama -> baru; `limit` mengambil titik TERBARU.
+ */
+const getVictimLocations = asyncHandler(async (req, res) => {
+  const victim = await Victim.findOne({ victim_id: req.params.id });
+  if (!victim) {
+    throw new ApiError(404, "VICTIM_NOT_FOUND", "Data korban dengan ID tersebut tidak ditemukan.");
+  }
+  const limit = Math.min(1000, Math.max(1, parseInt(req.query.limit, 10) || 200));
+
+  const range = { $gte: victim.created_at };
+  if (victim.status_korban === "arrived") {
+    const arrived = await StatusHistory.findOne({ victim_id: victim.victim_id, status_baru: "arrived" }).sort({
+      waktu_perubahan: -1,
+    });
+    if (arrived) range.$lte = arrived.waktu_perubahan;
+  }
+
+  const points = await Location.find({ tag_id: victim.tag_id, received_at: range }, { latitude: 1, longitude: 1, received_at: 1, timestamp: 1 })
+    .sort({ received_at: -1 })
+    .limit(limit)
+    .lean();
+
+  return sendSuccess(res, 200, {
+    victim_id: victim.victim_id,
+    tag_id: victim.tag_id,
+    points: points.reverse().map((p) => ({
+      lat: p.latitude,
+      lng: p.longitude,
+      timestamp: p.timestamp,
+      received_at: p.received_at,
+    })),
+  });
 });
 
 /**
@@ -323,4 +436,5 @@ module.exports = {
   updateVictim,
   listVictims,
   getVictimDetail,
+  getVictimLocations,
 };
