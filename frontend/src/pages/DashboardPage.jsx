@@ -88,8 +88,11 @@ export default function DashboardPage() {
                 label="Tag belum terdaftar"
                 to="/perangkat?filter=bebas"
               />
-              {/* Tautan ke /pasien diaktifkan setelah halaman Data Pasien ada (T7). */}
-              <RegistrationSummaryRow value={data.registration.registered} label="Tag terdaftar" />
+              <RegistrationSummaryRow
+                value={data.registration.registered}
+                label="Tag terdaftar"
+                to="/pasien?status=aktif"
+              />
             </div>
           </div>
 

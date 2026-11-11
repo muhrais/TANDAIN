@@ -4,6 +4,7 @@ const {
   updateVictim,
   listVictims,
   getVictimDetail,
+  getVictimLocations,
 } = require("../controllers/victimController");
 const { authenticate, requireRole, ROLES } = require("../middleware/auth");
 
@@ -14,6 +15,7 @@ router.use(authenticate, requireRole(...ROLES.STAFF_MEDIS));
 
 router.get("/", listVictims); // GET /api/victims
 router.get("/:id", getVictimDetail); // GET /api/victims/:id
+router.get("/:id/locations", getVictimLocations); // GET /api/victims/:id/locations
 router.post("/", createVictim); // POST /api/victims
 router.put("/:id", updateVictim); // PUT /api/victims/:id
 

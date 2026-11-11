@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 
 const SEGMENT_COLORS = {
@@ -79,7 +80,10 @@ export default function TriageDistributionCard({ data, onCatatKorbanJiwa, classN
           ))}
         </ul>
         {onCatatKorbanJiwa && (
-          <div className="mt-4 flex items-center justify-end gap-3 border-t border-black/5 pt-3">
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-black/5 pt-3">
+            <Link to="/pasien?tab=korban-jiwa" className="text-xs font-semibold text-muted hover:text-ink">
+              Lihat catatan korban jiwa
+            </Link>
             <button
               type="button"
               onClick={onCatatKorbanJiwa}

@@ -1,7 +1,8 @@
 /**
  * Script seeding sederhana untuk kebutuhan development/testing lokal.
- * Menjalankan: npm run seed             (tambah data yang belum ada)
- *             npm run seed -- --reset  (hapus korban/tag/lokasi/riwayat/korban jiwa dulu)
+ * Menjalankan: npm run seed                    (tambah data yang belum ada)
+ *             npm run seed -- --reset         (hapus korban/tag/lokasi/riwayat/korban jiwa dulu)
+ *             npm run seed -- --victims 200   (tambah 200 korban acak untuk uji P-05)
  *
  * Membuat:
  * - 3 akun user (koordinator, petugas_pos_medis, tenaga_medis_lapangan)
@@ -26,6 +27,8 @@ const Location = require("../models/Location");
 const KorbanJiwa = require("../models/KorbanJiwa");
 
 const RESET = process.argv.includes("--reset");
+const victimsArgIndex = process.argv.indexOf("--victims");
+const EXTRA_VICTIMS = victimsArgIndex === -1 ? 0 : parseInt(process.argv[victimsArgIndex + 1], 10) || 0;
 
 async function seed() {
   await connectDB();
@@ -197,9 +200,61 @@ async function seed() {
     console.log(`[SEED] Korban contoh '${sv.nama || sv.tag_id}' (${sv.kategori_triase}, ${sv.status_korban}) berhasil dibuat.`);
   }
 
+  if (EXTRA_VICTIMS > 0) {
+    await seedExtraVictims(EXTRA_VICTIMS, now);
+  }
+
   console.log("[SEED] Selesai.");
   await mongoose.disconnect();
   process.exit(0);
+}
+
+// Korban acak untuk uji pencarian/paginasi Data Pasien (P-05). Tag
+// TND-GEN-xxx; yang sudah ada dilewati, jadi aman dijalankan berulang.
+async function seedExtraVictims(count, now) {
+  const DEPAN = ["Agus", "Bayu", "Citra", "Dewi", "Eko", "Fitri", "Gilang", "Hana", "Irfan", "Joko", "Kiki", "Lina", "Mira", "Nanda", "Putri", "Rizky", "Sinta", "Taufik", "Umar", "Wulan"];
+  const BELAKANG = ["Pratama", "Lestari", "Santoso", "Wibowo", "Saputri", "Hidayat", "Nugraha", "Kusuma", "Rahma", "Siregar"];
+  const TRIASE = ["merah", "kuning", "hijau"];
+  const STATUS = ["registered", "triaged", "waiting_transfer", "in_transit", "arrived"];
+  const TUJUAN = { merah: "POSKO-MERAH", kuning: "POSKO-KUNING", hijau: "POSKO-HIJAU" };
+
+  const tagIds = Array.from({ length: count }, (_, i) => `TND-GEN-${String(i + 1).padStart(3, "0")}`);
+  const existing = new Set((await Victim.find({ tag_id: { $in: tagIds } }, { tag_id: 1 })).map((v) => v.tag_id));
+  const victims = [];
+  for (const [i, tag_id] of tagIds.entries()) {
+    if (existing.has(tag_id)) continue;
+    const kategori_triase = TRIASE[i % 3];
+    const status_korban = STATUS[(i * 7) % 5];
+    const menit = 5 + ((i * 13) % 180);
+    victims.push({
+      tag_id,
+      nama: `${DEPAN[i % DEPAN.length]} ${BELAKANG[(i * 3) % BELAKANG.length]}`,
+      usia: 5 + ((i * 17) % 80),
+      jenis_kelamin: i % 2 === 0 ? "L" : "P",
+      kategori_triase,
+      status_korban,
+      posko_asal: "POSKO-UTAMA",
+      posko_tujuan: STATUS.indexOf(status_korban) >= 2 ? TUJUAN[kategori_triase] : null,
+      waktu_update_terakhir: new Date(now - menit * 60000),
+      created_at: new Date(now - (menit + 20) * 60000),
+    });
+  }
+  await Tag.bulkWrite(
+    victims.map((v) => ({
+      updateOne: { filter: { tag_id: v.tag_id }, update: { $setOnInsert: { tag_id: v.tag_id, status_tag: "active" } }, upsert: true },
+    }))
+  );
+  // Victim.create (bukan insertMany) supaya default victim_id terisi per dokumen.
+  for (const v of victims) {
+    const victim = await Victim.create(v);
+    await StatusHistory.create({
+      victim_id: victim.victim_id,
+      status_lama: null,
+      status_baru: "registered",
+      waktu_perubahan: v.created_at,
+    });
+  }
+  console.log(`[SEED] --victims: ${victims.length} korban acak dibuat (${existing.size} sudah ada).`);
 }
 
 seed().catch((err) => {

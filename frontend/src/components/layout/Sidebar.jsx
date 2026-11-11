@@ -4,7 +4,6 @@ import {
   Map,
   Nfc,
   ArrowLeftRight,
-  CirclePlus,
   Database,
   Settings,
   Watch,
@@ -24,7 +23,7 @@ const CONNECTION_INDICATOR = {
 };
 
 // `roles` cuma relevan untuk item yang punya `path` (halaman sungguhan).
-// Item tanpa `path` (Medis/Data Pasien/Pengaturan belum ada halamannya)
+// Item tanpa `path` (Pengaturan belum ada halamannya)
 // selalu tampil nonaktif untuk semua role - lihat NavItem.
 // Sama dengan ROLES.STAFF_MEDIS di backend (src/middleware/auth.js).
 const STAFF_MEDIS = ["koordinator", "petugas_pos_medis", "tenaga_medis_lapangan"];
@@ -34,8 +33,7 @@ const NAV_ITEMS = [
   { label: "Maps", icon: Map, path: "/maps", roles: ["koordinator"] },
   { label: "Scan NFC", icon: Nfc, path: "/scan", roles: STAFF_MEDIS },
   { label: "Evakuasi", icon: ArrowLeftRight, path: "/evakuasi", roles: STAFF_MEDIS },
-  { label: "Medis", icon: CirclePlus },
-  { label: "Data Pasien", icon: Database },
+  { label: "Data Pasien", icon: Database, path: "/pasien", roles: STAFF_MEDIS },
   { label: "Perangkat", icon: Watch, path: "/perangkat", roles: ["koordinator"] },
   { label: "Pengaturan", icon: Settings },
 ];
