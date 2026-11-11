@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const schemaOptions = require("../utils/schemaOptions");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("crypto");
 
 /**
  * Koleksi `status_history` — PRD Software bagian 5.5
@@ -17,7 +17,7 @@ const statusHistorySchema = new mongoose.Schema(
   {
     history_id: {
       type: String,
-      default: () => `HIST-${uuidv4()}`,
+      default: () => `HIST-${randomUUID()}`,
       unique: true,
     },
     victim_id: {

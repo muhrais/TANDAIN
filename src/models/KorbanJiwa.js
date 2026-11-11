@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const schemaOptions = require("../utils/schemaOptions");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("crypto");
 
 /**
  * Koleksi `korban_jiwa`
@@ -16,7 +16,7 @@ const korbanJiwaSchema = new mongoose.Schema(
   {
     kj_id: {
       type: String,
-      default: () => `KJ-${uuidv4()}`,
+      default: () => `KJ-${randomUUID()}`,
       unique: true,
     },
     jumlah: {
