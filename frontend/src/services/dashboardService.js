@@ -29,8 +29,8 @@ export async function getTriageDistribution() {
     merah,
     kuning,
     hijau,
-    // Belum ada konsep korban jiwa di backend saat ini.
-    korban_jiwa: 0,
+    // Diinput langsung (koleksi korban_jiwa), tidak masuk donut korban aktif.
+    korban_jiwa: summary.korban_jiwa?.total ?? 0,
   };
 }
 

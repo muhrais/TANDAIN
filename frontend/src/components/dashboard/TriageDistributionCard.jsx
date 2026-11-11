@@ -1,3 +1,5 @@
+import { Plus } from "lucide-react";
+
 const SEGMENT_COLORS = {
   merah: "var(--color-triase-merah)",
   hijau: "var(--color-triase-hijau)",
@@ -50,7 +52,7 @@ const LEGEND_ROWS = [
   { key: "korban_jiwa", label: "Korban Jiwa", color: "bg-ink" },
 ];
 
-export default function TriageDistributionCard({ data, className = "" }) {
+export default function TriageDistributionCard({ data, onCatatKorbanJiwa, className = "" }) {
   return (
     <div
       className={`flex flex-wrap items-center justify-center gap-x-10 gap-y-6 rounded-2xl bg-white p-6 shadow-sm ${className}`}
@@ -76,6 +78,18 @@ export default function TriageDistributionCard({ data, className = "" }) {
             </li>
           ))}
         </ul>
+        {onCatatKorbanJiwa && (
+          <div className="mt-4 flex items-center justify-end gap-3 border-t border-black/5 pt-3">
+            <button
+              type="button"
+              onClick={onCatatKorbanJiwa}
+              className="flex items-center gap-1 text-xs font-semibold text-brand hover:text-brand-dark"
+            >
+              <Plus size={14} />
+              Catat korban jiwa
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -117,6 +117,7 @@ Catatan perilaku:
 - **Ekspor CSV** saat ini disusun di frontend dari `GET /api/victims` (satu baris per korban + ringkasan per kategori dan status).
 - Peta membaca `GET /api/locations/latest`: satu titik terakhir per tag, termasuk tag yang belum diregistrasi.
 - Tab Alert memunculkan alert **tombol darurat** selama 10 menit setelah tombol perangkat ditekan.
+- **Korban jiwa** dicatat langsung (tidak lewat gelang) oleh koordinator atau tenaga medis lapangan, dari kartu Distribusi Triase di dashboard atau tombol di halaman Scan. Tenaga medis lapangan bisa mengubah catatannya sendiri selama 30 menit; hapus hanya oleh koordinator, wajib alasan, dan tersimpan sebagai soft delete.
 
 ### Panel metrik pengujian (`?debug=1`)
 
@@ -174,6 +175,9 @@ Login via `POST /api/auth/login` (`{ "username", "password" }`), lalu kirim toke
 | `GET/POST/PUT /api/victims` | ✅ | ✅ | 401 |
 | `POST /api/tags/:tag_id/scan` | ✅ | ✅ | 401 |
 | `GET /api/posko` | ✅ | ✅ | 401 |
+| `GET /api/korban-jiwa` | ✅ | ✅ | 401 |
+| `POST/PUT /api/korban-jiwa` | ✅ | tenaga medis lapangan saja (PUT: entri sendiri ≤ 30 mnt) | 401 |
+| `DELETE /api/korban-jiwa/:id` (body `{ alasan }`) | ✅ | 403 | 401 |
 | `POST /api/locations`, `/api/locations/batch` | perangkat | perangkat | ✅ |
 | `POST /api/devices/heartbeat`, `/api/devices/button` | perangkat | perangkat | ✅ |
 

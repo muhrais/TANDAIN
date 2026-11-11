@@ -1,7 +1,7 @@
 /**
  * Script seeding sederhana untuk kebutuhan development/testing lokal.
  * Menjalankan: npm run seed             (tambah data yang belum ada)
- *             npm run seed -- --reset  (hapus korban/tag/lokasi/riwayat dulu)
+ *             npm run seed -- --reset  (hapus korban/tag/lokasi/riwayat/korban jiwa dulu)
  *
  * Membuat:
  * - 3 akun user (koordinator, petugas_pos_medis, tenaga_medis_lapangan)
@@ -23,6 +23,7 @@ const Tag = require("../models/Tag");
 const Victim = require("../models/Victim");
 const StatusHistory = require("../models/StatusHistory");
 const Location = require("../models/Location");
+const KorbanJiwa = require("../models/KorbanJiwa");
 
 const RESET = process.argv.includes("--reset");
 
@@ -37,9 +38,12 @@ async function seed() {
       Tag.deleteMany({}),
       Location.deleteMany({}),
       StatusHistory.deleteMany({}),
+      KorbanJiwa.deleteMany({}),
     ]);
-    const [victims, tags, locations, history] = results.map((r) => r.deletedCount);
-    console.log(`[SEED] --reset: hapus ${victims} korban, ${tags} tag, ${locations} lokasi, ${history} riwayat status.`);
+    const [victims, tags, locations, history, korbanJiwa] = results.map((r) => r.deletedCount);
+    console.log(
+      `[SEED] --reset: hapus ${victims} korban, ${tags} tag, ${locations} lokasi, ${history} riwayat status, ${korbanJiwa} catatan korban jiwa.`
+    );
   }
 
   // --- Seed Users ---

@@ -17,7 +17,9 @@ const TEXT_COLOR = {
 };
 
 // Fallback saat kategori_triase tidak diketahui (mis. korban sudah dihapus).
+// Catatan korban jiwa memakai titik hitam, sama dengan legenda dashboard.
 const NEUTRAL_DOT = "bg-neutral-300";
+const KORBAN_JIWA_DOT = "bg-ink";
 const NEUTRAL_TEXT = "text-ink";
 
 const TRIASE_LABEL = { merah: "Merah", kuning: "Kuning", hijau: "Hijau" };
@@ -27,11 +29,13 @@ const STATUS_FILTERS = [
   { key: "semua", label: "Semua" },
   ...STATUS_ORDER.map((key) => ({ key, label: STATUS_LABEL[key] })),
   { key: "perubahan", label: "Ubah triase & data" },
+  { key: "korban_jiwa", label: "Korban jiwa" },
 ];
 
 function matchesStatusFilter(activity, filter) {
   if (filter === "semua") return true;
-  if (filter === "perubahan") return activity.jenis !== "status";
+  if (filter === "perubahan") return activity.jenis === "triase" || activity.jenis === "data";
+  if (filter === "korban_jiwa") return activity.jenis === "korban_jiwa";
   return activity.jenis === "status" && activity.status_baru === filter;
 }
 
@@ -43,6 +47,7 @@ function transitionLabel(activity) {
     }`;
   }
   if (activity.jenis === "data") return "Data diperbarui";
+  if (activity.jenis === "korban_jiwa") return "Korban jiwa";
   return activity.status_lama
     ? `${STATUS_LABEL[activity.status_lama]} → ${STATUS_LABEL[activity.status_baru]}`
     : STATUS_LABEL[activity.status_baru];
@@ -50,7 +55,8 @@ function transitionLabel(activity) {
 
 function TimelineRow({ activity, isFirst, isLast }) {
   const transition = transitionLabel(activity);
-  const dotColor = DOT_COLOR[activity.kategori_triase] ?? NEUTRAL_DOT;
+  const dotColor =
+    activity.jenis === "korban_jiwa" ? KORBAN_JIWA_DOT : DOT_COLOR[activity.kategori_triase] ?? NEUTRAL_DOT;
   const textColor = TEXT_COLOR[activity.kategori_triase] ?? NEUTRAL_TEXT;
 
   return (

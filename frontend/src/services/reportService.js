@@ -1,4 +1,5 @@
 import { listVictims } from "./victimService";
+import { listKorbanJiwa } from "./korbanJiwaService";
 import { downloadCsv } from "../lib/csv";
 import { STATUS_ORDER } from "../lib/activity";
 
@@ -40,10 +41,13 @@ function countBy(victims, key, values) {
 
 // Belum ada GET /api/report/export (T-BE-7), jadi CSV disusun di FE dari
 // GET /api/victims. Isinya sama dengan yang dipakai dashboard, jadi angka
-// ringkasan konsisten dengan tampilan (PRD #7). Begitu endpoint backend ada,
-// cukup ganti isi fungsi ini.
+// ringkasan konsisten dengan tampilan (PRD #7). Ringkasan ikut memuat total
+// korban jiwa (koleksi korban_jiwa).
 export async function exportVictimsCsv() {
-  const victims = await listVictims();
+  const [victims, korbanJiwa] = await Promise.all([
+    listVictims(),
+    listKorbanJiwa().catch(() => null),
+  ]);
   const exportedAt = new Date();
 
   const rows = [
@@ -54,6 +58,7 @@ export async function exportVictimsCsv() {
     ["total_korban", victims.length],
     ...countBy(victims, "kategori_triase", ["merah", "kuning", "hijau"]),
     ...countBy(victims, "status_korban", STATUS_ORDER),
+    ...(korbanJiwa ? [["korban_jiwa", korbanJiwa.total], ["korban_jiwa_entri", korbanJiwa.items.length]] : []),
   ];
 
   const stamp = exportedAt.toISOString().slice(0, 19).replace(/[:T]/g, "-");
