@@ -1,5 +1,5 @@
 import { apiClient } from "../lib/apiClient";
-import { STATUS_LABEL, formatTime, formatElapsed } from "../lib/activity";
+import { STATUS_LABEL, formatTime, formatElapsed, transitionLabel, activityHeadline } from "../lib/activity";
 import { getLatestLocations } from "./locationService";
 import { listPosko } from "./poskoService";
 
@@ -65,7 +65,10 @@ export async function getRecentActivity(limit = 4) {
   const summary = await getSummary();
   return summary.recent_activity.slice(0, limit).map((item) => ({
     time: formatTime(item.waktu_perubahan),
-    message: item.description,
+    headline: activityHeadline(item),
+    nama: item.nama ?? null,
+    kategori_triase: item.kategori_triase ?? null,
+    label: transitionLabel(item),
   }));
 }
 

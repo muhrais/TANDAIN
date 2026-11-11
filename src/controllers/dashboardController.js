@@ -37,6 +37,31 @@ const DATA_FIELD_LABEL = {
   kondisi_klinis: "kondisi klinis",
 };
 
+// Keterangan pendek untuk baris linimasa (null bila tidak ada), mis.
+// "Menuju Pos Merah" atau "Nama, usia". Pasangan label perubahan di frontend.
+function describeDetail(entry, victim, poskoNameById) {
+  const namaPosko = (id) => (id ? poskoNameById.get(id) || id : null);
+  if (entry.jenis === "triase") return null;
+  if (entry.jenis === "data") {
+    const fields = Object.keys(entry.nilai_baru || {}).map((f) => DATA_FIELD_LABEL[f] || f);
+    return fields.length ? fields.join(", ").replace(/^./, (c) => c.toUpperCase()) : null;
+  }
+  const asal = namaPosko(victim && victim.posko_asal);
+  const tujuan = namaPosko(victim && victim.posko_tujuan);
+  switch (entry.status_baru) {
+    case "registered":
+      return asal ? `Di ${asal}` : null;
+    case "waiting_transfer":
+      return asal ? `Dari ${asal}` : null;
+    case "in_transit":
+      return tujuan ? `Menuju ${tujuan}` : null;
+    case "arrived":
+      return tujuan ? `Di ${tujuan}` : null;
+    default:
+      return null;
+  }
+}
+
 function describeActivity(entry, victim, poskoNameById, pengubah) {
   const base = describeChange(entry, victim, poskoNameById);
   return pengubah ? `${base} oleh ${pengubah}` : base;
@@ -165,6 +190,7 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
       history_id: entry.history_id,
       victim_id: entry.victim_id,
       tag_id: victim ? victim.tag_id : null,
+      nama: victim ? victim.nama || null : null,
       kategori_triase: victim ? victim.kategori_triase : null,
       jenis: entry.jenis,
       status_lama: entry.status_lama,
@@ -173,6 +199,7 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
       nilai_baru: entry.nilai_baru,
       diubah_oleh_nama: pengubah,
       waktu_perubahan: entry.waktu_perubahan,
+      keterangan: describeDetail(entry, victim, poskoNameById),
       description: describeActivity(entry, victim, poskoNameById, pengubah),
     };
   });
@@ -183,6 +210,7 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
       history_id: entry.kj_id,
       victim_id: null,
       tag_id: null,
+      nama: null,
       kategori_triase: null,
       jenis: "korban_jiwa",
       status_lama: null,
@@ -193,6 +221,7 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
       // Waktu pencatatan (bukan waktu_ditemukan), supaya urutannya sama
       // dengan kapan petugas benar-benar memasukkan data.
       waktu_perubahan: entry.created_at,
+      keterangan: entry.posko_id ? `Di ${poskoNameById.get(entry.posko_id) || entry.posko_id}` : null,
       description: `${entry.jumlah} korban jiwa dicatat${tempat}${pencatat ? ` oleh ${pencatat}` : ""}`,
     };
   });
