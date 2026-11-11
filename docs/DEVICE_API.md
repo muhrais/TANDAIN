@@ -1,7 +1,11 @@
 # Device API TANDAIN (heartbeat v2)
 
-Kontrak antara firmware gelang (ESP32-C3) dan backend. Semua endpoint perangkat **tanpa token**
-dan memakai `Content-Type: application/json`. Base URL contoh: `http://192.168.137.1:3000`.
+Kontrak antara firmware gelang (ESP32-C3) dan backend. Semua endpoint perangkat **tanpa token
+pengguna** dan memakai `Content-Type: application/json`. Base URL contoh: `http://192.168.137.1:3000`.
+
+Bila server mengisi `DEVICE_API_KEY` (wajib di deploy cloud, lihat `docs/DEPLOY_CLOUD.md`),
+setiap request perangkat harus membawa header `X-Device-Key: <kunci>`. Tanpa header yang benar
+server membalas 401 `DEVICE_KEY_INVALID`. Mode lapangan tanpa `DEVICE_API_KEY` tidak berubah.
 
 | Endpoint | Interval | Isi |
 |---|---|---|
@@ -100,6 +104,7 @@ triase → LED (uji PAIR-02).
 | Kode | Kapan |
 |---|---|
 | 400 `VALIDATION_ERROR` | `tag_id` kosong/bukan string, atau `gps_status` di luar daftar |
+| 401 `DEVICE_KEY_INVALID` | Server memakai `DEVICE_API_KEY` dan header `X-Device-Key` tidak ada/salah |
 | 5xx | Server bermasalah. Firmware pertahankan LED terakhir dan coba lagi di heartbeat berikutnya |
 
 Jika respons gagal atau tidak bisa di-parse, **jangan** mematikan LED. Pertahankan mode terakhir.

@@ -23,6 +23,8 @@
  *   --offline A-B         detik ke-A s.d. B semua tag "offline": lokasi disimpan di buffer
  *   --batch-on-reconnect  kirim isi buffer lewat POST /api/locations/batch saat online lagi
  *   --out PATH            file CSV log (default scripts/out/sim_<waktu>.csv)
+ *   --device-key K        header X-Device-Key (default env DEVICE_API_KEY), untuk server
+ *                         yang mengunci endpoint perangkat
  *   --fw-legacy           kirim payload heartbeat lama (tanpa telemetri v2),
  *                         untuk memastikan firmware yang sudah ter-flash tetap diterima
  *
@@ -60,12 +62,17 @@ function isOffline() {
   return elapsed >= OFFLINE[0] && elapsed < OFFLINE[1];
 }
 
+const DEVICE_KEY = (() => {
+  const i = process.argv.indexOf("--device-key");
+  return i === -1 ? process.env.DEVICE_API_KEY || "" : process.argv[i + 1] || "";
+})();
+
 async function post(path, body) {
   const t0 = performance.now();
   try {
     const res = await fetch(BASE + path, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(DEVICE_KEY ? { "X-Device-Key": DEVICE_KEY } : {}) },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(5000),
     });

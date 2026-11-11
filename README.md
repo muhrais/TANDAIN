@@ -182,6 +182,20 @@ Catatan:
 - Setelah mengubah kode frontend, jalankan ulang `npm run deploy` supaya hasil build diperbarui.
 - `SERVE_FRONTEND=false` mematikan penyajian dashboard dari backend (backend API saja).
 
+## Deploy Cloud (Render + MongoDB Atlas)
+
+Untuk dashboard yang online tanpa laptop sebagai host: satu web service Render (API + dashboard) dan database MongoDB Atlas, keduanya gratis. Langkah lengkap, pengaturan domain `tandain.tech`, dan perubahan firmware (HTTPS + header `X-Device-Key`) ada di [`docs/DEPLOY_CLOUD.md`](docs/DEPLOY_CLOUD.md). Konfigurasi service ada di `render.yaml`.
+
+Pengamanan yang aktif lewat environment (berlaku juga di mode lapangan bila diisi):
+
+| Variabel | Fungsi |
+|---|---|
+| `DEVICE_API_KEY` | Endpoint firmware (`/api/devices/heartbeat`, `/api/devices/button`, `/api/locations*`) wajib header `X-Device-Key`. Kosong = terbuka seperti sebelumnya |
+| `CORS_ORIGINS` | Daftar origin browser yang boleh memanggil API, pisahkan koma. Kosong = semua |
+| `NODE_ENV=production` | Server menolak start bila `JWT_SECRET` < 32 karakter; seed butuh `--allow-production` |
+
+Login dibatasi 10 percobaan gagal per IP + username per 15 menit (respons 429).
+
 ## Akun Bawaan (hasil seed)
 
 | Role | Username | Password |

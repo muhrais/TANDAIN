@@ -5,6 +5,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const routes = require("./routes");
 const { errorHandler, notFoundHandler } = require("./middleware/errorHandler");
+const { corsOrigins } = require("./config/env");
 
 const app = express();
 
@@ -12,7 +13,10 @@ const app = express();
 // memakai IP klien asli, bukan alamat tunnel.
 app.set("trust proxy", 1);
 
-app.use(cors());
+// CORS_ORIGINS kosong = izinkan semua (dev/lapangan). Di cloud, isi dengan
+// domain dashboard. Request dari origin yang sama tidak terpengaruh.
+const allowedOrigins = corsOrigins();
+app.use(cors(allowedOrigins.length > 0 ? { origin: allowedOrigins } : undefined));
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
