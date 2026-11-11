@@ -44,6 +44,7 @@ export default function DashboardPage() {
         onTabChange={setActiveTab}
         lastUpdated={lastUpdated}
         pollError={error}
+        onRefresh={refresh}
       />
 
       {activeTab === "Ringkasan" && (

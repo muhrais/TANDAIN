@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { TriangleAlert, Bell } from "lucide-react";
+import { TriangleAlert, Bell, RefreshCw } from "lucide-react";
 
 const TABS = ["Ringkasan", "Alert", "Aktivitas"];
 
@@ -35,6 +35,7 @@ export default function Topbar({
   onTabChange,
   lastUpdated,
   pollError,
+  onRefresh,
 }) {
   const isLive = Boolean(lastUpdated) && !pollError;
 
@@ -78,17 +79,19 @@ export default function Topbar({
                 : `${alertCounts.aktif} alert aktif`}
             </button>
           )}
-          <span
-            role="status"
-            title="Data diperbarui otomatis setiap beberapa detik"
-            className={`hidden items-center gap-1.5 text-sm font-medium sm:flex ${
+          <button
+            type="button"
+            onClick={onRefresh}
+            title="Refresh manual (data juga diperbarui otomatis)"
+            className={`flex items-center gap-1.5 text-sm font-medium ${
               isLive ? "text-logo-green" : "text-triase-merah"
             }`}
           >
             <span className={`h-2 w-2 rounded-full ${isLive ? "bg-logo-green" : "bg-triase-merah"}`} />
             {isLive ? "Live" : "Terputus"} · {isLive ? "update" : "data"}{" "}
             {lastUpdated ? clockFormatter.format(lastUpdated) : "--:--:--"}
-          </span>
+            <RefreshCw size={14} aria-hidden="true" />
+          </button>
         </div>
       </div>
 
