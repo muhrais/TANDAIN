@@ -17,7 +17,7 @@ export default function PriorityQueueCard({ items, className = "" }) {
   return (
     <div className={`flex min-h-0 flex-col rounded-2xl bg-white p-5 shadow-sm ${className}`}>
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="font-semibold text-ink">Antrian Prioritas</h3>
+        <h3 className="font-semibold text-ink">Antrean Prioritas</h3>
         <Link to="/evakuasi" aria-label="Buka halaman Evakuasi" className="text-muted hover:text-ink">
           <ChevronRight size={18} />
         </Link>

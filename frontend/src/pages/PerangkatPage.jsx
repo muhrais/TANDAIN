@@ -439,7 +439,7 @@ export default function PerangkatPage() {
         <div>
           <h1 className="text-xl font-bold text-ink md:text-2xl">Perangkat</h1>
           <p className="mt-1 text-sm text-muted">
-            Pairing NFC gelang ke GPS-nya dilakukan sekali saat persiapan alat. Petugas lapangan cukup scan NFC.
+            Pairing NFC gelang dengan modul GPS dilakukan satu kali saat persiapan alat. Setelah itu, petugas lapangan cukup memindai NFC gelang.
           </p>
         </div>
         <button
@@ -447,7 +447,7 @@ export default function PerangkatPage() {
           onClick={refresh}
           className={`flex items-center gap-1.5 text-sm font-medium ${error ? "text-triase-merah" : "text-muted hover:text-ink"}`}
         >
-          {error ? "Terputus" : "Muat ulang"}
+          {error ? "Terputus" : "Refresh"}
           <RefreshCw size={14} />
         </button>
       </div>

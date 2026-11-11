@@ -60,7 +60,7 @@ export default function MapsPage() {
             error ? "text-triase-merah" : "text-muted hover:text-ink"
           }`}
         >
-          {error ? "Terputus" : "Muat ulang"}
+          {error ? "Terputus" : "Refresh"}
           <RefreshCw size={14} />
         </button>
       </div>

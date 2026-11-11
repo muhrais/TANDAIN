@@ -108,7 +108,7 @@ export default function PoskoSettings({ posko, onSaved }) {
       <div className="p-4 md:px-5 md:pt-5">
         <h2 className="font-semibold text-ink">Posko</h2>
         <p className="text-sm text-muted">
-          Nama dan koordinat dipakai peta dan pilihan posko tujuan; kapasitas dipakai alert kapasitas. Jenis posko tetap.
+          Nama dan koordinat digunakan pada peta dan pilihan posko tujuan; kapasitas digunakan untuk alert kapasitas. Jenis posko tidak dapat diubah.
         </p>
       </div>
       <ul className="divide-y divide-black/5">

@@ -90,9 +90,9 @@ export default function EvakuasiPage() {
     <div className="min-w-0 flex-1 space-y-6 p-4 md:p-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-ink md:text-2xl">Evakuasi & Antrian</h1>
+          <h1 className="text-xl font-bold text-ink md:text-2xl">Evakuasi & Antrean</h1>
           <p className="mt-1 text-sm text-muted">
-            Urut merah → kuning → hijau, lalu yang paling lama menunggu. Status hanya bisa maju satu langkah.
+            Korban diurutkan menurut kategori triase (merah, kuning, hijau), lalu waktu tunggu terlama. Status hanya dapat dinaikkan satu tahap.
           </p>
         </div>
         <button
@@ -102,7 +102,7 @@ export default function EvakuasiPage() {
             error ? "text-triase-merah" : "text-muted hover:text-ink"
           }`}
         >
-          {error ? "Terputus" : "Muat ulang"}
+          {error ? "Terputus" : "Refresh"}
           <RefreshCw size={14} />
         </button>
       </div>

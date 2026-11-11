@@ -139,8 +139,8 @@ export default function ScanNfcPage() {
         <h1 className="text-2xl font-bold text-ink">Scan NFC</h1>
         <p className="mt-1 text-sm text-muted">
           {NFC_SUPPORTED
-            ? "Tempelkan tag NFC ke HP, atau masukkan tag_id manual di bawah."
-            : "Web NFC API tidak tersedia di browser ini (cuma Chrome Android). Masukkan tag_id manual."}
+            ? "Tempelkan gelang ke bagian belakang ponsel, atau masukkan ID tag secara manual."
+            : "Web NFC hanya tersedia di Chrome Android. Masukkan ID tag secara manual."}
         </p>
       </div>
 
@@ -156,7 +156,7 @@ export default function ScanNfcPage() {
             {nfcListening ? "Menunggu tag..." : "Scan pakai NFC"}
           </button>
           {nfcListening && (
-            <span className="text-sm text-muted">Tempelkan tag NFC ke bagian belakang HP.</span>
+            <span className="text-sm text-muted">Tempelkan gelang ke bagian belakang ponsel.</span>
           )}
         </div>
       )}

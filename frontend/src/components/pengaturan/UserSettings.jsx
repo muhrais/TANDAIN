@@ -140,7 +140,7 @@ export default function UserSettings({ users, onSaved }) {
       <div className="flex flex-wrap items-start justify-between gap-3 p-4 md:px-5 md:pt-5">
         <div>
           <h2 className="font-semibold text-ink">Pengguna</h2>
-          <p className="text-sm text-muted">Akun petugas yang bisa masuk ke TANDAIN. Minimal harus ada satu koordinator.</p>
+          <p className="text-sm text-muted">Akun petugas yang dapat masuk ke TANDAIN. Paling sedikit satu akun harus berperan sebagai koordinator.</p>
         </div>
         <button type="button" onClick={() => setDialog("baru")} className={BTN_PRIMARY}>
           <Plus size={14} />
