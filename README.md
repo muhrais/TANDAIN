@@ -160,6 +160,28 @@ Buka dua terminal:
 
 MongoDB (kalau pakai Docker) harus sudah `docker start tandain-mongo` sebelum terminal 1 dijalankan.
 
+## Deploy Lapangan (laptop + hotspot + Cloudflare Tunnel)
+
+Satu laptop menjalankan semuanya. Gelang mengirim data ke laptop lewat hotspot (HTTP lokal, tanpa internet), sedangkan HP petugas membuka dashboard lewat alamat HTTPS dari Cloudflare Tunnel (syarat Web NFC di Chrome Android).
+
+```
+Gelang ESP32 ──HTTP──► 192.168.137.1:3000 ┐
+                                           ├─ laptop: Express (API + dashboard hasil build) + MongoDB
+HP petugas ──HTTPS──► *.trycloudflare.com ─┘   (cloudflared meneruskan ke localhost:3000)
+```
+
+1. Nyalakan **Mobile Hotspot Windows** (band 2.4 GHz). Laptop tetap tersambung ke internet lewat Wi-Fi/LAN lain supaya tunnel jalan.
+2. `docker start tandain-mongo`
+3. Dari root repo: `npm run deploy` — build frontend lalu menjalankan backend di port 3000. Backend ikut melayani dashboard, jadi tidak perlu `npm run dev` di `frontend/`.
+4. Terminal kedua: `npm run tunnel` (sekali pasang: `winget install --id Cloudflare.cloudflared`). Salin alamat `https://<acak>.trycloudflare.com` yang muncul, buka di Chrome HP.
+5. Firmware gelang: `BACKEND_BASE_URL = "http://192.168.137.1:3000"` dan SSID/password hotspot laptop (lihat `firmware/README.md`). Cek di halaman Perangkat bahwa gelang online.
+
+Catatan:
+- Alamat quick tunnel berganti setiap `npm run tunnel` dijalankan. Untuk alamat tetap, pakai named tunnel dengan domain sendiri di akun Cloudflare.
+- Kalau internet putus, data gelang tetap masuk (jalurnya lokal). Dashboard masih bisa dibuka di `http://192.168.137.1:3000`, tapi tanpa HTTPS sehingga scan NFC di HP tidak tersedia; pakai input manual `tag_id`.
+- Setelah mengubah kode frontend, jalankan ulang `npm run deploy` supaya hasil build diperbarui.
+- `SERVE_FRONTEND=false` mematikan penyajian dashboard dari backend (backend API saja).
+
 ## Akun Bawaan (hasil seed)
 
 | Role | Username | Password |
@@ -253,6 +275,9 @@ Sinkron LED untuk uji PAIR-02 tercatat di setiap gelang: `led_command` (perintah
 | root | `npm run sim` | Simulator tag virtual |
 | root | `npm run bench` | Benchmark latensi API |
 | root | `npm run gps-report` | Sesi uji GPS dan rekap CSV |
+| root | `npm run build` | Build frontend ke `frontend/dist` (dilayani backend) |
+| root | `npm run deploy` | Build frontend lalu jalankan backend (mode deploy lapangan) |
+| root | `npm run tunnel` | Cloudflare quick tunnel HTTPS ke `localhost:3000` |
 | `frontend/` | `npm run dev` | Dev server Vite |
 | `frontend/` | `npm run build` | Build produksi ke `frontend/dist` |
 | `frontend/` | `npm run lint` | Lint dengan oxlint |

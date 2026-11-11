@@ -10,6 +10,9 @@ async function start() {
 
   app.listen(PORT, HOST, () => {
     console.log(`[SERVER] TANDAIN Backend berjalan di http://localhost:${PORT}`);
+    if (app.servesFrontend) {
+      console.log(`[SERVER] Dashboard (hasil build) ikut dilayani di http://localhost:${PORT}`);
+    }
     console.log(`[SERVER] Perangkat LAN dapat mengakses port ${PORT} pada IP laptop.`);
     console.log(`[SERVER] Coba: GET http://localhost:${PORT}/api/health`);
   });
