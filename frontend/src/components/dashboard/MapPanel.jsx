@@ -50,7 +50,7 @@ export default function MapPanel({
   posko = [],
   serverTime,
   onMarkerClick,
-  scrollWheelZoom = false,
+  scrollWheelZoom = true,
   className = "",
 }) {
   // Pusat peta ditentukan sekali saat mount saja (state initializer, bukan
