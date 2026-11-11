@@ -160,6 +160,57 @@ Buka dua terminal:
 
 MongoDB (kalau pakai Docker) harus sudah `docker start tandain-mongo` sebelum terminal 1 dijalankan.
 
+## Deploy Lapangan (laptop + hotspot + Cloudflare Tunnel)
+
+Satu laptop menjalankan semuanya. Gelang mengirim data ke laptop lewat hotspot (HTTP lokal, tanpa internet), sedangkan HP petugas membuka dashboard lewat alamat HTTPS dari Cloudflare Tunnel (syarat Web NFC di Chrome Android).
+
+```
+Gelang ESP32 ──HTTP──► 192.168.137.1:3000 ┐
+                                           ├─ laptop: Express (API + dashboard hasil build) + MongoDB
+HP petugas ──HTTPS──► *.trycloudflare.com ─┘   (cloudflared meneruskan ke localhost:3000)
+```
+
+1. Nyalakan **Mobile Hotspot Windows** (band 2.4 GHz). Laptop tetap tersambung ke internet lewat Wi-Fi/LAN lain supaya tunnel jalan.
+2. `docker start tandain-mongo`
+3. Dari root repo: `npm run deploy` — build frontend lalu menjalankan backend di port 3000. Backend ikut melayani dashboard, jadi tidak perlu `npm run dev` di `frontend/`.
+4. Terminal kedua: `npm run tunnel` (sekali pasang: `winget install --id Cloudflare.cloudflared`). Salin alamat `https://<acak>.trycloudflare.com` yang muncul, buka di Chrome HP.
+5. Firmware gelang: `BACKEND_BASE_URL = "http://192.168.137.1:3000"` dan SSID/password hotspot laptop (lihat `firmware/README.md`). Cek di halaman Perangkat bahwa gelang online.
+
+Catatan:
+- Alamat quick tunnel berganti setiap `npm run tunnel` dijalankan. Untuk alamat tetap, pakai named tunnel dengan domain sendiri di akun Cloudflare.
+- Kalau internet putus, data gelang tetap masuk (jalurnya lokal). Dashboard masih bisa dibuka di `http://192.168.137.1:3000`, tapi tanpa HTTPS sehingga scan NFC di HP tidak tersedia; pakai input manual `tag_id`.
+- Setelah mengubah kode frontend, jalankan ulang `npm run deploy` supaya hasil build diperbarui.
+- `SERVE_FRONTEND=false` mematikan penyajian dashboard dari backend (backend API saja).
+
+## Deploy Cloud (Vercel + MongoDB Atlas)
+
+Versi online di **https://tandain-35.vercel.app**, tanpa laptop sebagai host: dashboard di CDN Vercel, API sebagai Serverless Function (`api/index.js`, `vercel.json`), data di MongoDB Atlas. Keduanya gratis tanpa kartu.
+
+- Langkah deploy: [`docs/DEPLOY_VERCEL.md`](docs/DEPLOY_VERCEL.md) (`npx vercel deploy --prod` dari laptop).
+- Atlas, migrasi data, domain `tandain.tech`, dan firmware HTTPS + header `X-Device-Key`: [`docs/DEPLOY_CLOUD.md`](docs/DEPLOY_CLOUD.md).
+
+Pengamanan yang aktif lewat environment (berlaku juga di mode lapangan bila diisi):
+
+| Variabel | Fungsi |
+|---|---|
+| `DEVICE_API_KEY` | Endpoint firmware (`/api/devices/heartbeat`, `/api/devices/button`, `/api/locations*`) wajib header `X-Device-Key`. Kosong = terbuka seperti sebelumnya |
+| `CORS_ORIGINS` | Daftar origin browser yang boleh memanggil API, pisahkan koma. Kosong = semua |
+| `NODE_ENV=production` | Server menolak start bila `JWT_SECRET` < 32 karakter; seed butuh `--allow-production` |
+
+Login dibatasi 10 percobaan gagal per IP + username per 15 menit (respons 429).
+
+## Memantau Gelang
+
+Selain dashboard, status gelang bisa dipantau dari tiga tempat:
+
+| Tempat | Untuk |
+|---|---|
+| `npm run monitor` | Tabel status semua gelang dari database yang ditunjuk `MONGODB_URI` (Atlas), refresh tiap 3 dtk. Hanya membaca |
+| Serial Monitor Arduino (115200) | Sisi gelang: `POST /api/devices/heartbeat -> 200` (sukses), `401` (kunci perangkat salah), `-1` (internet/TLS) |
+| Vercel → project `tandain` → Logs | Sisi server: setiap request ke API beserta kode status |
+
+Kolom LED di `npm run monitor` membandingkan perintah server (`none` bila gelang belum dipakai korban, atau warna triase) dengan warna yang dilaporkan gelang lewat `led_state`. Firmware GPS-003 belum melaporkan `led_state`, dan saat gelang bebas firmware menyalakan warna default (kuning).
+
 ## Akun Bawaan (hasil seed)
 
 | Role | Username | Password |
@@ -253,6 +304,10 @@ Sinkron LED untuk uji PAIR-02 tercatat di setiap gelang: `led_command` (perintah
 | root | `npm run sim` | Simulator tag virtual |
 | root | `npm run bench` | Benchmark latensi API |
 | root | `npm run gps-report` | Sesi uji GPS dan rekap CSV |
+| root | `npm run monitor` | Pantau gelang langsung dari database (`.env`): online, heartbeat/menit, GPS, triase, LED, tombol. `-- --tag GPS-003`, `-- --interval 5`, `-- --once` |
+| root | `npm run build` | Build frontend ke `frontend/dist` (dilayani backend) |
+| root | `npm run deploy` | Build frontend lalu jalankan backend (mode deploy lapangan) |
+| root | `npm run tunnel` | Cloudflare quick tunnel HTTPS ke `localhost:3000` |
 | `frontend/` | `npm run dev` | Dev server Vite |
 | `frontend/` | `npm run build` | Build produksi ke `frontend/dist` |
 | `frontend/` | `npm run lint` | Lint dengan oxlint |

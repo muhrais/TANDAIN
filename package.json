@@ -7,10 +7,14 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "build": "npm --prefix frontend run build",
+    "deploy": "npm run build && npm start",
+    "tunnel": "cloudflared tunnel --url http://localhost:3000",
     "seed": "node src/seed/seed.js",
     "sim": "node scripts/simulate-tags.js",
     "bench": "node scripts/bench-api.js",
-    "gps-report": "node scripts/gps-report.js"
+    "gps-report": "node scripts/gps-report.js",
+    "monitor": "node scripts/monitor-devices.js"
   },
   "keywords": [
     "tandain",
@@ -21,6 +25,9 @@
   ],
   "author": "Tim TANDAIN - Muhammad Rais Aminurrahman",
   "license": "ISC",
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -28,8 +35,7 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.0",
-    "morgan": "^1.10.0",
-    "uuid": "^9.0.1"
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"

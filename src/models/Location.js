@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const schemaOptions = require("../utils/schemaOptions");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("crypto");
 
 /**
  * Koleksi `locations` — PRD Software bagian 5.4
@@ -10,7 +10,7 @@ const locationSchema = new mongoose.Schema(
   {
     location_id: {
       type: String,
-      default: () => `LOC-${uuidv4()}`,
+      default: () => `LOC-${randomUUID()}`,
       unique: true,
     },
     tag_id: {

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const schemaOptions = require("../utils/schemaOptions");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("crypto");
 
 /**
  * Koleksi `victims` — PRD Software bagian 5.3
@@ -10,7 +10,7 @@ const victimSchema = new mongoose.Schema(
   {
     victim_id: {
       type: String,
-      default: () => `V-${uuidv4()}`,
+      default: () => `V-${randomUUID()}`,
       unique: true,
     },
     tag_id: {

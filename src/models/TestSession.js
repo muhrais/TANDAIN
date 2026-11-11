@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const schemaOptions = require("../utils/schemaOptions");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("crypto");
 
 /**
  * Koleksi `test_sessions`: rentang waktu sesi uji lapangan (S-01 TTFF,
@@ -9,7 +9,7 @@ const { v4: uuidv4 } = require("uuid");
  */
 const testSessionSchema = new mongoose.Schema(
   {
-    session_id: { type: String, default: () => `TS-${uuidv4().slice(0, 8)}`, unique: true },
+    session_id: { type: String, default: () => `TS-${randomUUID().slice(0, 8)}`, unique: true },
     nama: { type: String, required: true, trim: true },
     id_uji: { type: String, default: null, trim: true }, // mis. "S-02"
     tag_ids: { type: [String], default: [] },

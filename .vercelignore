@@ -1,0 +1,10 @@
+# Jangan unggah rahasia lokal dan file yang tidak dibutuhkan build Vercel.
+# Pola diawali "/" = hanya di root, supaya frontend/.env.production tetap
+# ikut (build dashboard butuh VITE_API_BASE_URL kosong = API satu origin).
+/.env
+/.env.*
+!/.env.example
+/firmware/
+/scripts/out/
+/frontend/dist/
+/frontend/.env.local

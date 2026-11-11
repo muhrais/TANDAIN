@@ -34,6 +34,14 @@ const victimsArgIndex = process.argv.indexOf("--victims");
 const EXTRA_VICTIMS = victimsArgIndex === -1 ? 0 : parseInt(process.argv[victimsArgIndex + 1], 10) || 0;
 
 async function seed() {
+  // Seed membuat akun dengan password default dan --reset menghapus data:
+  // di produksi (DB cloud) harus diminta eksplisit.
+  if (process.env.NODE_ENV === "production" && !process.argv.includes("--allow-production")) {
+    console.error("[SEED] NODE_ENV=production. Tambahkan --allow-production bila memang ingin seed DB produksi.");
+    console.error("[SEED] Setelah seed, segera ganti password akun bawaan lewat Pengaturan > Pengguna.");
+    process.exit(1);
+  }
+
   await connectDB();
 
   // --reset: kosongkan data operasional (korban, tag, lokasi, riwayat) supaya
