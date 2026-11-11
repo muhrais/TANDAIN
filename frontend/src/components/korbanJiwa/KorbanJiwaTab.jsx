@@ -100,9 +100,9 @@ export default function KorbanJiwaTab({ posko }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm md:p-5">
-        <div className="flex items-baseline gap-3">
-          <span className="w-12 text-3xl font-extrabold tabular-nums text-ink">{data?.total ?? "-"}</span>
-          <span className="text-sm text-ink/80">
+        <div className="flex items-center gap-3">
+          <span className="w-12 text-3xl font-extrabold leading-none tabular-nums text-ink">{data?.total ?? "-"}</span>
+          <span className="text-sm leading-none text-ink/80">
             korban jiwa tercatat
             {data && <span className="text-muted"> · {data.items.length} catatan</span>}
           </span>
@@ -132,7 +132,7 @@ export default function KorbanJiwaTab({ posko }) {
             </li>
             {data.items.map((entry) => (
               <li key={entry.kj_id} className={`grid grid-cols-1 gap-2 px-4 py-4 lg:items-center lg:gap-4 lg:px-5 ${ROW_GRID}`}>
-                <div className="text-2xl font-extrabold tabular-nums text-ink">{entry.jumlah}</div>
+                <div className="text-2xl font-extrabold leading-none tabular-nums text-ink">{entry.jumlah}</div>
                 <div className="text-[13px]">
                   <div className="font-semibold text-ink">{formatDateTime(entry.waktu_ditemukan)}</div>
                   <div className="text-muted">dicatat {formatDateTime(entry.created_at)}</div>
