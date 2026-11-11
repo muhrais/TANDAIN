@@ -48,35 +48,24 @@ export default function DashboardPage() {
       />
 
       {activeTab === "Ringkasan" && (
-        // Satu grid 12 kolom: baris atas 6/6 (lebar sama), baris bawah 8/4 (peta lebih lebar).
-        // Tinggi tiap baris mengikuti kolom tertinggi sehingga tepi bawah kartu selalu rata.
+        // Urutan menurut prioritas petugas: apa yang harus ditangani dulu
+        // (antrean + triase), lalu progres evakuasi, baru peta dan aktivitas.
+        // Perangkat hanya strip satu baris di paling atas.
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
           <DeviceStatusCard devices={data.devices} />
 
+          {/* Tinggi baris mengikuti kartu triase; antrean di-scroll di dalam kartu
+              (xl:h-0 + min-h-full) supaya daftar panjang tidak memanjangkan baris. */}
+          <div className="grid max-h-96 xl:col-span-6 xl:h-0 xl:max-h-none xl:min-h-full">
+            <PriorityQueueCard items={data.priorityQueue} />
+          </div>
           <TriageDistributionCard data={data.triage} className="xl:col-span-6" />
 
-          <div className="flex flex-col gap-5 xl:col-span-6">
-            <div className="grid grid-cols-3 gap-2 sm:gap-5">
-              <StatCard
-                label="Menunggu"
-                value={data.evacuation.waiting_pickup}
-                caption="Menunggu jemputan"
-                color="merah"
-              />
-              <StatCard
-                label="Perjalanan"
-                value={data.evacuation.in_transit}
-                caption="Dalam perjalanan"
-                color="kuning"
-              />
-              <StatCard
-                label="Tiba"
-                value={data.evacuation.arrived}
-                caption="Tiba di posko"
-                color="hijau"
-              />
-            </div>
-            <div className="grid flex-1 grid-rows-2 gap-5">
+          <div className="grid grid-cols-2 gap-2 sm:gap-5 xl:col-span-12 xl:grid-cols-4">
+            <StatCard label="Menunggu jemputan" value={data.evacuation.waiting_pickup} />
+            <StatCard label="Dalam perjalanan" value={data.evacuation.in_transit} />
+            <StatCard label="Tiba di posko" value={data.evacuation.arrived} />
+            <div className="grid grid-rows-2 gap-2">
               <RegistrationSummaryRow
                 value={data.registration.not_registered}
                 label="Tag belum terdaftar"
@@ -100,10 +89,8 @@ export default function DashboardPage() {
             className="aspect-square xl:col-span-7"
           />
 
-          {/* Tinggi baris mengikuti peta (persegi). Kolom samping h-0 + min-h-full
-              supaya tidak ikut memanjangkan baris; isi kartu di-scroll. */}
-          <div className="grid grid-rows-2 gap-5 xl:col-span-5 xl:h-0 xl:min-h-full">
-            <PriorityQueueCard items={data.priorityQueue} />
+          {/* Tinggi baris mengikuti peta (persegi). */}
+          <div className="grid max-h-96 xl:col-span-5 xl:h-0 xl:max-h-none xl:min-h-full">
             <RecentActivityCard items={data.recentActivity} onShowAll={() => setActiveTab("Aktivitas")} />
           </div>
         </div>

@@ -69,7 +69,7 @@ export default function AmbangSettings({ incident, onSaved }) {
     try {
       const saved = await updateIncident({ ambang });
       onSaved(saved);
-      setNotice("Ambang alert disimpan. Tab Alert di dashboard memakai nilai baru pada siklus polling berikutnya.");
+      setNotice("Batas alert disimpan. Tab Alert di dashboard memakai nilai baru dalam beberapa detik.");
     } catch (err) {
       setError(err instanceof ApiClientError ? err.details?.map((d) => d.message).join(" ") || err.message : "Gagal terhubung ke server.");
     } finally {
@@ -86,10 +86,10 @@ export default function AmbangSettings({ incident, onSaved }) {
     <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-white p-4 shadow-sm md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-semibold text-ink">Ambang Alert</h2>
+          <h2 className="font-semibold text-ink">Batas Alert</h2>
           <p className="text-sm text-muted">Batas nilai yang memicu alert pada tab Alert di dashboard.</p>
         </div>
-        <button type="button" onClick={resetDefault} className="text-sm font-semibold text-brand hover:text-brand-dark">
+        <button type="button" onClick={resetDefault} className="text-sm font-semibold text-ink hover:underline">
           Kembalikan ke default
         </button>
       </div>
@@ -127,7 +127,7 @@ export default function AmbangSettings({ incident, onSaved }) {
           );
         })}
       </ul>
-      <SaveBar saving={saving} notice={notice} error={error} label="Simpan ambang" meta={lastUpdatedText(incident)} />
+      <SaveBar saving={saving} notice={notice} error={error} label="Simpan batas" meta={lastUpdatedText(incident)} />
     </form>
   );
 }

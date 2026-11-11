@@ -1,5 +1,11 @@
 import { ChevronRight } from "lucide-react";
 
+const TEXT_COLOR = {
+  merah: "text-triase-merah",
+  kuning: "text-triase-kuning-dark",
+  hijau: "text-triase-hijau",
+};
+
 export default function RecentActivityCard({ items, onShowAll, className = "" }) {
   return (
     <div className={`flex min-h-0 flex-col rounded-2xl bg-white p-5 shadow-sm ${className}`}>
@@ -19,11 +25,16 @@ export default function RecentActivityCard({ items, onShowAll, className = "" })
       )}
       <ul className="-mr-2 min-h-0 flex-1 divide-y divide-black/5 overflow-y-auto pr-2">
         {items.map((item, index) => (
-          <li key={`${item.time}-${index}`} className="flex items-center gap-3 py-2.5 text-[13px]">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted/60" />
-            <span className="w-10 shrink-0 tabular-nums text-muted">{item.time}</span>
-            <span className="shrink-0 text-muted/50">—</span>
-            <span className="min-w-0 text-ink/80">{item.message}</span>
+          <li
+            key={`${item.time}-${index}`}
+            className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 py-2.5 text-[13px]"
+          >
+            <span className="tabular-nums text-muted">{item.time}</span>
+            <span className="min-w-0 truncate">
+              <span className={`font-semibold ${TEXT_COLOR[item.kategori_triase] ?? "text-ink"}`}>{item.headline}</span>
+              {item.nama && <span className="ml-2 text-ink/70">{item.nama}</span>}
+            </span>
+            <span className="truncate text-xs text-muted">{item.label}</span>
           </li>
         ))}
       </ul>

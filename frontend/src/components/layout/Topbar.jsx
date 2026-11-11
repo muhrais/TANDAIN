@@ -1,7 +1,6 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { TriangleAlert, Bell, RefreshCw, Download } from "lucide-react";
-import { exportVictimsCsv } from "../../services/reportService";
+import { TriangleAlert, Bell } from "lucide-react";
+import RefreshButton from "../common/RefreshButton";
 
 const TABS = ["Ringkasan", "Alert", "Aktivitas"];
 
@@ -40,20 +39,6 @@ export default function Topbar({
   onRefresh,
 }) {
   const isLive = Boolean(lastUpdated) && !pollError;
-  const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState("");
-
-  async function handleExport() {
-    setExportError("");
-    setExporting(true);
-    try {
-      await exportVictimsCsv();
-    } catch (err) {
-      setExportError(err.message || "Gagal mengekspor data.");
-    } finally {
-      setExporting(false);
-    }
-  }
 
   return (
     <div>
@@ -77,56 +62,34 @@ export default function Topbar({
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={exporting}
-            title={exportError || "Unduh data seluruh korban (CSV)"}
-            className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-60 ${
-              exportError
-                ? "border-triase-merah/40 text-triase-merah"
-                : "border-black/10 text-ink hover:bg-white"
-            }`}
-          >
-            <Download size={14} />
-            {exporting ? "Mengekspor..." : exportError ? "Ekspor gagal, coba lagi" : "Ekspor CSV"}
-          </button>
-          {alertCounts.kritis > 0 && (
+          {/* Satu indikator alert saja: merah bila ada yang kritis, netral bila
+              hanya ada alert biasa. Angkanya selalu sama dengan isi tab Alert. */}
+          {alertCounts.aktif > 0 && (
             <button
               type="button"
               onClick={() => onTabChange("Alert")}
-              className="flex items-center gap-1.5 rounded-md bg-triase-merah-soft px-3 py-1 text-xs font-semibold text-triase-merah transition-colors hover:bg-triase-merah/15"
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                alertCounts.kritis > 0
+                  ? "bg-triase-merah-soft text-triase-merah hover:bg-triase-merah/15"
+                  : "bg-white text-ink hover:bg-black/5"
+              }`}
             >
-              <TriangleAlert size={14} />
-              {alertCounts.kritis} alert kritis
+              {alertCounts.kritis > 0 ? <TriangleAlert size={14} aria-hidden="true" /> : <Bell size={14} aria-hidden="true" />}
+              {alertCounts.kritis > 0
+                ? `${alertCounts.kritis} alert kritis`
+                : `${alertCounts.aktif} alert aktif`}
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => onTabChange("Alert")}
-            className="relative text-muted hover:text-ink"
-            aria-label={`Notifikasi, ${alertCounts.aktif} alert aktif`}
-          >
-            <Bell size={20} />
-            {alertCounts.aktif > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">
-                {alertCounts.aktif}
-              </span>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={onRefresh}
-            title="Refresh manual"
-            className={`hidden items-center gap-1.5 text-sm font-medium sm:flex ${
+          <span
+            role="status"
+            className={`hidden items-center gap-1.5 text-sm font-medium tabular-nums sm:flex ${
               isLive ? "text-logo-green" : "text-triase-merah"
             }`}
           >
             <span className={`h-2 w-2 rounded-full ${isLive ? "bg-logo-green" : "bg-triase-merah"}`} />
-            {isLive ? "Live" : "Terputus"} · {isLive ? "update" : "data"}{" "}
-            {lastUpdated ? clockFormatter.format(lastUpdated) : "--:--:--"}
-            <RefreshCw size={14} />
-          </button>
+            {isLive ? "Live" : "Terputus"} · {lastUpdated ? clockFormatter.format(lastUpdated) : "--:--:--"}
+          </span>
+          <RefreshButton onClick={onRefresh} error={!isLive} />
         </div>
       </div>
 

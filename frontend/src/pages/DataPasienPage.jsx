@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, RefreshCw, Download, ChevronRight, ChevronLeft, ArrowUp, ArrowDown } from "lucide-react";
+import RefreshButton from "../components/common/RefreshButton";
+import { Search, Download, ChevronRight, ChevronLeft, ArrowUp, ArrowDown } from "lucide-react";
 import LevelFilter, { TRIASE_OPTIONS } from "../components/common/LevelFilter";
 import SegmentedFilter from "../components/common/SegmentedFilter";
 import { BTN_ROW, BTN_SECONDARY } from "../components/common/Modal";
@@ -202,15 +203,9 @@ export default function DataPasienPage() {
           </p>
         </div>
         {tab === "korban" && (
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => setTick((t) => t + 1)}
-              className={`flex items-center gap-1.5 text-sm font-medium ${error ? "text-triase-merah" : "text-muted hover:text-ink"}`}
-            >
-              {error ? "Terputus" : "Refresh"}
-              <RefreshCw size={14} />
-            </button>
+          // Refresh selalu di ujung kanan atas, sama seperti halaman lain;
+          // Ekspor ada di sebelah kirinya.
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={handleExport}
@@ -221,6 +216,7 @@ export default function DataPasienPage() {
               <Download size={14} />
               {exporting ? "Mengekspor..." : exportError ? "Ekspor gagal" : hasFilter ? "Ekspor hasil filter" : "Ekspor CSV"}
             </button>
+            <RefreshButton onClick={() => setTick((t) => t + 1)} error={Boolean(error)} />
           </div>
         )}
       </div>
