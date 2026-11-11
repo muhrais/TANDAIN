@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Plus, Pencil } from "lucide-react";
-import Modal, { BTN_PRIMARY, BTN_SECONDARY, BTN_ROW, INPUT, LABEL } from "../common/Modal";
+import Modal, { BTN_PRIMARY, BTN_ROW, INPUT, LABEL, BTN_DIALOG_PRIMARY, BTN_DIALOG_SECONDARY } from "../common/Modal";
 import { createUser, updateUser } from "../../services/userService";
 import { ApiClientError } from "../../lib/apiClient";
 import { getCurrentUser } from "../../services/authService";
@@ -66,10 +66,10 @@ function UserDialog({ user, onClose, onSaved }) {
       onClose={onClose}
       footer={
         <>
-          <button type="button" onClick={onClose} className={BTN_SECONDARY}>
+          <button type="button" onClick={onClose} className={BTN_DIALOG_SECONDARY}>
             Batal
           </button>
-          <button type="submit" form="user-form" disabled={saving} className={BTN_PRIMARY}>
+          <button type="submit" form="user-form" disabled={saving} className={BTN_DIALOG_PRIMARY}>
             {saving ? "Menyimpan..." : isNew ? "Tambah pengguna" : "Simpan perubahan"}
           </button>
         </>

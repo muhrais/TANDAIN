@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import Modal, { BTN_PRIMARY, BTN_SECONDARY } from "./Modal";
+import Modal, { BTN_DIALOG_PRIMARY, BTN_DIALOG_SECONDARY } from "./Modal";
 import { ConfirmContext } from "../../lib/confirm";
 
 // Satu dialog konfirmasi untuk seluruh aplikasi (lihat useConfirm di lib/confirm.js).
@@ -35,13 +35,14 @@ export default function ConfirmProvider({ children }) {
       {request && (
         <Modal
           title={request.title ?? "Konfirmasi"}
+          size="sm"
           onClose={cancel}
           footer={
             <>
-              <button type="button" onClick={cancel} className={BTN_SECONDARY}>
+              <button type="button" onClick={cancel} className={BTN_DIALOG_SECONDARY}>
                 {request.cancelLabel ?? "Batal"}
               </button>
-              <button type="button" ref={confirmButtonRef} onClick={() => close(true)} className={BTN_PRIMARY}>
+              <button type="button" ref={confirmButtonRef} onClick={() => close(true)} className={BTN_DIALOG_PRIMARY}>
                 {request.confirmLabel ?? "Ya, lanjutkan"}
               </button>
             </>

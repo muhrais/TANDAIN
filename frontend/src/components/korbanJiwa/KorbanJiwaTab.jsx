@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import Modal, { BTN_PRIMARY, BTN_SECONDARY, BTN_ROW, INPUT, LABEL } from "../common/Modal";
+import Modal, { BTN_PRIMARY, BTN_ROW, INPUT, LABEL, BTN_DIALOG_PRIMARY, BTN_DIALOG_SECONDARY } from "../common/Modal";
 import KorbanJiwaForm from "./KorbanJiwaForm";
 import { usePolling } from "../../hooks/usePolling";
 import { listKorbanJiwa, deleteKorbanJiwa } from "../../services/korbanJiwaService";
@@ -51,10 +51,10 @@ function DeleteDialog({ entry, onClose, onDeleted }) {
       onClose={onClose}
       footer={
         <>
-          <button type="button" onClick={onClose} className={BTN_SECONDARY}>
+          <button type="button" onClick={onClose} className={BTN_DIALOG_SECONDARY}>
             Batal
           </button>
-          <button type="submit" form="hapus-kj-form" disabled={saving} className={BTN_PRIMARY}>
+          <button type="submit" form="hapus-kj-form" disabled={saving} className={BTN_DIALOG_PRIMARY}>
             {saving ? "Menghapus..." : "Hapus catatan"}
           </button>
         </>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Minus, Plus, LocateFixed, X } from "lucide-react";
-import Modal, { BTN_PRIMARY, BTN_SECONDARY, INPUT, LABEL } from "../common/Modal";
+import Modal, { INPUT, LABEL, BTN_DIALOG_PRIMARY, BTN_DIALOG_SECONDARY } from "../common/Modal";
 import { createKorbanJiwa, updateKorbanJiwa } from "../../services/korbanJiwaService";
 import { ApiClientError } from "../../lib/apiClient";
 import { toLocalInput, fromLocalInput } from "../../lib/datetime";
@@ -105,10 +105,10 @@ export default function KorbanJiwaForm({ entry = null, posko = [], onSaved, onCl
       onClose={onClose}
       footer={
         <>
-          <button type="button" onClick={onClose} className={BTN_SECONDARY}>
+          <button type="button" onClick={onClose} className={BTN_DIALOG_SECONDARY}>
             Batal
           </button>
-          <button type="submit" form="korban-jiwa-form" disabled={saving} className={BTN_PRIMARY}>
+          <button type="submit" form="korban-jiwa-form" disabled={saving} className={BTN_DIALOG_PRIMARY}>
             {saving ? "Menyimpan..." : entry ? "Simpan perubahan" : "Simpan catatan"}
           </button>
         </>
