@@ -13,7 +13,8 @@
     "seed": "node src/seed/seed.js",
     "sim": "node scripts/simulate-tags.js",
     "bench": "node scripts/bench-api.js",
-    "gps-report": "node scripts/gps-report.js"
+    "gps-report": "node scripts/gps-report.js",
+    "monitor": "node scripts/monitor-devices.js"
   },
   "keywords": [
     "tandain",
