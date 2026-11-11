@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Pencil } from "lucide-react";
 import { updateVictim } from "../../services/victimService";
 import { ApiClientError } from "../../lib/apiClient";
+import { useConfirm } from "../../lib/confirm";
+import { TRIASE_LABEL } from "../../lib/triase";
 
 const TRIASE_OPTIONS = [
   { value: "merah", label: "Merah" },
@@ -27,6 +29,7 @@ function errorText(err) {
 // membaca kategori_triase dari respons heartbeat (data.assignment), jadi
 // warna LED ikut berubah pada heartbeat berikutnya tanpa perintah terpisah.
 export default function VictimEditSection({ victim, onUpdated }) {
+  const confirm = useConfirm();
   const [saving, setSaving] = useState(null); // "triase" | "kondisi" | null
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -50,12 +53,16 @@ export default function VictimEditSection({ victim, onUpdated }) {
     }
   }
 
-  function handleTriase(next) {
+  async function handleTriase(next) {
     const current = victim.kategori_triase;
     if (next === current || saving) return;
     if (
       TRIASE_RANK[next] > TRIASE_RANK[current] &&
-      !window.confirm(`Turunkan triase ${victim.tag_id} dari ${current} ke ${next}?`)
+      !(await confirm({
+        title: "Turunkan triase?",
+        message: `Triase ${victim.tag_id} akan diturunkan dari ${TRIASE_LABEL[current]} ke ${TRIASE_LABEL[next]}. LED gelang ikut berubah pada heartbeat berikutnya.`,
+        confirmLabel: "Ya, turunkan",
+      }))
     ) {
       return;
     }

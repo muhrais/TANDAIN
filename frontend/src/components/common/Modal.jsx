@@ -5,14 +5,18 @@ import { X } from "lucide-react";
 // tutup lewat tombol X, klik overlay, atau Escape.
 export default function Modal({ title, onClose, children, footer, size = "md" }) {
   useEffect(() => {
+    // Fase capture + stopPropagation: Escape hanya menutup dialog ini, bukan
+    // juga drawer/halaman di belakangnya yang ikut mendengarkan Escape.
     function handleKey(event) {
-      if (event.key === "Escape") onClose();
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      onClose();
     }
-    document.addEventListener("keydown", handleKey);
+    document.addEventListener("keydown", handleKey, true);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", handleKey);
+      document.removeEventListener("keydown", handleKey, true);
       document.body.style.overflow = previousOverflow;
     };
   }, [onClose]);

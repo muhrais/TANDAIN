@@ -5,6 +5,7 @@ import SegmentedFilter from "../components/common/SegmentedFilter";
 import { usePolling } from "../hooks/usePolling";
 import { listDevices, pairDevice, unpairDevice, identifyDevice } from "../services/deviceService";
 import { ApiClientError } from "../lib/apiClient";
+import { useConfirm } from "../lib/confirm";
 import { NFC_SUPPORTED, readNfcSerial, nfcErrorMessage } from "../lib/nfc";
 import { formatAgo } from "../lib/map";
 import { STATUS_LABEL } from "../lib/activity";
@@ -267,6 +268,7 @@ function PairingPanel({ device, onDone, onClose }) {
 }
 
 function DeviceRow({ device, now, onChanged, onMessage }) {
+  const confirm = useConfirm();
   const [pairing, setPairing] = useState(false);
   const [busy, setBusy] = useState(false);
   const blinking = device.identify_until && new Date(device.identify_until) > now;
@@ -289,9 +291,14 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
     run(() => identifyDevice(device.tag_id));
   }
 
-  function handleUnpair() {
+  async function handleUnpair() {
     const note = device.victim ? ` Gelang ini sedang dipakai ${device.victim.nama || "korban"}.` : "";
-    if (!window.confirm(`Lepas pairing NFC dari ${device.tag_id}?${note}`)) return;
+    const ok = await confirm({
+      title: "Lepas pairing NFC?",
+      message: `NFC gelang ${device.tag_id} akan dilepas dari GPS-nya dan perlu di-pairing ulang sebelum dipakai scan.${note}`,
+      confirmLabel: "Lepas pairing",
+    });
+    if (!ok) return;
     run(() => unpairDevice(device.tag_id), `Pairing NFC ${device.tag_id} dilepas.`);
   }
 
