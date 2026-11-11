@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 const SEGMENT_COLORS = {
   merah: "var(--color-triase-merah)",
@@ -53,7 +53,7 @@ const LEGEND_ROWS = [
   { key: "korban_jiwa", label: "Korban Jiwa", color: "bg-ink" },
 ];
 
-export default function TriageDistributionCard({ data, onCatatKorbanJiwa, className = "" }) {
+export default function TriageDistributionCard({ data, className = "" }) {
   return (
     <div
       className={`flex flex-wrap items-center justify-center gap-x-10 gap-y-6 rounded-2xl bg-white p-6 shadow-sm ${className}`}
@@ -79,21 +79,15 @@ export default function TriageDistributionCard({ data, onCatatKorbanJiwa, classN
             </li>
           ))}
         </ul>
-        {onCatatKorbanJiwa && (
-          <div className="mt-4 flex items-center justify-between gap-3 border-t border-black/5 pt-3">
-            <Link to="/pasien?tab=korban-jiwa" className="text-xs font-semibold text-muted hover:text-ink">
-              Lihat catatan korban jiwa
-            </Link>
-            <button
-              type="button"
-              onClick={onCatatKorbanJiwa}
-              className="flex items-center gap-1 text-xs font-semibold text-brand hover:text-brand-dark"
-            >
-              <Plus size={14} />
-              Catat korban jiwa
-            </button>
-          </div>
-        )}
+        <div className="mt-4 flex justify-end border-t border-black/5 pt-3">
+          <Link
+            to="/pasien?tab=korban-jiwa"
+            className="flex items-center gap-0.5 text-xs font-semibold text-muted hover:text-ink"
+          >
+            Detail Korban Jiwa
+            <ChevronRight size={14} />
+          </Link>
+        </div>
       </div>
     </div>
   );

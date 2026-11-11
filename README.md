@@ -121,7 +121,7 @@ Catatan perilaku:
 - Tab Alert memunculkan alert **tombol darurat** selama 10 menit setelah tombol perangkat ditekan.
 - Ambang alert lain (merah menunggu, GPS diam, baterai, kapasitas) dibaca dari **Pengaturan > Ambang Alert**; default 10 mnt / 5 mnt / 20% / 80%.
 - Baris atas dashboard (nama insiden, lokasi, relawan, nakes) dibaca dari **Pengaturan > Insiden**, bukan lagi dari variabel env.
-- **Korban jiwa** dicatat langsung (tidak lewat gelang) oleh koordinator atau tenaga medis lapangan, dari kartu Distribusi Triase di dashboard, tombol di halaman Scan, atau tab Korban Jiwa di Data Pasien. Tenaga medis lapangan bisa mengubah catatannya sendiri selama 30 menit; hapus hanya oleh koordinator, wajib alasan, dan tersimpan sebagai soft delete.
+- **Korban jiwa** dicatat langsung (tidak lewat gelang) oleh koordinator atau tenaga medis lapangan, dari tab Korban Jiwa di Data Pasien (kartu Distribusi Triase di dashboard menautkan ke sana). Tenaga medis lapangan bisa mengubah catatannya sendiri selama 30 menit; hapus hanya oleh koordinator, wajib alasan, dan tersimpan sebagai soft delete.
 
 ### Panel metrik pengujian (`?debug=1`)
 
