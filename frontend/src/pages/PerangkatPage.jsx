@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { RefreshCw, Search, Lightbulb, Link2, Unlink, Radar, X, BatteryMedium, Wifi, Satellite, Timer, Cpu } from "lucide-react";
+import { ChevronDown, RefreshCw, Search, Lightbulb, Link2, Unlink, Radar, X, BatteryMedium, Wifi, Satellite, Timer, Cpu } from "lucide-react";
 import SegmentedFilter from "../components/common/SegmentedFilter";
 import { usePolling } from "../hooks/usePolling";
 import { listDevices, pairDevice, unpairDevice, identifyDevice } from "../services/deviceService";
@@ -97,15 +97,13 @@ function TelemetryRow({ device }) {
     device.led_state,
   ].some((v) => v !== null && v !== undefined);
 
-  if (!hasTelemetry) {
-    return <p className="mt-3 text-xs text-muted">Telemetri belum dikirim (firmware v1).</p>;
-  }
+  if (!hasTelemetry) return null;
 
   const lowBattery = device.battery_pct !== null && device.battery_pct <= 20;
   const ledMismatch = device.led_command && device.led_state && device.led_state !== device.led_command;
 
   return (
-    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 rounded-lg bg-page px-3 py-2 text-xs">
+    <div className="flex flex-wrap gap-x-5 gap-y-1.5 rounded-lg bg-white px-3 py-2 text-xs">
       <TelemetryItem
         icon={BatteryMedium}
         label="Baterai"
@@ -135,6 +133,58 @@ function TelemetryRow({ device }) {
         tone={ledMismatch ? "text-triase-kuning-dark" : "text-ink"}
       />
       <TelemetryItem icon={Cpu} label="FW" value={device.fw_version ?? "-"} />
+    </div>
+  );
+}
+
+const dateFormatter = new Intl.DateTimeFormat("id-ID", { dateStyle: "short", timeStyle: "medium" });
+
+function formatDate(value) {
+  return value ? dateFormatter.format(new Date(value)) : "-";
+}
+
+function DetailItem({ label, children }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-muted">{label}</dt>
+      <dd className="truncate font-medium text-ink">{children}</dd>
+    </div>
+  );
+}
+
+// Detail teknis gelang (dulu di kartu Perangkat GPS di dashboard): hanya
+// dibuka saat dibutuhkan supaya daftar tetap ringkas.
+function DeviceDetail({ device }) {
+  const loc = device.latest_location;
+  const hasCoords = typeof loc?.lat === "number" && typeof loc?.lng === "number";
+
+  return (
+    <div className="mt-3 space-y-3 rounded-lg bg-page px-4 py-3 text-xs">
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-2.5 md:grid-cols-3 xl:grid-cols-4">
+        <DetailItem label="Satelit">{device.satellites ?? 0}</DetailItem>
+        <DetailItem label="IP">{device.ip_address || "-"}</DetailItem>
+        <DetailItem label="Koordinat">
+          {hasCoords ? (
+            <a
+              className="text-blue-600 underline"
+              href={`https://www.google.com/maps?q=${loc.lat},${loc.lng}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {loc.lat.toFixed(6)}, {loc.lng.toFixed(6)}
+            </a>
+          ) : (
+            "Belum tersedia"
+          )}
+        </DetailItem>
+        <DetailItem label="Update lokasi">{formatDate(loc?.timestamp)}</DetailItem>
+        <DetailItem label="Heartbeat">{formatDate(device.last_seen)}</DetailItem>
+        <DetailItem label="Tombol darurat">
+          {device.button_press_count > 0 ? `${device.button_press_count}× ditekan` : "Belum pernah"}
+        </DetailItem>
+        <DetailItem label="Tekan terakhir">{formatDate(device.last_button_pressed_at)}</DetailItem>
+      </dl>
+      <TelemetryRow device={device} />
     </div>
   );
 }
@@ -271,6 +321,7 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
   const confirm = useConfirm();
   const [pairing, setPairing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
   const blinking = device.identify_until && new Date(device.identify_until) > now;
 
   async function run(action, successMessage) {
@@ -324,6 +375,15 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
           <div className="mt-0.5 text-[13px] text-muted">
             {GPS_LABEL[device.gps_status] ?? device.gps_status} · {formatAgo(now - new Date(device.last_seen))}
           </div>
+          <button
+            type="button"
+            onClick={() => setShowDetail((v) => !v)}
+            aria-expanded={showDetail}
+            className="mt-1 flex items-center gap-0.5 text-xs font-semibold text-muted hover:text-ink"
+          >
+            Detail
+            <ChevronDown size={14} aria-hidden="true" className={showDetail ? "rotate-180" : ""} />
+          </button>
         </div>
 
         {/* Setiap kolom dua baris (utama + keterangan) supaya tingginya seragam. */}
@@ -395,7 +455,7 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
         </div>
       </div>
 
-      <TelemetryRow device={device} />
+      {showDetail && <DeviceDetail device={device} />}
 
       {pairing && (
         <PairingPanel
