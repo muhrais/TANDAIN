@@ -4,6 +4,7 @@ const DeviceTelemetry = require("../models/DeviceTelemetry");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
+const { wifiCommandForHeartbeat } = require("./deviceWifiController");
 
 const GPS_STATUSES = ["no_data", "searching", "fixed", "unknown"];
 const LED_STATES = ["none", "identify", "merah", "kuning", "hijau"];
@@ -128,6 +129,7 @@ const receiveHeartbeat = asyncHandler(async (req, res) => {
         gps_status,
         satellites: Number.isFinite(satellites) ? satellites : 0,
         ip_address,
+        wifi_configurable: req.body.wifi_configurable === true,
         ...telemetry,
       },
       // status_tag hanya diisi saat tag baru, supaya tanda "damaged" /
@@ -157,9 +159,14 @@ const receiveHeartbeat = asyncHandler(async (req, res) => {
   }).catch((err) => console.warn(`[telemetry] gagal simpan ${tag_id}: ${err.message}`));
   if (process.env.VERCEL) await telemetryWrite;
 
+  const wifiCommand = tag.wifi_configurable
+    ? await wifiCommandForHeartbeat(tag_id, req.body.wifi_result).catch(() => ({}))
+    : {};
+
   return sendSuccess(res, 200, {
     tag_id: tag.tag_id,
     received_at: now,
+    ...wifiCommand,
     ...command,
   });
 });
@@ -249,6 +256,7 @@ const listDevices = asyncHandler(async (_req, res) => {
       tag.last_seen && now - new Date(tag.last_seen).getTime() <= ONLINE_WINDOW_MS
     ),
     last_seen: tag.last_seen,
+    wifi_configurable: tag.wifi_configurable === true,
     gps_status: tag.gps_status || "unknown",
     satellites: tag.satellites || 0,
     ip_address: tag.ip_address,

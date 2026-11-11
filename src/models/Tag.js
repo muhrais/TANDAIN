@@ -77,6 +77,7 @@ const tagSchema = new mongoose.Schema(
     uptime_ms: { type: Number, default: null },
     rssi: { type: Number, default: null },
     buffered_count: { type: Number, default: null },
+    wifi_configurable: { type: Boolean, default: false },
     // Mode LED yang sedang ditampilkan perangkat (laporan balik firmware).
     led_state: {
       type: String,

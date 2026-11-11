@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { RefreshCw, Search, Lightbulb, Link2, Unlink, Radar, X, BatteryMedium, Wifi, Satellite, Timer, Cpu } from "lucide-react";
+import { RefreshCw, Search, Lightbulb, Link2, Unlink, Radar, X, BatteryMedium, Wifi, Satellite, Timer, Cpu, Bluetooth } from "lucide-react";
 import SegmentedFilter from "../components/common/SegmentedFilter";
+import WifiSetupDialog from "../components/devices/WifiSetupDialog";
 import { usePolling } from "../hooks/usePolling";
 import { listDevices, pairDevice, unpairDevice, identifyDevice } from "../services/deviceService";
 import { ApiClientError } from "../lib/apiClient";
@@ -267,7 +268,7 @@ function PairingPanel({ device, onDone, onClose }) {
   );
 }
 
-function DeviceRow({ device, now, onChanged, onMessage }) {
+function DeviceRow({ device, now, onChanged, onMessage, onWifi }) {
   const confirm = useConfirm();
   const [pairing, setPairing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -359,6 +360,10 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
         </div>
 
         <div className="flex flex-wrap gap-2 lg:justify-end">
+          <button type="button" onClick={() => onWifi(device)}
+            className="flex items-center gap-1.5 rounded-md border border-black/10 px-2.5 py-1.5 text-[13px] font-semibold text-ink hover:bg-page">
+            <Wifi size={14} /> Atur Wi-Fi
+          </button>
           <button
             type="button"
             onClick={() => run(() => identifyDevice(device.tag_id), `LED ${device.tag_id} berkedip ±15 detik.`)}
@@ -422,6 +427,7 @@ export default function PerangkatPage() {
   });
   const [query, setQuery] = useState("");
   const [message, setMessage] = useState(null);
+  const [wifiSetup, setWifiSetup] = useState(null);
 
   const rows = useMemo(
     () => (devices ?? []).filter((d) => matchesFilter(d, filter) && matchesSearch(d, query.trim())),
@@ -442,14 +448,20 @@ export default function PerangkatPage() {
             Pairing NFC gelang dengan modul GPS dilakukan satu kali saat persiapan alat. Setelah itu, petugas lapangan cukup memindai NFC gelang.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={refresh}
-          className={`flex items-center gap-1.5 text-sm font-medium ${error ? "text-triase-merah" : "text-muted hover:text-ink"}`}
-        >
-          {error ? "Terputus" : "Refresh"}
-          <RefreshCw size={14} />
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="button" onClick={() => setWifiSetup({ device: null })}
+            className="flex items-center gap-1.5 rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-ink hover:bg-page">
+            <Bluetooth size={14} /> Atur via Bluetooth
+          </button>
+          <button
+            type="button"
+            onClick={refresh}
+            className={`flex items-center gap-1.5 text-sm font-medium ${error ? "text-triase-merah" : "text-muted hover:text-ink"}`}
+          >
+            {error ? "Terputus" : "Refresh"}
+            <RefreshCw size={14} />
+          </button>
+        </div>
       </div>
 
       {/* Pencarian dan filter dalam satu kartu, sama dengan Data Pasien dan Evakuasi. */}
@@ -503,11 +515,13 @@ export default function PerangkatPage() {
               <span className="text-right">Aksi</span>
             </li>
             {rows.map((device) => (
-              <DeviceRow key={device.tag_id} device={device} now={now} onChanged={refresh} onMessage={showMessage} />
+              <DeviceRow key={device.tag_id} device={device} now={now} onChanged={refresh} onMessage={showMessage}
+                onWifi={(selected) => setWifiSetup({ device: selected })} />
             ))}
           </ul>
         )}
       </div>
+      {wifiSetup && <WifiSetupDialog device={wifiSetup.device} onClose={() => setWifiSetup(null)} onChanged={refresh} />}
     </div>
   );
 }
