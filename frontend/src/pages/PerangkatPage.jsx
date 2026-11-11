@@ -432,21 +432,6 @@ export default function PerangkatPage() {
         </button>
       </div>
 
-      {devices && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
-          <span>
-            <span className="font-semibold text-ink">{devices.length}</span> gelang
-          </span>
-          <span>
-            <span className="font-semibold text-ink">{devices.filter((d) => d.online).length}</span> online
-          </span>
-          <span>
-            <span className="font-semibold text-triase-kuning-dark">{devices.filter((d) => !d.paired).length}</span>{" "}
-            belum di-pairing
-          </span>
-        </div>
-      )}
-
       <SegmentedFilter label="Status" options={FILTERS} value={filter} onChange={setFilter} />
 
       {message && (

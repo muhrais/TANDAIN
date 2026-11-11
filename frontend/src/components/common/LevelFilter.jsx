@@ -27,7 +27,11 @@ const TONE = {
 export default function LevelFilter({ label, options, value, onChange }) {
   return (
     <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-3">
-      {label && <span className="shrink-0 text-xs font-medium text-muted sm:w-14 sm:pt-1.5">{label}</span>}
+      {/* Label setinggi satu baris pill (29.5px) dan isinya di tengah, supaya
+          sejajar dengan baris pertama walau pill turun ke baris berikutnya. */}
+      {label && (
+        <span className="shrink-0 text-xs font-medium text-muted sm:flex sm:h-[29.5px] sm:w-14 sm:items-center">{label}</span>
+      )}
       <div className="flex min-w-0 flex-wrap gap-1.5" role="group" aria-label={`Filter ${label ?? ""}`.trim()}>
         {options.map((option) => {
           const tone = TONE[option.tone ?? "netral"];
