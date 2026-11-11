@@ -321,7 +321,7 @@ function DeviceRow({ device, now, onChanged, onMessage }) {
   const confirm = useConfirm();
   const [pairing, setPairing] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [showDetail, setShowDetail] = useState(false);
+  const [showDetail, setShowDetail] = useState(true);
   const blinking = device.identify_until && new Date(device.identify_until) > now;
 
   async function run(action, successMessage) {
