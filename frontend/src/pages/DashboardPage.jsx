@@ -103,10 +103,12 @@ export default function DashboardPage() {
             onMarkerClick={(item) =>
               item.victim && navigate(`/evakuasi?victim=${encodeURIComponent(item.victim.victim_id)}`)
             }
-            className="xl:col-span-8"
+            className="aspect-square xl:col-span-7"
           />
 
-          <div className="grid grid-rows-2 gap-5 xl:col-span-4">
+          {/* Tinggi baris mengikuti peta (persegi). Kolom samping h-0 + min-h-full
+              supaya tidak ikut memanjangkan baris; isi kartu di-scroll. */}
+          <div className="grid grid-rows-2 gap-5 xl:col-span-5 xl:h-0 xl:min-h-full">
             <PriorityQueueCard items={data.priorityQueue} />
             <RecentActivityCard items={data.recentActivity} onShowAll={() => setActiveTab("Aktivitas")} />
           </div>
