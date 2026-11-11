@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
 import Sidebar from "../components/layout/Sidebar";
 import DebugMetricsPanel from "../components/debug/DebugMetricsPanel";
+import PageErrorBoundary from "../components/common/PageErrorBoundary";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     function handleAuthExpired() {
@@ -39,7 +41,9 @@ export default function AppLayout() {
 
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <Outlet />
+      <PageErrorBoundary key={location.pathname}>
+        <Outlet />
+      </PageErrorBoundary>
 
       <DebugMetricsPanel />
     </div>
