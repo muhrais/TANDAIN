@@ -11,6 +11,7 @@ import EvakuasiPage from "./pages/EvakuasiPage";
 import PerangkatPage from "./pages/PerangkatPage";
 import DataPasienPage from "./pages/DataPasienPage";
 import PengaturanPage from "./pages/PengaturanPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/scan" element={<ScanNfcPage />} />
           <Route path="/evakuasi" element={<EvakuasiPage />} />
           <Route path="/pasien" element={<DataPasienPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
     </Routes>
