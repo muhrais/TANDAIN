@@ -82,4 +82,52 @@ const getPoskoDetail = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { listPosko, getPoskoDetail };
+/**
+ * PUT /api/posko/:posko_id (Auth: koordinator) - Pengaturan > Posko.
+ * Body opsional: { nama_posko, kapasitas_maksimum, lokasi: { lat, lng } }.
+ * `jenis` sengaja tidak bisa diubah: dipakai untuk default posko tujuan
+ * sesuai triase dan warna marker di peta.
+ */
+const updatePosko = asyncHandler(async (req, res) => {
+  const { posko_id } = req.params;
+  const body = req.body || {};
+  const posko = await Posko.findOne({ posko_id });
+  if (!posko) {
+    throw new ApiError(404, "POSKO_NOT_FOUND", "posko_id tidak ditemukan pada koleksi posko.");
+  }
+
+  const errors = [];
+  if (body.nama_posko !== undefined) {
+    if (typeof body.nama_posko !== "string" || !body.nama_posko.trim() || body.nama_posko.trim().length > 60) {
+      errors.push({ field: "nama_posko", message: "nama_posko wajib diisi, maksimal 60 karakter." });
+    } else posko.nama_posko = body.nama_posko.trim();
+  }
+  if (body.kapasitas_maksimum !== undefined) {
+    const kapasitas = body.kapasitas_maksimum;
+    if (!Number.isInteger(kapasitas) || kapasitas < 1 || kapasitas > 10000) {
+      errors.push({ field: "kapasitas_maksimum", message: "kapasitas_maksimum harus bilangan bulat 1-10000." });
+    } else posko.kapasitas_maksimum = kapasitas;
+  }
+  if (body.lokasi !== undefined) {
+    const { lat, lng } = body.lokasi || {};
+    const valid =
+      typeof lat === "number" && typeof lng === "number" && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+    if (!valid) {
+      errors.push({ field: "lokasi", message: "lokasi harus berisi lat (-90..90) dan lng (-180..180)." });
+    } else posko.lokasi = { lat, lng };
+  }
+  if (errors.length > 0) {
+    throw new ApiError(422, "VALIDATION_ERROR", "Data posko tidak valid.", errors);
+  }
+
+  await posko.save();
+  return sendSuccess(res, 200, {
+    posko_id: posko.posko_id,
+    nama_posko: posko.nama_posko,
+    jenis: posko.jenis,
+    lokasi: posko.lokasi,
+    kapasitas_maksimum: posko.kapasitas_maksimum,
+  });
+});
+
+module.exports = { listPosko, getPoskoDetail, updatePosko };

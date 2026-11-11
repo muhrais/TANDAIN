@@ -3,7 +3,7 @@ import AlertRulesCard from "./AlertRulesCard";
 import BreakdownCard from "../common/BreakdownCard";
 import { ALERT_TYPES } from "../../lib/alert";
 
-export default function AlertTab({ alerts, onResolve }) {
+export default function AlertTab({ alerts, ambang, onResolve }) {
   const byType = Object.entries(ALERT_TYPES).map(([key, type]) => ({
     label: type.label,
     count: alerts.filter((a) => a.jenis === key).length,
@@ -15,7 +15,7 @@ export default function AlertTab({ alerts, onResolve }) {
 
       <div className="grid grid-rows-2 gap-5 xl:col-span-4">
         <BreakdownCard title="Alert per Jenis" items={byType} />
-        <AlertRulesCard />
+        <AlertRulesCard ambang={ambang} />
       </div>
     </div>
   );

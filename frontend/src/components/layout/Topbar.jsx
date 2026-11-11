@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { TriangleAlert, Bell, RefreshCw, Download } from "lucide-react";
 import { exportVictimsCsv } from "../../services/reportService";
 
@@ -11,6 +12,23 @@ const clockFormatter = new Intl.DateTimeFormat("en-GB", {
   hour12: false,
   timeZone: "Asia/Jakarta",
 });
+
+// Baris identitas insiden: "Simulasi MCI FT UI • Depok • 15 korban • 2 korban
+// jiwa • 12 relawan • 6 nakes". Nama/lokasi kosong -> tautan ke Pengaturan,
+// bukan teks placeholder.
+function incidentParts(info) {
+  const parts = [];
+  if (info.nama_insiden) parts.push({ key: "nama", text: info.nama_insiden });
+  if (info.lokasi) parts.push({ key: "lokasi", text: info.lokasi });
+  if (!info.nama_insiden && !info.lokasi) {
+    parts.push({ key: "atur", text: "Atur identitas insiden", to: "/pengaturan" });
+  }
+  parts.push({ key: "korban", text: `${info.total_korban} korban` });
+  parts.push({ key: "kj", text: `${info.korban_jiwa} korban jiwa` });
+  if (info.jumlah_relawan) parts.push({ key: "relawan", text: `${info.jumlah_relawan} relawan` });
+  if (info.jumlah_nakes) parts.push({ key: "nakes", text: `${info.jumlah_nakes} nakes` });
+  return parts;
+}
 
 export default function Topbar({
   incidentInfo,
@@ -43,11 +61,18 @@ export default function Topbar({
         <div>
           <h1 className="text-xl font-bold text-ink md:text-2xl">Dashboard</h1>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
-            <span>{incidentInfo.nama_bencana}</span>
-            <span className="text-muted/50">•</span>
-            <span>{incidentInfo.lokasi}</span>
-            <span className="text-muted/50">•</span>
-            <span>{incidentInfo.total_korban} korban</span>
+            {incidentParts(incidentInfo).map((part, index) => (
+              <span key={part.key} className="flex items-center gap-2">
+                {index > 0 && <span className="text-muted/50">•</span>}
+                {part.to ? (
+                  <Link to={part.to} className="underline decoration-dotted underline-offset-4 hover:text-ink">
+                    {part.text}
+                  </Link>
+                ) : (
+                  <span>{part.text}</span>
+                )}
+              </span>
+            ))}
           </div>
         </div>
 

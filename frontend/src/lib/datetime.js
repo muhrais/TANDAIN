@@ -22,6 +22,12 @@ const dateTimeFormatter = new Intl.DateTimeFormat("id-ID", {
   timeZone: "Asia/Jakarta",
 });
 
+// "Terakhir diubah 11 Nov 09.42 oleh Koordinator Posko"
+export function lastUpdatedText(doc) {
+  if (!doc?.updated_at) return "";
+  return `Terakhir diubah ${formatDateTime(doc.updated_at)}${doc.updated_by_nama ? ` oleh ${doc.updated_by_nama}` : ""}`;
+}
+
 // "11 Nov 09.42"
 export function formatDateTime(value) {
   if (!value) return "-";

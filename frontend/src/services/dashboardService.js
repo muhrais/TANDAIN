@@ -69,17 +69,20 @@ export async function getRecentActivity(limit = 4) {
   }));
 }
 
-// Belum ada GET /api/incident (T-BE-7, stretch). Nama & lokasi insiden
-// dikonfigurasi lewat env (lihat frontend/.env.example) supaya tidak perlu
-// hardcode; total korban dari data asli. Jumlah relawan/nakes (FR-DASH-05,
-// Should) belum ada sumber datanya sama sekali - sengaja tidak ditampilkan
-// daripada munculkan angka palsu.
+// Identitas insiden dari dokumen insiden aktif (Pengaturan > Insiden),
+// ikut di summary supaya tidak perlu request tambahan. FR-DASH-05.
 export async function getIncidentInfo() {
   const summary = await getSummary();
+  const incident = summary.incident ?? {};
   return {
-    nama_bencana: import.meta.env.VITE_INCIDENT_NAME || "Insiden belum dikonfigurasi",
-    lokasi: import.meta.env.VITE_INCIDENT_LOCATION || "-",
+    nama_insiden: incident.nama_insiden || "",
+    lokasi: incident.lokasi || "",
+    waktu_mulai: incident.waktu_mulai ?? null,
+    jumlah_relawan: incident.jumlah_relawan ?? 0,
+    jumlah_nakes: incident.jumlah_nakes ?? 0,
+    ambang: incident.ambang ?? null,
     total_korban: summary.totals.all_victims,
+    korban_jiwa: summary.korban_jiwa?.total ?? 0,
   };
 }
 

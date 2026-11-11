@@ -22,9 +22,9 @@ const CONNECTION_INDICATOR = {
   unknown: { label: "Memeriksa server...", dot: "bg-neutral-500" },
 };
 
-// `roles` cuma relevan untuk item yang punya `path` (halaman sungguhan).
-// Item tanpa `path` (Pengaturan belum ada halamannya)
-// selalu tampil nonaktif untuk semua role - lihat NavItem.
+// Setiap item adalah halaman sungguhan; item disembunyikan untuk role yang
+// tidak punya akses. Menu "Medis" dihapus (Pekan 12): tampilan per posko
+// tertutup oleh filter posko di Data Pasien.
 // Sama dengan ROLES.STAFF_MEDIS di backend (src/middleware/auth.js).
 const STAFF_MEDIS = ["koordinator", "petugas_pos_medis", "tenaga_medis_lapangan"];
 
@@ -35,7 +35,7 @@ const NAV_ITEMS = [
   { label: "Evakuasi", icon: ArrowLeftRight, path: "/evakuasi", roles: STAFF_MEDIS },
   { label: "Data Pasien", icon: Database, path: "/pasien", roles: STAFF_MEDIS },
   { label: "Perangkat", icon: Watch, path: "/perangkat", roles: ["koordinator"] },
-  { label: "Pengaturan", icon: Settings },
+  { label: "Pengaturan", icon: Settings, path: "/pengaturan", roles: ["koordinator"] },
 ];
 
 const ROLE_LABELS = {
@@ -78,20 +78,6 @@ function NavItem({ label, icon: Icon, path, onNavigate }) {
       active ? "rounded-r-full bg-brand text-white" : "text-neutral-400 hover:text-white"
     }`;
 
-  if (!path) {
-    return (
-      <button
-        type="button"
-        aria-disabled="true"
-        title="Segera"
-        onClick={(event) => event.preventDefault()}
-        className={`${className(false)} cursor-not-allowed opacity-50`}
-      >
-        {content(false)}
-      </button>
-    );
-  }
-
   return (
     <NavLink to={path} end={path === "/"} onClick={onNavigate} className={({ isActive }) => className(isActive)}>
       {({ isActive }) => content(isActive)}
@@ -103,7 +89,7 @@ export default function Sidebar({ open = false, onClose }) {
   const navigate = useNavigate();
   const user = getCurrentUser();
   const connection = CONNECTION_INDICATOR[useConnectionStatus(pingHealth)];
-  const visibleItems = NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(user?.role));
+  const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(user?.role));
 
   function handleLogout() {
     logout();

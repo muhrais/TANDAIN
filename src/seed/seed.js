@@ -8,6 +8,8 @@
  * - 3 akun user (koordinator, petugas_pos_medis, tenaga_medis_lapangan)
  *   dengan password default.
  * - 4 posko dasar (utama, merah, kuning, hijau) beserta koordinatnya.
+ * - Dokumen insiden aktif (nama, lokasi, relawan, nakes, ambang alert)
+ *   bila belum ada; isian dari halaman Pengaturan tidak ditimpa.
  * - 15 tag + korban contoh (macam-macam kategori triase & status) beserta
  *   lokasi dan riwayat statusnya, supaya dashboard, peta, dan antrian
  *   langsung punya data untuk didemokan tanpa perlu tag fisik.
@@ -25,6 +27,7 @@ const Victim = require("../models/Victim");
 const StatusHistory = require("../models/StatusHistory");
 const Location = require("../models/Location");
 const KorbanJiwa = require("../models/KorbanJiwa");
+const Incident = require("../models/Incident");
 
 const RESET = process.argv.includes("--reset");
 const victimsArgIndex = process.argv.indexOf("--victims");
@@ -88,6 +91,27 @@ async function seed() {
     console.log(`[SEED] Posko '${p.posko_id}' disimpan (${p.lokasi.lat}, ${p.lokasi.lng}).`);
   }
   const poskoById = new Map(poskoToSeed.map((p) => [p.posko_id, p]));
+
+  // --- Seed Insiden aktif (hanya saat belum ada, supaya isian Pengaturan aman) ---
+  const incidentResult = await Incident.updateOne(
+    { incident_id: "AKTIF" },
+    {
+      $setOnInsert: {
+        incident_id: "AKTIF",
+        nama_insiden: "Simulasi MCI FT UI",
+        lokasi: "Depok",
+        waktu_mulai: new Date(),
+        jumlah_relawan: 12,
+        jumlah_nakes: 6,
+      },
+    },
+    { upsert: true, setDefaultsOnInsert: true }
+  );
+  console.log(
+    incidentResult.upsertedCount
+      ? "[SEED] Insiden aktif dibuat (Simulasi MCI FT UI, Depok)."
+      : "[SEED] Insiden aktif sudah ada, dilewati."
+  );
 
   // --- Seed Tag + Korban contoh (untuk demo dashboard/posko tanpa hardware) ---
   const now = Date.now();

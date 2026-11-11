@@ -108,6 +108,7 @@ Buka `http://localhost:5173`.
 | Evakuasi | `/evakuasi` | ✅ | ✅ | ✅ | Antrian prioritas, ubah status satu langkah, pilih posko tujuan |
 | Data Pasien | `/pasien` | ✅ | ✅ | ✅ | Semua korban (cari, filter triase/status/posko, urut, paginasi, ekspor CSV hasil filter), detail korban (ubah identitas, triase, kondisi klinis, status; riwayat dengan nama pengubah; jejak lokasi), tab **Korban Jiwa** |
 | Perangkat | `/perangkat` | ✅ | – | – | Pairing NFC, identifikasi gelang, telemetri perangkat |
+| Pengaturan | `/pengaturan` | ✅ | – | – | Tab Insiden (nama, lokasi, waktu mulai, relawan, nakes), Ambang Alert, Posko (nama, koordinat, kapasitas), Pengguna (tambah, ganti role, reset sandi) |
 
 Role selain koordinator yang membuka halaman khusus koordinator diarahkan ke `/forbidden`. Setelah login, koordinator masuk ke `/`, petugas pos medis dan tenaga medis lapangan ke `/scan`.
 
@@ -118,6 +119,8 @@ Catatan perilaku:
 - **Ekspor CSV** saat ini disusun di frontend dari `GET /api/victims` (satu baris per korban + ringkasan per kategori dan status).
 - Peta membaca `GET /api/locations/latest`: satu titik terakhir per tag, termasuk tag yang belum diregistrasi.
 - Tab Alert memunculkan alert **tombol darurat** selama 10 menit setelah tombol perangkat ditekan.
+- Ambang alert lain (merah menunggu, GPS diam, baterai, kapasitas) dibaca dari **Pengaturan > Ambang Alert**; default 10 mnt / 5 mnt / 20% / 80%.
+- Baris atas dashboard (nama insiden, lokasi, relawan, nakes) dibaca dari **Pengaturan > Insiden**, bukan lagi dari variabel env.
 - **Korban jiwa** dicatat langsung (tidak lewat gelang) oleh koordinator atau tenaga medis lapangan, dari kartu Distribusi Triase di dashboard, tombol di halaman Scan, atau tab Korban Jiwa di Data Pasien. Tenaga medis lapangan bisa mengubah catatannya sendiri selama 30 menit; hapus hanya oleh koordinator, wajib alasan, dan tersimpan sebagai soft delete.
 
 ### Panel metrik pengujian (`?debug=1`)
@@ -177,10 +180,14 @@ Login via `POST /api/auth/login` (`{ "username", "password" }`), lalu kirim toke
 | `GET/POST/PUT /api/victims` | ✅ | ✅ | 401 |
 | `POST /api/tags/:tag_id/scan` | ✅ | ✅ | 401 |
 | `GET /api/posko` | ✅ | ✅ | 401 |
+| `PUT /api/posko/:posko_id` | ✅ | 403 | 401 |
 | `GET /api/victims/:id/locations` | ✅ | ✅ | 401 |
 | `GET /api/korban-jiwa` | ✅ | ✅ | 401 |
 | `POST/PUT /api/korban-jiwa` | ✅ | tenaga medis lapangan saja (PUT: entri sendiri ≤ 30 mnt) | 401 |
 | `DELETE /api/korban-jiwa/:id` (body `{ alasan }`) | ✅ | 403 | 401 |
+| `GET /api/incident` | ✅ | ✅ | 401 |
+| `PUT /api/incident` | ✅ | 403 | 401 |
+| `GET/POST/PUT /api/users` | ✅ | 403 | 401 |
 | `POST /api/locations`, `/api/locations/batch` | perangkat | perangkat | ✅ |
 | `POST /api/devices/heartbeat`, `/api/devices/button` | perangkat | perangkat | ✅ |
 
@@ -242,7 +249,7 @@ Sinkron LED untuk uji PAIR-02 tercatat di setiap gelang: `led_command` (perintah
 |---|---|---|
 | root | `npm run dev` | Backend dengan auto-reload (nodemon) |
 | root | `npm start` | Backend mode produksi |
-| root | `npm run seed` | Isi user, posko, dan korban contoh (`-- --reset` untuk mengosongkan dulu, `-- --victims 200` untuk menambah korban acak) |
+| root | `npm run seed` | Isi user, posko, insiden, dan korban contoh (`-- --reset` untuk mengosongkan dulu, `-- --victims 200` untuk menambah korban acak) |
 | root | `npm run sim` | Simulator tag virtual |
 | root | `npm run bench` | Benchmark latensi API |
 | root | `npm run gps-report` | Sesi uji GPS dan rekap CSV |

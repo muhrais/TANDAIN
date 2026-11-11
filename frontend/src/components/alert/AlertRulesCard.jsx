@@ -1,6 +1,7 @@
-import { ALERT_TYPES } from "../../lib/alert";
+import { ALERT_TYPES, resolveAmbang } from "../../lib/alert";
 
-export default function AlertRulesCard({ className = "" }) {
+export default function AlertRulesCard({ ambang, className = "" }) {
+  const values = resolveAmbang(ambang);
   return (
     <div className={`flex flex-col rounded-2xl bg-white p-5 shadow-sm ${className}`}>
       <h3 className="mb-2 font-semibold text-ink">Ambang Batas Alert</h3>
@@ -12,7 +13,7 @@ export default function AlertRulesCard({ className = "" }) {
               <Icon size={16} strokeWidth={1.75} className="shrink-0 text-muted" />
               <div className="min-w-0 leading-tight">
                 <div className="text-sm text-ink/80">{type.label}</div>
-                <div className="mt-0.5 text-xs font-semibold text-muted">{type.rule}</div>
+                <div className="mt-0.5 text-xs font-semibold text-muted">{type.rule(values)}</div>
               </div>
             </li>
           );
