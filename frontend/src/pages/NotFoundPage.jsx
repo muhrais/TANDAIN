@@ -12,7 +12,7 @@ export default function NotFoundPage() {
         <p className="text-sm text-muted">
           Halaman yang dituju tidak tersedia. Apabila aplikasi baru saja diperbarui, refresh halaman dengan Ctrl+Shift+R.
         </p>
-        <Link to={home} className="inline-block text-sm font-semibold text-brand hover:text-brand-dark">
+        <Link to={home} className="inline-block text-sm font-semibold text-ink hover:underline">
           Kembali ke halaman utama
         </Link>
       </div>

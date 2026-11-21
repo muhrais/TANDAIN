@@ -16,29 +16,38 @@ export function resolveAmbang(ambang) {
   return { ...DEFAULT_AMBANG, ...(ambang ?? {}) };
 }
 
+// Durasi pendek untuk alert: 5 mnt, 3 jam, 21 hari. Tanpa pembulatan ini
+// gelang yang sudah lama mati menampilkan angka menit lima digit.
+export function formatDurasi(minutes) {
+  const m = Math.max(0, Math.round(minutes));
+  if (m < 60) return `${m} mnt`;
+  if (m < 1440) return `${Math.round(m / 60)} jam`;
+  return `${Math.round(m / 1440)} hari`;
+}
+
 export const ALERT_TYPES = {
   darurat: {
-    label: "Tombol darurat ditekan",
+    label: "Tombol darurat",
     icon: Siren,
     rule: () => "Langsung kritis",
   },
   merah_menunggu: {
-    label: "Korban merah menunggu jemputan",
+    label: "Merah belum dijemput",
     icon: Timer,
     rule: (a) => `> ${a.merah_menunggu_mnt} menit`,
   },
   kapasitas_posko: {
-    label: "Kapasitas posko hampir penuh",
+    label: "Posko hampir penuh",
     icon: Users,
     rule: (a) => `≥ ${a.kapasitas_peringatan_pct}% · penuh = kritis`,
   },
   sinyal_gps: {
-    label: "Sinyal GPS hilang",
+    label: "GPS hilang",
     icon: MapPinOff,
     rule: (a) => `> ${a.gps_diam_mnt} menit tanpa update`,
   },
   baterai_rendah: {
-    label: "Baterai tag rendah",
+    label: "Baterai rendah",
     icon: BatteryLow,
     rule: (a) => `< ${a.baterai_rendah_pct}%`,
   },
@@ -101,7 +110,7 @@ export function deriveAlerts({ summary, posko = [], locations, now = new Date(),
       subjek: item.tag_id,
       kategori_triase: item.kategori_triase,
       waktu: item.waktu_update_terakhir,
-      detail: `Menunggu jemputan ${Math.round(waitMinutes)} menit, melewati batas ${a.merah_menunggu_mnt} menit.`,
+      detail: `Menunggu ${formatDurasi(waitMinutes)} (batas ${a.merah_menunggu_mnt} mnt)`,
     });
   }
 
@@ -116,7 +125,7 @@ export function deriveAlerts({ summary, posko = [], locations, now = new Date(),
       status: "aktif",
       subjek: p.nama_posko,
       waktu: now.toISOString(),
-      detail: `Kapasitas terisi ${p.jumlah_korban_saat_ini} dari ${p.kapasitas_maksimum} korban (${Math.round(pct)}%).`,
+      detail: `${p.jumlah_korban_saat_ini}/${p.kapasitas_maksimum} korban (${Math.round(pct)}%)`,
     });
   }
 
@@ -134,9 +143,7 @@ export function deriveAlerts({ summary, posko = [], locations, now = new Date(),
           subjek: item.tag_id,
           kategori_triase: item.victim?.kategori_triase,
           waktu: item.last_button_pressed_at,
-          detail: item.victim
-            ? `Tombol darurat ditekan pada tag ${item.victim.nama || item.tag_id}.`
-            : "Tombol darurat ditekan pada tag yang belum diregistrasi.",
+          detail: item.victim ? item.victim.nama || "Tanpa nama" : "Belum diregistrasi",
         });
       }
     }
@@ -151,7 +158,10 @@ export function deriveAlerts({ summary, posko = [], locations, now = new Date(),
         subjek: item.tag_id,
         kategori_triase: item.victim?.kategori_triase,
         waktu: item.received_at,
-        detail: `Tidak ada update GPS selama ${Math.max(0, Math.round(silentMinutes))} menit. Menampilkan lokasi terakhir yang diketahui.`,
+        detail:
+          silentMinutes > a.gps_diam_mnt
+            ? `Tanpa update ${formatDurasi(silentMinutes)}`
+            : "Belum dapat sinyal satelit",
       });
     }
 
@@ -164,7 +174,7 @@ export function deriveAlerts({ summary, posko = [], locations, now = new Date(),
         subjek: item.tag_id,
         kategori_triase: item.victim?.kategori_triase,
         waktu: item.received_at,
-        detail: `Baterai tag tersisa ${item.battery_pct}%, di bawah batas ${a.baterai_rendah_pct}%.`,
+        detail: `Sisa ${item.battery_pct}% (batas ${a.baterai_rendah_pct}%)`,
       });
     }
   }

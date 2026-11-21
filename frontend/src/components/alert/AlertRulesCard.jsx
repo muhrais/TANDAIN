@@ -4,7 +4,7 @@ export default function AlertRulesCard({ ambang, className = "" }) {
   const values = resolveAmbang(ambang);
   return (
     <div className={`flex flex-col rounded-2xl bg-white p-5 shadow-sm ${className}`}>
-      <h3 className="mb-2 font-semibold text-ink">Ambang Batas Alert</h3>
+      <h3 className="mb-2 font-semibold text-ink">Batas Alert</h3>
       <ul className="divide-y divide-black/5">
         {Object.entries(ALERT_TYPES).map(([key, type]) => {
           const Icon = type.icon;

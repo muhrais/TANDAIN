@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { RefreshCw, Search, Lightbulb, Link2, Unlink, Radar, X, BatteryMedium, Wifi, Satellite, Timer, Cpu, Bluetooth } from "lucide-react";
+import RefreshButton from "../components/common/RefreshButton";
+import { ChevronDown, Search, Lightbulb, Link2, Unlink, Radar, X, BatteryMedium, Wifi, Satellite, Timer, Cpu, Bluetooth } from "lucide-react";
 import SegmentedFilter from "../components/common/SegmentedFilter";
 import WifiSetupDialog from "../components/devices/WifiSetupDialog";
 import { usePolling } from "../hooks/usePolling";
@@ -26,7 +27,7 @@ const DOT_COLOR = {
 
 // Template kolom bersama header dan baris; kolom aksi lebar tetap supaya
 // baris dengan dua atau tiga tombol tetap sejajar (lihat EvakuasiPage).
-const ROW_GRID = "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.3fr)_21rem]";
+const ROW_GRID = "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.3fr)_23.5rem]";
 
 const FILTERS = [
   { key: "semua", label: "Semua" },
@@ -98,15 +99,13 @@ function TelemetryRow({ device }) {
     device.led_state,
   ].some((v) => v !== null && v !== undefined);
 
-  if (!hasTelemetry) {
-    return <p className="mt-3 text-xs text-muted">Telemetri belum dikirim (firmware v1).</p>;
-  }
+  if (!hasTelemetry) return null;
 
   const lowBattery = device.battery_pct !== null && device.battery_pct <= 20;
   const ledMismatch = device.led_command && device.led_state && device.led_state !== device.led_command;
 
   return (
-    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 rounded-lg bg-page px-3 py-2 text-xs">
+    <div className="flex flex-wrap gap-x-5 gap-y-1.5 rounded-lg bg-white px-3 py-2 text-xs">
       <TelemetryItem
         icon={BatteryMedium}
         label="Baterai"
@@ -136,6 +135,58 @@ function TelemetryRow({ device }) {
         tone={ledMismatch ? "text-triase-kuning-dark" : "text-ink"}
       />
       <TelemetryItem icon={Cpu} label="FW" value={device.fw_version ?? "-"} />
+    </div>
+  );
+}
+
+const dateFormatter = new Intl.DateTimeFormat("id-ID", { dateStyle: "short", timeStyle: "medium" });
+
+function formatDate(value) {
+  return value ? dateFormatter.format(new Date(value)) : "-";
+}
+
+function DetailItem({ label, children }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-muted">{label}</dt>
+      <dd className="truncate font-medium text-ink">{children}</dd>
+    </div>
+  );
+}
+
+// Detail teknis gelang (dulu di kartu Perangkat GPS di dashboard): hanya
+// dibuka saat dibutuhkan supaya daftar tetap ringkas.
+function DeviceDetail({ device }) {
+  const loc = device.latest_location;
+  const hasCoords = typeof loc?.lat === "number" && typeof loc?.lng === "number";
+
+  return (
+    <div className="mt-3 space-y-3 rounded-lg bg-page px-4 py-3 text-xs">
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-2.5 md:grid-cols-3 xl:grid-cols-4">
+        <DetailItem label="Satelit">{device.satellites ?? 0}</DetailItem>
+        <DetailItem label="IP">{device.ip_address || "-"}</DetailItem>
+        <DetailItem label="Koordinat">
+          {hasCoords ? (
+            <a
+              className="text-blue-600 underline"
+              href={`https://www.google.com/maps?q=${loc.lat},${loc.lng}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {loc.lat.toFixed(6)}, {loc.lng.toFixed(6)}
+            </a>
+          ) : (
+            "Belum tersedia"
+          )}
+        </DetailItem>
+        <DetailItem label="Update lokasi">{formatDate(loc?.timestamp)}</DetailItem>
+        <DetailItem label="Heartbeat">{formatDate(device.last_seen)}</DetailItem>
+        <DetailItem label="Tombol darurat">
+          {device.button_press_count > 0 ? `${device.button_press_count}× ditekan` : "Belum pernah"}
+        </DetailItem>
+        <DetailItem label="Tekan terakhir">{formatDate(device.last_button_pressed_at)}</DetailItem>
+      </dl>
+      <TelemetryRow device={device} />
     </div>
   );
 }
@@ -193,7 +244,7 @@ function PairingPanel({ device, onDone, onClose }) {
   }
 
   return (
-    <div className="mt-3 space-y-3 rounded-lg border border-brand/20 bg-brand/5 p-3 text-[13px]">
+    <div className="mt-3 space-y-3 rounded-lg border border-black/10 bg-page p-3 text-[13px]">
       <div className="flex items-start justify-between gap-2">
         <p className="text-ink">
           LED <span className="font-semibold">{device.tag_id}</span> sedang berkedip. Pastikan stiker gelang yang kamu
@@ -272,6 +323,7 @@ function DeviceRow({ device, now, onChanged, onMessage, onWifi }) {
   const confirm = useConfirm();
   const [pairing, setPairing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [showDetail, setShowDetail] = useState(true);
   const blinking = device.identify_until && new Date(device.identify_until) > now;
 
   async function run(action, successMessage) {
@@ -311,7 +363,7 @@ function DeviceRow({ device, now, onChanged, onMessage, onWifi }) {
             <span className="text-sm font-semibold text-ink">{device.tag_id}</span>
             <span
               className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${
-                device.online ? "bg-triase-hijau-soft text-triase-hijau" : "bg-triase-merah-soft text-triase-merah"
+                device.online ? "bg-triase-hijau-soft text-triase-hijau" : "bg-neutral-100 text-neutral-500"
               }`}
             >
               {device.online ? "Online" : "Offline"}
@@ -325,6 +377,15 @@ function DeviceRow({ device, now, onChanged, onMessage, onWifi }) {
           <div className="mt-0.5 text-[13px] text-muted">
             {GPS_LABEL[device.gps_status] ?? device.gps_status} · {formatAgo(now - new Date(device.last_seen))}
           </div>
+          <button
+            type="button"
+            onClick={() => setShowDetail((v) => !v)}
+            aria-expanded={showDetail}
+            className="mt-1 flex items-center gap-0.5 text-xs font-semibold text-muted hover:text-ink"
+          >
+            Detail
+            <ChevronDown size={14} aria-hidden="true" className={showDetail ? "rotate-180" : ""} />
+          </button>
         </div>
 
         {/* Setiap kolom dua baris (utama + keterangan) supaya tingginya seragam. */}
@@ -360,9 +421,14 @@ function DeviceRow({ device, now, onChanged, onMessage, onWifi }) {
         </div>
 
         <div className="flex flex-wrap gap-2 lg:justify-end">
-          <button type="button" onClick={() => onWifi(device)}
-            className="flex items-center gap-1.5 rounded-md border border-black/10 px-2.5 py-1.5 text-[13px] font-semibold text-ink hover:bg-page">
-            <Wifi size={14} /> Atur Wi-Fi
+          <button
+            type="button"
+            onClick={() => onWifi(device)}
+            aria-label={`Atur Wi-Fi ${device.tag_id}`}
+            title="Atur Wi-Fi"
+            className="flex w-8 items-center justify-center rounded-md border border-black/10 py-1.5 text-muted hover:bg-page hover:text-ink"
+          >
+            <Wifi size={14} />
           </button>
           <button
             type="button"
@@ -378,7 +444,7 @@ function DeviceRow({ device, now, onChanged, onMessage, onWifi }) {
             onClick={openPairing}
             disabled={busy || pairing}
             // Aksi per baris: gaya sekunder (lihat StatusActionButton).
-            className="flex w-[10.5rem] items-center justify-start gap-1.5 rounded-md border border-brand/30 bg-white px-3 py-1.5 text-[13px] font-semibold text-brand transition-colors hover:border-brand hover:bg-brand/5 disabled:opacity-50"
+            className="flex w-[10.5rem] items-center justify-start gap-1.5 rounded-md border border-black/10 bg-white px-3 py-1.5 text-[13px] font-semibold text-ink transition-colors hover:bg-page disabled:opacity-50"
           >
             <Link2 size={14} />
             {device.paired ? "Pairing ulang" : "Pairing NFC"}
@@ -400,7 +466,7 @@ function DeviceRow({ device, now, onChanged, onMessage, onWifi }) {
         </div>
       </div>
 
-      <TelemetryRow device={device} />
+      {showDetail && <DeviceDetail device={device} />}
 
       {pairing && (
         <PairingPanel
@@ -448,19 +514,15 @@ export default function PerangkatPage() {
             Pairing NFC gelang dengan modul GPS dilakukan satu kali saat persiapan alat. Setelah itu, petugas lapangan cukup memindai NFC gelang.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <button type="button" onClick={() => setWifiSetup({ device: null })}
-            className="flex items-center gap-1.5 rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-ink hover:bg-page">
-            <Bluetooth size={14} /> Atur via Bluetooth
-          </button>
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={refresh}
-            className={`flex items-center gap-1.5 text-sm font-medium ${error ? "text-triase-merah" : "text-muted hover:text-ink"}`}
+            onClick={() => setWifiSetup({ device: null })}
+            className="flex h-8 items-center gap-1.5 rounded-md border border-black/10 bg-white px-3 text-[13px] font-semibold text-ink transition-colors hover:bg-page"
           >
-            {error ? "Terputus" : "Refresh"}
-            <RefreshCw size={14} />
+            <Bluetooth size={14} aria-hidden="true" /> Atur via Bluetooth
           </button>
+          <RefreshButton onClick={refresh} error={Boolean(error)} />
         </div>
       </div>
 

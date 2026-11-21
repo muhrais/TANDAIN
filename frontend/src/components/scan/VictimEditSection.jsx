@@ -115,7 +115,7 @@ export default function VictimEditSection({ victim, onUpdated }) {
             <button
               type="button"
               onClick={() => setEditingKondisi(true)}
-              className="flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-dark"
+              className="flex items-center gap-1 text-sm font-semibold text-ink hover:underline"
             >
               <Pencil size={14} />
               Ubah

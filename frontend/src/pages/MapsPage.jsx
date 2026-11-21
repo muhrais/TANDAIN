@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw } from "lucide-react";
+import RefreshButton from "../components/common/RefreshButton";
 import MapPanel from "../components/dashboard/MapPanel";
 import LevelFilter, { TRIASE_OPTIONS } from "../components/common/LevelFilter";
 import { usePolling } from "../hooks/usePolling";
@@ -53,16 +53,7 @@ export default function MapsPage() {
             {data.markers.length} tag mengirim lokasi · {data.posko.length} posko
           </p>
         </div>
-        <button
-          type="button"
-          onClick={refresh}
-          className={`flex items-center gap-1.5 text-sm font-medium ${
-            error ? "text-triase-merah" : "text-muted hover:text-ink"
-          }`}
-        >
-          {error ? "Terputus" : "Refresh"}
-          <RefreshCw size={14} />
-        </button>
+        <RefreshButton onClick={refresh} error={Boolean(error)} />
       </div>
 
       <LevelFilter label="Triase" options={FILTERS} value={filter} onChange={setFilter} />

@@ -25,7 +25,7 @@ function errorMessage(err) {
 // semuanya terlihat sama mendesak.
 const VARIANT_CLASS = {
   primary: "bg-brand text-white hover:bg-brand-dark",
-  secondary: "border border-brand/30 bg-white text-brand hover:border-brand hover:bg-brand/5",
+  secondary: "border border-black/10 bg-white text-ink hover:bg-page",
 };
 
 export default function StatusActionButton({ victim, posko = [], onUpdated, onError, variant = "primary" }) {

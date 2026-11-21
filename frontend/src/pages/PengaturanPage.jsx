@@ -11,7 +11,7 @@ import { ApiClientError } from "../lib/apiClient";
 
 const TABS = [
   { key: "insiden", label: "Insiden" },
-  { key: "ambang", label: "Ambang Alert" },
+  { key: "ambang", label: "Batas Alert" },
   { key: "posko", label: "Posko" },
   { key: "pengguna", label: "Pengguna" },
 ];
@@ -59,7 +59,7 @@ export default function PengaturanPage() {
     <div className="min-w-0 flex-1 space-y-6 p-4 md:p-8">
       <div>
         <h1 className="text-xl font-bold text-ink md:text-2xl">Pengaturan</h1>
-        <p className="mt-1 text-sm text-muted">Data insiden, ambang alert, posko, dan akun pengguna.</p>
+        <p className="mt-1 text-sm text-muted">Data insiden, batas alert, posko, dan akun pengguna.</p>
       </div>
 
       <div role="tablist" aria-label="Bagian pengaturan" className="flex items-center gap-1 overflow-x-auto">

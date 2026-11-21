@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import LevelFilter, { TRIASE_OPTIONS } from "../common/LevelFilter";
 import SegmentedFilter from "../common/SegmentedFilter";
-import { STATUS_ORDER, STATUS_LABEL, formatTime } from "../../lib/activity";
+import { STATUS_ORDER, STATUS_LABEL, formatTime, transitionLabel, activityHeadline } from "../../lib/activity";
 
 const DOT_COLOR = {
   merah: "bg-triase-merah",
@@ -22,8 +22,6 @@ const NEUTRAL_DOT = "bg-neutral-300";
 const KORBAN_JIWA_DOT = "bg-ink";
 const NEUTRAL_TEXT = "text-ink";
 
-const TRIASE_LABEL = { merah: "Merah", kuning: "Kuning", hijau: "Hijau" };
-
 // "perubahan" = entri riwayat selain perpindahan status (ubah triase / data).
 const STATUS_FILTERS = [
   { key: "semua", label: "Semua" },
@@ -39,29 +37,39 @@ function matchesStatusFilter(activity, filter) {
   return activity.jenis === "status" && activity.status_baru === filter;
 }
 
-// Label ringkas di kanan baris: transisi status, transisi triase, atau "Data diperbarui".
-function transitionLabel(activity) {
-  if (activity.jenis === "triase") {
-    return `Triase ${TRIASE_LABEL[activity.nilai_lama] ?? activity.nilai_lama} → ${
-      TRIASE_LABEL[activity.nilai_baru] ?? activity.nilai_baru
-    }`;
+const TRIASE_NAMES = ["merah", "kuning", "hijau"];
+
+// Baris utama "apa yang berubah". Ubah triase menampilkan kedua kategori
+// dengan warnanya masing-masing, supaya terbaca sekilas tanpa memindai teks.
+function ChangeLabel({ activity }) {
+  if (activity.jenis === "triase" && TRIASE_NAMES.includes(activity.nilai_lama) && TRIASE_NAMES.includes(activity.nilai_baru)) {
+    const word = (key) => (
+      <span className={`font-semibold ${TEXT_COLOR[key]}`}>{key[0].toUpperCase() + key.slice(1)}</span>
+    );
+    return (
+      <>
+        Triase {word(activity.nilai_lama)} <span className="text-muted">→</span> {word(activity.nilai_baru)}
+      </>
+    );
   }
-  if (activity.jenis === "data") return "Data diperbarui";
-  if (activity.jenis === "korban_jiwa") return "Korban jiwa";
-  return activity.status_lama
-    ? `${STATUS_LABEL[activity.status_lama]} → ${STATUS_LABEL[activity.status_baru]}`
-    : STATUS_LABEL[activity.status_baru];
+  return transitionLabel(activity);
 }
 
+// Satu baris: jam, titik triase, tag + nama di kiri; di kanannya apa yang
+// berubah, lalu satu baris kecil berisi keterangan (posko, kolom data) dan
+// "oleh <pengubah>". Hanya satu kalimat pendek per baris, tanpa pengulangan.
 function TimelineRow({ activity, isFirst, isLast }) {
-  const transition = transitionLabel(activity);
   const dotColor =
     activity.jenis === "korban_jiwa" ? KORBAN_JIWA_DOT : DOT_COLOR[activity.kategori_triase] ?? NEUTRAL_DOT;
   const textColor = TEXT_COLOR[activity.kategori_triase] ?? NEUTRAL_TEXT;
+  const detail = [activity.keterangan, activity.diubah_oleh_nama && `oleh ${activity.diubah_oleh_nama}`]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    // Kolom label lebar tetap (bukan auto) supaya semua label sama lebar dan sejajar.
-    <li className="grid grid-cols-[3rem_1rem_minmax(0,1fr)_15rem] items-start gap-x-3 py-3 text-sm">
+    // Kolom tag + nama lebar tetap (bukan auto) supaya kolom perubahan sejajar di semua baris.
+    // Di HP, perubahan turun tepat di bawah tag.
+    <li className="grid grid-cols-[3rem_1rem_minmax(0,1fr)] items-start gap-x-3 gap-y-0.5 py-3 text-sm md:grid-cols-[3rem_1rem_13rem_minmax(0,1fr)]">
       <span className="tabular-nums text-muted">{formatTime(activity.waktu_perubahan)}</span>
 
       <span className="relative flex h-full justify-center self-stretch">
@@ -74,13 +82,16 @@ function TimelineRow({ activity, isFirst, isLast }) {
         <span className={`relative mt-1 h-2.5 w-2.5 rounded-full ring-4 ring-white ${dotColor}`} />
       </span>
 
-      <span className="min-w-0">
-        {activity.tag_id && <span className={`mr-2 font-semibold ${textColor}`}>{activity.tag_id}</span>}
-        <span className="text-ink/80">{activity.description}</span>
+      <span className="min-w-0 truncate">
+        <span className={`font-semibold ${textColor}`}>{activityHeadline(activity)}</span>
+        {activity.nama && <span className="ml-2 text-ink/70">{activity.nama}</span>}
       </span>
 
-      <span title={transition} className="truncate rounded-md bg-page px-2 py-1 text-center text-xs text-muted">
-        {transition}
+      <span className="col-start-3 min-w-0 md:col-start-auto">
+        <span className="block truncate text-ink">
+          <ChangeLabel activity={activity} />
+        </span>
+        {detail && <span className="block truncate text-xs text-muted">{detail}</span>}
       </span>
     </li>
   );
