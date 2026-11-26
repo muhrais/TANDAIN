@@ -279,18 +279,23 @@ Setiap heartbeat disimpan ke koleksi `device_telemetry` (dihapus otomatis setela
 
 ```bash
 # mulai sesi, titik acuan diisi untuk menghitung galat GPS (S-02)
-npm run gps-report -- --start "S-02 titik A" --id-uji S-02 --acuan -6.3612,106.8249 --tags GPS-001,GPS-002,GPS-003 --catatan "luar ruangan, USB"
+npm run gps-report -- --start "S-02 titik A" --id-uji S-02 --acuan -6.3612,106.8249 --interval 5 --tags GPS-001,GPS-002,GPS-003 --catatan "luar ruangan, USB"
 
-# hentikan sesi, ringkasan tercetak dan tersimpan di scripts/out/gps_<session_id>.csv
+# hentikan sesi, ringkasan tercetak dan tersimpan di scripts/out/gps_<session_id>.csv,
+# plus gps_points_<session_id>.csv (per titik) dan gps_button_<session_id>.csv (per tekanan tombol)
 npm run gps-report -- --stop TS-xxxxxxxx
 
 npm run gps-report -- --report TS-xxxxxxxx   # ringkasan saat sesi masih berjalan
 npm run gps-report -- --list                 # daftar sesi
 ```
 
-Ringkasan per gelang: titik lokasi diterima vs diharapkan (kontinuitas, jeda terpanjang), galat rata-rata/p50/p95/maks ke titik acuan, TTFF, HDOP dan satelit rata-rata, baterai awal/akhir, uptime, dan jumlah reboot.
+Ringkasan per gelang: titik lokasi diterima vs diharapkan (kontinuitas, jeda terpanjang), galat rata-rata/p50/p95/maks ke titik acuan, latensi uplink lokasi (`uplink_n`, rata-rata, p50, p95, maks), tombol darurat (`tombol_n` dan latensi tekan → server), TTFF, HDOP, satelit, dan RSSI rata-rata, baterai awal/akhir, uptime, dan jumlah reboot.
 
-API (koordinator): `POST /api/test-sessions`, `POST /api/test-sessions/:id/stop`, `GET /api/test-sessions`, `GET /api/test-sessions/:id/summary`.
+Latensi uplink dihitung dari `sent_at` (jam NTP ESP32 saat kirim, atau saat tombol ditekan) sampai server menerima (`received_at`), disimpan sebagai `uplink_ms`. Firmware lama tanpa `sent_at` tetap diterima; kolom uplink-nya kosong. Default `--interval` sekarang 5 dtk; isi `--interval 10` untuk sketch GPS-001 lapangan. `--no-points` mematikan CSV per titik/tombol.
+
+CSV per titik (`gps_points_<id>.csv`) berisi `tag_id, received_at, sent_at, uplink_ms, lat, lng, galat_m, satellites, hdop, rssi, heartbeat_at, acuan_lat, acuan_lng`, siap dipakai untuk scatter plot sebaran titik vs titik acuan. Satelit/HDOP/RSSI diambil dari heartbeat terakhir sebelum titik itu.
+
+API (koordinator): `POST /api/test-sessions`, `POST /api/test-sessions/:id/stop`, `GET /api/test-sessions`, `GET /api/test-sessions/:id/summary`, `GET /api/test-sessions/:id/points` (semua titik lokasi dan tekanan tombol dalam rentang sesi).
 
 Sinkron LED untuk uji PAIR-02 tercatat di setiap gelang: `led_command` (perintah server), `led_state` (laporan firmware), dan `led_sync_ms` (jeda dari triase ditetapkan sampai firmware melaporkan warna yang sama). Halaman **Perangkat** menampilkan telemetri dan status LED ini di bawah tiap gelang.
 

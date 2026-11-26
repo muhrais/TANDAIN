@@ -37,6 +37,18 @@ const locationSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    // Jam perangkat (NTP) tepat sebelum payload dikirim. Opsional; firmware
+    // lama tidak mengirimnya.
+    sent_at: {
+      type: Date,
+      default: null,
+    },
+    // received_at - sent_at (latensi uplink ESP -> server). null bila sent_at
+    // kosong, jam perangkat belum benar, atau data dari buffer offline (/batch).
+    uplink_ms: {
+      type: Number,
+      default: null,
+    },
     battery_pct: {
       type: Number,
       default: null,

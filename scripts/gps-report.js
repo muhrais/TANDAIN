@@ -6,16 +6,28 @@
  *      -> mencetak session_id, sesi mulai dihitung sejak saat ini
  *   2. biarkan gelang mengirim data (mis. 10 menit)
  *   3. npm run gps-report -- --stop TS-xxxxxxxx
- *      -> sesi dihentikan, ringkasan per perangkat dicetak dan disimpan ke CSV
+ *      -> sesi dihentikan, ringkasan per perangkat dicetak dan disimpan ke CSV,
+ *         plus CSV per titik (scatter plot vs titik acuan) dan per tekanan tombol
  *
  * Opsi lain:
  *   --report TS-xxxxxxxx   cetak ringkasan sesi (boleh saat sesi masih berjalan)
  *   --list                 daftar sesi terakhir
- *   --interval S           interval kirim lokasi firmware (default 10)
+ *   --interval S           interval kirim lokasi firmware, detik (default 5 = firmware cloud dan
+ *                          GPS-002/003 lapangan; GPS-001 lapangan pakai 10)
  *   --catatan "..."        kondisi uji (lokasi, casing, daya)
  *   --base URL             alamat backend (default http://localhost:3000)
  *   --user U --pass P      akun koordinator (default koordinator1 / koordinator123)
- *   --out PATH             file CSV (default scripts/out/gps_<session_id>.csv)
+ *   --out PATH             file CSV ringkasan (default scripts/out/gps_<session_id>.csv)
+ *   --no-points            jangan tulis CSV per titik dan per tombol
+ *
+ * File keluaran --stop / --report (folder scripts/out/):
+ *   gps_<id>.csv          ringkasan per gelang (galat, kontinuitas, TTFF, uplink, tombol, RSSI)
+ *   gps_points_<id>.csv   satu baris per titik lokasi: jam, uplink, lat/lng, galat,
+ *                         satelit/HDOP/RSSI dari heartbeat terakhir sebelum titik itu
+ *   gps_button_<id>.csv   satu baris per tekanan tombol: jam tekan, jam terima, uplink
+ *
+ * uplink_ms = jam server terima - jam ESP kirim (NTP). Kosong bila firmware belum
+ * mengirim sent_at atau jam ESP belum sinkron.
  */
 const path = require("path");
 const { parseArgs, writeCsv } = require("./lib/util");
@@ -24,6 +36,7 @@ const args = parseArgs();
 const BASE = String(args.base ?? "http://localhost:3000").replace(/\/$/, "");
 const USER = String(args.user ?? "koordinator1");
 const PASS = String(args.pass ?? "koordinator123");
+const DEFAULT_INTERVAL_DTK = 5;
 
 async function call(method, p, token, body) {
   const res = await fetch(BASE + p, {
@@ -48,9 +61,20 @@ const COLUMNS = [
   "galat_p50_m",
   "galat_p95_m",
   "galat_maks_m",
+  "uplink_n",
+  "uplink_rata_ms",
+  "uplink_p50_ms",
+  "uplink_p95_ms",
+  "uplink_maks_ms",
+  "tombol_n",
+  "tombol_uplink_n",
+  "tombol_uplink_rata_ms",
+  "tombol_uplink_p95_ms",
+  "tombol_uplink_maks_ms",
   "ttff_dtk",
   "hdop_rata",
   "satelit_rata",
+  "rssi_rata",
   "heartbeat_diterima",
   "baterai_awal_pct",
   "baterai_akhir_pct",
@@ -77,8 +101,12 @@ function printReport(summary) {
       "jeda maks (s)": p.jeda_maks_dtk,
       "galat rata (m)": p.galat_rata_m,
       "galat p95 (m)": p.galat_p95_m,
+      "uplink rata/p95 (ms)": p.uplink_n ? `${p.uplink_rata_ms}/${p.uplink_p95_ms}` : "-",
+      tombol: p.tombol_n,
+      "tombol uplink rata (ms)": p.tombol_uplink_n ? p.tombol_uplink_rata_ms : "-",
       "TTFF (s)": p.ttff_dtk,
       HDOP: p.hdop_rata,
+      RSSI: p.rssi_rata,
       baterai: p.baterai_awal_pct === null ? "-" : `${p.baterai_awal_pct}->${p.baterai_akhir_pct}`,
       reboot: p.reboot,
     }))
@@ -100,18 +128,65 @@ function saveCsv(summary) {
   console.log(`CSV: ${writeCsv(out, header, rows)}`);
 }
 
+const POINT_COLUMNS = [
+  "tag_id",
+  "received_at",
+  "sent_at",
+  "uplink_ms",
+  "lat",
+  "lng",
+  "galat_m",
+  "satellites",
+  "hdop",
+  "rssi",
+  "heartbeat_at",
+];
+const BUTTON_COLUMNS = ["tag_id", "sent_at", "received_at", "uplink_ms", "lat", "lng", "satellites"];
+
+function savePointsCsv(data) {
+  const s = data.session;
+  const outDir = path.join(__dirname, "out");
+  const acuan = s.titik_acuan ?? {};
+  // Titik acuan ikut di tiap baris supaya CSV bisa langsung dipakai scatter plot.
+  const pointRows = data.points.map((p) => [
+    s.session_id,
+    ...POINT_COLUMNS.map((c) => p[c] ?? ""),
+    acuan.lat ?? "",
+    acuan.lng ?? "",
+  ]);
+  const pointsFile = writeCsv(
+    path.join(outDir, `gps_points_${s.session_id}.csv`),
+    ["session_id", ...POINT_COLUMNS, "acuan_lat", "acuan_lng"],
+    pointRows
+  );
+  const buttonFile = writeCsv(
+    path.join(outDir, `gps_button_${s.session_id}.csv`),
+    ["session_id", ...BUTTON_COLUMNS],
+    data.tombol.map((b) => [s.session_id, ...BUTTON_COLUMNS.map((c) => b[c] ?? "")])
+  );
+  const withUplink = data.points.filter((p) => p.uplink_ms !== null).length;
+  console.log(`CSV titik: ${pointsFile} (${data.points.length} titik, ${withUplink} dengan uplink)`);
+  console.log(`CSV tombol: ${buttonFile} (${data.tombol.length} tekanan)`);
+}
+
 async function main() {
   const login = await call("POST", "/api/auth/login", null, { username: USER, password: PASS });
   const token = login.token;
 
   if (args.start) {
     const acuan = args.acuan ? String(args.acuan).split(",").map(Number) : null;
+    if (args.interval === undefined) {
+      console.log(
+        `Peringatan: --interval tidak diisi, dipakai ${DEFAULT_INTERVAL_DTK} dtk. ` +
+          "Isi --interval 10 bila memakai sketch GPS-001 lapangan."
+      );
+    }
     const session = await call("POST", "/api/test-sessions", token, {
       nama: String(args.start),
       id_uji: args["id-uji"] ? String(args["id-uji"]) : null,
       tag_ids: args.tags ? String(args.tags).split(",").map((t) => t.trim()) : [],
       titik_acuan: acuan ? { lat: acuan[0], lng: acuan[1] } : null,
-      interval_lokasi_dtk: Number(args.interval ?? 10),
+      interval_lokasi_dtk: Number(args.interval ?? DEFAULT_INTERVAL_DTK),
       catatan: args.catatan ? String(args.catatan) : "",
     });
     console.log(`Sesi dimulai: ${session.session_id} (${session.nama})`);
@@ -143,6 +218,9 @@ async function main() {
   const summary = await call("GET", `/api/test-sessions/${id}/summary`, token);
   printReport(summary);
   saveCsv(summary);
+  if (!args["no-points"]) {
+    savePointsCsv(await call("GET", `/api/test-sessions/${id}/points`, token));
+  }
 }
 
 main().catch((err) => {

@@ -4,6 +4,7 @@ const {
   stopTestSession,
   listTestSessions,
   getTestSessionSummary,
+  getTestSessionPoints,
 } = require("../controllers/testSessionController");
 const { authenticate, requireRole, ROLES } = require("../middleware/auth");
 
@@ -15,5 +16,6 @@ router.get("/", listTestSessions);
 router.post("/", createTestSession);
 router.post("/:id/stop", stopTestSession);
 router.get("/:id/summary", getTestSessionSummary);
+router.get("/:id/points", getTestSessionPoints);
 
 module.exports = router;

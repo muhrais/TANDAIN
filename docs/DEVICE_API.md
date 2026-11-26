@@ -1,4 +1,4 @@
-# Device API TANDAIN (heartbeat v2)
+# Device API TANDAIN (heartbeat v2, uplink `sent_at`)
 
 Kontrak antara firmware gelang (ESP32-C3) dan backend. Semua endpoint perangkat **tanpa token
 pengguna** dan memakai `Content-Type: application/json`. Base URL contoh: `http://192.168.137.1:3000`.
@@ -9,8 +9,8 @@ server membalas 401 `DEVICE_KEY_INVALID`. Mode lapangan tanpa `DEVICE_API_KEY` t
 
 | Endpoint | Interval | Isi |
 |---|---|---|
-| `POST /api/devices/heartbeat` | 5 dtk | Status perangkat + telemetri; respons membawa perintah LED |
-| `POST /api/locations` | 10 dtk (saat GPS fix) | Satu titik lokasi |
+| `POST /api/devices/heartbeat` | 3 dtk (GPS-001 lapangan: 5 dtk) | Status perangkat + telemetri; respons membawa perintah LED |
+| `POST /api/locations` | 5 dtk saat GPS fix (GPS-001 lapangan: 10 dtk) | Satu titik lokasi |
 | `POST /api/locations/batch` | saat Wi-Fi tersambung lagi | Isi buffer offline |
 | `POST /api/devices/button` | saat tombol ditekan | Event tombol darurat |
 
@@ -114,21 +114,42 @@ Jika respons gagal atau tidak bisa di-parse, **jangan** mematikan LED. Pertahank
 `POST /api/locations`
 
 ```json
-{ "tag_id": "GPS-001", "lat": -6.361234, "lng": 106.824911, "timestamp": "2026-11-07T08:15:00Z", "battery_pct": 82 }
+{
+  "tag_id": "GPS-001",
+  "lat": -6.361234,
+  "lng": 106.824911,
+  "timestamp": "2026-11-07T08:15:00Z",
+  "battery_pct": 82,
+  "sent_at": "2026-11-07T08:15:00.412Z"
+}
 ```
 
+| Field | Wajib | Keterangan |
+|---|---|---|
+| `sent_at` | tidak | Jam perangkat (NTP, UTC, ISO 8601 dengan milidetik) **tepat sebelum** request dikirim |
+
+Backend menyimpan `sent_at` dan menghitung `uplink_ms = received_at - sent_at` (latensi ESP → server).
+Bila hasilnya di luar −1000…60000 ms, jam perangkat dianggap belum benar dan `uplink_ms` disimpan
+`null`. `sent_at` yang bukan ISO 8601 valid ditolak 400. Respons 201 membawa `data.uplink_ms`.
+
+Firmware hanya mengisi `sent_at` setelah jam tersinkron NTP (`pool.ntp.org` / `time.google.com`).
+Jam GPS tidak dipakai karena butuh fix dan sebagian uji dilakukan di dalam ruangan.
+
 `POST /api/locations/batch` menerima `{ "items": [ …payload lokasi… ] }` dan membalas
-`data.synced_count`.
+`data.synced_count`. Titik dari batch **tidak** dihitung uplink-nya (sengaja tertunda di buffer).
 
 ## 3. Tombol darurat
 
 `POST /api/devices/button`
 
 ```json
-{ "tag_id": "GPS-001", "lat": -6.361234, "lng": 106.824911, "satellites": 8 }
+{ "tag_id": "GPS-001", "lat": -6.361234, "lng": 106.824911, "satellites": 8, "sent_at": "2026-11-07T08:15:03.120Z" }
 ```
 
-`lat`/`lng` boleh dihilangkan bila GPS belum fix.
+`lat`/`lng` boleh dihilangkan bila GPS belum fix. `sent_at` opsional = jam NTP saat tombol
+**terdeteksi ditekan** (bukan saat request dikirim), jadi `uplink_ms` mengukur tekan → server
+terima. Setiap tekanan disimpan di koleksi `button_events` (dihapus otomatis setelah 14 hari);
+respons 201 membawa `data.uplink_ms`.
 
 ## 4. Uji tanpa hardware
 
@@ -138,3 +159,5 @@ npm run sim -- --count 3 --prefix GPS --duration 300 --fw-legacy   # payload fir
 ```
 
 Simulator mengirim `led_state` = `led` dari respons heartbeat sebelumnya, sama seperti firmware v2.
+Lokasi simulator membawa `sent_at`; tambahkan `--button 10` supaya tiap tag menekan tombol kira-kira
+tiap 10 dtk (juga dengan `sent_at`). `--fw-legacy` mengirim semua payload tanpa field baru.

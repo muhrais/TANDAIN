@@ -1,10 +1,12 @@
 const Tag = require("../models/Tag");
 const Victim = require("../models/Victim");
 const DeviceTelemetry = require("../models/DeviceTelemetry");
+const ButtonEvent = require("../models/ButtonEvent");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
 const { wifiCommandForHeartbeat } = require("./deviceWifiController");
+const { validateSentAt, parseSentAt, uplinkMs } = require("../utils/uplink");
 
 const GPS_STATUSES = ["no_data", "searching", "fixed", "unknown"];
 const LED_STATES = ["none", "identify", "merah", "kuning", "hijau"];
@@ -173,6 +175,8 @@ const receiveHeartbeat = asyncHandler(async (req, res) => {
 
 // Menyimpan penekanan tombol sebagai event persisten agar tetap terlihat di
 // dashboard walaupun status LED darurat pada perangkat hanya aktif sebentar.
+// `sent_at` opsional = jam NTP perangkat saat tombol terdeteksi ditekan; tiap
+// tekanan juga dicatat di `button_events` untuk latensi tekan -> server.
 const receiveButtonPress = asyncHandler(async (req, res) => {
   const { tag_id, lat, lng, satellites = 0, ip_address = null } = req.body;
 
@@ -193,7 +197,14 @@ const receiveButtonPress = asyncHandler(async (req, res) => {
     throw new ApiError(400, "VALIDATION_ERROR", "Koordinat tombol tidak valid.");
   }
 
+  const sentAtError = validateSentAt(req.body.sent_at);
+  if (sentAtError) {
+    throw new ApiError(400, "VALIDATION_ERROR", sentAtError.message, [sentAtError]);
+  }
+
   const pressedAt = new Date();
+  const sentAt = parseSentAt(req.body.sent_at);
+  const uplink = uplinkMs(sentAt, pressedAt);
   const fields = {
     last_seen: pressedAt,
     last_button_pressed_at: pressedAt,
@@ -216,10 +227,23 @@ const receiveButtonPress = asyncHandler(async (req, res) => {
     { upsert: true, new: true }
   );
 
+  // Riwayat untuk alat uji; gagal tulis tidak boleh menggagalkan laporan
+  // tombol. Ditunggu supaya tidak hilang saat fungsi Vercel dibekukan.
+  await ButtonEvent.create({
+    tag_id,
+    sent_at: sentAt,
+    received_at: pressedAt,
+    uplink_ms: uplink,
+    lat: hasLocation ? lat : null,
+    lng: hasLocation ? lng : null,
+    satellites: tag.satellites,
+  }).catch((err) => console.warn(`[button] gagal simpan event ${tag_id}: ${err.message}`));
+
   return sendSuccess(res, 201, {
     tag_id: tag.tag_id,
     button_press_count: tag.button_press_count,
     pressed_at: tag.last_button_pressed_at,
+    uplink_ms: uplink,
   });
 });
 

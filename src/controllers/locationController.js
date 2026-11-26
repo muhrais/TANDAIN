@@ -4,10 +4,12 @@ const Location = require("../models/Location");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
+const { validateSentAt, parseSentAt, uplinkMs } = require("../utils/uplink");
 
 /**
  * Validasi satu payload lokasi sesuai contoh pada PRD bagian 6.1:
  * { tag_id, lat, lng, timestamp, battery_pct }
+ * plus `sent_at` opsional (jam NTP perangkat saat request dikirim).
  */
 function validateLocationPayload(body) {
   const { tag_id, lat, lng, timestamp, battery_pct } = body;
@@ -28,6 +30,8 @@ function validateLocationPayload(body) {
   if (battery_pct != null && (typeof battery_pct !== "number" || battery_pct < 0 || battery_pct > 100)) {
     errors.push({ field: "battery_pct", message: "battery_pct harus berupa angka antara 0 dan 100." });
   }
+  const sentAtError = validateSentAt(body.sent_at);
+  if (sentAtError) errors.push(sentAtError);
 
   return errors;
 }
@@ -38,10 +42,14 @@ function validateLocationPayload(body) {
  * praktis untuk tahap prototipe saat tag fisik langsung mengirim data
  * tanpa proses pendaftaran manual terlebih dahulu), lalu memperbarui
  * lokasi_terakhir korban aktif yang terhubung dengan tag tersebut (jika ada).
+ *
+ * `measureUplink` false untuk data /batch: titik buffer offline sengaja
+ * tertunda, jadi selisih sent_at -> received_at bukan latensi jaringan.
  */
-async function ingestSingleLocation(payload) {
+async function ingestSingleLocation(payload, { measureUplink = true } = {}) {
   const { tag_id, lat, lng, timestamp, battery_pct } = payload;
   const receivedAt = new Date();
+  const sentAt = parseSentAt(payload.sent_at);
   const measuredAt = timestamp ? new Date(timestamp) : receivedAt;
   const battery = typeof battery_pct === "number" ? battery_pct : null;
 
@@ -68,6 +76,8 @@ async function ingestSingleLocation(payload) {
     longitude: lng,
     timestamp: measuredAt,
     received_at: receivedAt,
+    sent_at: sentAt,
+    uplink_ms: measureUplink ? uplinkMs(sentAt, receivedAt) : null,
     battery_pct: battery,
     sync_status: "synced",
   });
@@ -100,7 +110,7 @@ const receiveLocation = asyncHandler(async (req, res) => {
   }
 
   const location = await ingestSingleLocation(req.body);
-  return sendSuccess(res, 201, { location_id: location.location_id });
+  return sendSuccess(res, 201, { location_id: location.location_id, uplink_ms: location.uplink_ms });
 });
 
 /**
@@ -129,7 +139,7 @@ const receiveLocationBatch = asyncHandler(async (req, res) => {
       failed.push({ index, errors });
       continue;
     }
-    const location = await ingestSingleLocation(item);
+    const location = await ingestSingleLocation(item, { measureUplink: false });
     results.push({ index, location_id: location.location_id });
   }
 
