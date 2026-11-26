@@ -19,7 +19,8 @@ const testSessionSchema = new mongoose.Schema(
       lng: { type: Number, default: null },
     },
     // Interval kirim lokasi firmware, untuk menghitung kontinuitas.
-    interval_lokasi_dtk: { type: Number, default: 10 },
+    // Firmware cloud mengirim lokasi tiap 5 dtk (GPS-001 lapangan: 10 dtk).
+    interval_lokasi_dtk: { type: Number, default: 5 },
     catatan: { type: String, default: "" },
     started_at: { type: Date, default: Date.now },
     stopped_at: { type: Date, default: null },

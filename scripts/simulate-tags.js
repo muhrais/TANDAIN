@@ -25,11 +25,16 @@
  *   --out PATH            file CSV log (default scripts/out/sim_<waktu>.csv)
  *   --device-key K        header X-Device-Key (default env DEVICE_API_KEY), untuk server
  *                         yang mengunci endpoint perangkat
- *   --fw-legacy           kirim payload heartbeat lama (tanpa telemetri v2),
- *                         untuk memastikan firmware yang sudah ter-flash tetap diterima
+ *   --fw-legacy           kirim payload lama (heartbeat tanpa telemetri v2, lokasi dan
+ *                         tombol tanpa sent_at), untuk memastikan firmware yang sudah
+ *                         ter-flash tetap diterima
+ *   --button S            tiap tag menekan tombol darurat rata-rata tiap S detik
+ *                         (default 0 = mati), untuk uji latensi tombol
  *
  * Log CSV per kiriman: tag_id, seq, kind, sent_at, status_code, latency_ms, items.
- * kind: location | heartbeat | batch | buffered | dropped
+ * kind: location | heartbeat | batch | buffered | dropped | button
+ * Lokasi dan tombol membawa sent_at (jam kirim), sama seperti firmware v2.1, jadi
+ * kolom uplink di gps-report ikut terisi.
  * Untuk heartbeat, kolom items berisi mode LED dari server (none | merah |
  * kuning | hijau | identify). Setiap perubahan LED juga dicetak ke konsol,
  * jadi alur pairing -> registrasi -> LED bisa diuji tanpa hardware.
@@ -49,7 +54,8 @@ const OFFLINE = args.offline ? String(args.offline).split("-").map((s) => Number
 const BATCH_ON_RECONNECT = Boolean(args["batch-on-reconnect"]);
 const OUT = args.out ? String(args.out) : defaultOutPath("sim");
 const FW_LEGACY = Boolean(args["fw-legacy"]);
-const FW_VERSION = "sim-2.0";
+const FW_VERSION = "sim-2.1";
+const BUTTON_MS = Number(args.button ?? 0) * 1000;
 
 // ±5 m per langkah (1° lintang ≈ 111 km).
 const STEP_DEG = 5 / 111000;
@@ -137,8 +143,23 @@ async function sendLocation(tag) {
     return;
   }
 
-  const r = await post("/api/locations", payload);
+  // sent_at diisi tepat sebelum kirim; titik buffer di atas sengaja tanpa
+  // sent_at baru karena dikirim tertunda lewat /batch.
+  const r = await post("/api/locations", FW_LEGACY ? payload : { ...payload, sent_at: new Date().toISOString() });
   log(tag, "location", r.status, r.latency);
+}
+
+async function sendButton(tag) {
+  if (isOffline()) return;
+  const payload = {
+    tag_id: tag.tag_id,
+    satellites: 6 + Math.floor(Math.random() * 5),
+    lat: Number(tag.lat.toFixed(6)),
+    lng: Number(tag.lng.toFixed(6)),
+  };
+  if (!FW_LEGACY) payload.sent_at = new Date().toISOString();
+  const r = await post("/api/devices/button", payload);
+  log(tag, "button", r.status, r.latency, r.json?.data?.uplink_ms ?? "");
 }
 
 async function sendHeartbeat(tag) {
@@ -194,6 +215,10 @@ function summarize() {
   if (HEARTBEAT_MS > 0) {
     console.log(`Heartbeat: ${heartbeats.filter(ok).length}/${heartbeats.length} sukses`);
   }
+  if (BUTTON_MS > 0) {
+    const buttons = byKind("button");
+    console.log(`Tombol: ${buttons.filter(ok).length}/${buttons.length} sukses`);
+  }
   if (OFFLINE) {
     console.log(`Offline buffer: ${buffered} titik disimpan, ${batchSynced} tersinkron lewat batch` +
       (BATCH_ON_RECONNECT ? "" : " (batch tidak aktif, buffer dibuang)"));
@@ -216,6 +241,14 @@ async function main() {
       if (HEARTBEAT_MS > 0) {
         sendHeartbeat(tag);
         timers.push(setInterval(() => sendHeartbeat(tag), HEARTBEAT_MS));
+      }
+      if (BUTTON_MS > 0) {
+        // Jeda acak 0.5x-1.5x supaya tekanan antar tag tidak serempak.
+        const press = () => {
+          sendButton(tag);
+          timers.push(setTimeout(press, BUTTON_MS * (0.5 + Math.random())));
+        };
+        timers.push(setTimeout(press, BUTTON_MS * (0.5 + Math.random())));
       }
     }, offset));
   });
