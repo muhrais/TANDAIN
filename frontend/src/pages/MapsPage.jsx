@@ -6,7 +6,7 @@ import LevelFilter, { TRIASE_OPTIONS } from "../components/common/LevelFilter";
 import { usePolling } from "../hooks/usePolling";
 import { getMapMarkers } from "../services/dashboardService";
 import { STATUS_LABEL } from "../lib/activity";
-import { STALE_THRESHOLD_MS, formatAgo } from "../lib/map";
+import { isGpsOffline, formatAgo } from "../lib/map";
 
 const FILTERS = [...TRIASE_OPTIONS, { key: "belum", label: "Belum registrasi", tone: "abu" }];
 
@@ -72,7 +72,7 @@ export default function MapsPage() {
           {markers.length === 0 && <li className="p-4 text-sm text-muted">Tidak ada tag untuk filter ini.</li>}
           {markers.map((item) => {
             const elapsedMs = now - new Date(item.received_at);
-            const isStale = elapsedMs > STALE_THRESHOLD_MS;
+            const isStale = isGpsOffline(item, elapsedMs);
             return (
               <li key={item.tag_id}>
                 <button
@@ -96,7 +96,7 @@ export default function MapsPage() {
                         : "Belum diregistrasi"}
                     </span>
                     <span className="block text-muted">
-                      {isStale ? "Lokasi terakhir · " : "Update "}
+                      {isStale ? "GPS offline · lokasi terakhir " : "Update "}
                       {formatAgo(elapsedMs)}
                     </span>
                   </span>

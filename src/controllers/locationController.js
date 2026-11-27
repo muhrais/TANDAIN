@@ -182,10 +182,27 @@ const getLatestLocations = asyncHandler(async (req, res) => {
   const sinceMinutes = Number(req.query.since_minutes);
   const since = sinceMinutes > 0 ? new Date(now.getTime() - sinceMinutes * 60 * 1000) : null;
 
-  const [tags, activeVictims] = await Promise.all([
-    Tag.find({ "latest_location.lat": { $ne: null } }).lean(),
+  const [allTags, activeVictims] = await Promise.all([
+    Tag.find({}).lean(),
     Victim.find({ status_korban: { $ne: "arrived" } }).sort({ created_at: -1 }).lean(),
   ]);
+
+  // Tag yang latest_location-nya kosong (data lama / hasil restore) tetap
+  // ditampilkan di titik terakhirnya, diambil dari log koleksi `locations`.
+  const missing = allTags.filter((t) => t.latest_location?.lat == null || t.latest_location?.lng == null);
+  if (missing.length > 0) {
+    const lastPoints = await Location.aggregate([
+      { $match: { tag_id: { $in: missing.map((t) => t.tag_id) } } },
+      { $sort: { received_at: -1 } },
+      { $group: { _id: "$tag_id", lat: { $first: "$latitude" }, lng: { $first: "$longitude" }, timestamp: { $first: "$timestamp" }, received_at: { $first: "$received_at" } } },
+    ]);
+    const byTag = new Map(lastPoints.map((p) => [p._id, p]));
+    for (const t of missing) {
+      const p = byTag.get(t.tag_id);
+      if (p) t.latest_location = { lat: p.lat, lng: p.lng, timestamp: p.timestamp, received_at: p.received_at };
+    }
+  }
+  const tags = allTags.filter((t) => t.latest_location?.lat != null && t.latest_location?.lng != null);
 
   // Satu tag hanya boleh punya satu korban aktif (DUPLICATE_ACTIVE_VICTIM),
   // tapi kalau ada data lama yang dobel, ambil yang terbaru (sort di atas).

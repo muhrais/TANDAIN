@@ -6,6 +6,12 @@ export const DEFAULT_CENTER = { lat: -6.3612, lng: 106.8249 };
 // terakhir yang diketahui, bukan posisi terkini (mitigasi risiko GPS hilang).
 export const STALE_THRESHOLD_MS = 60 * 1000;
 
+// GPS dianggap offline kalau perangkat tidak heartbeat, GPS tidak fix, atau
+// lokasi sudah lewat ambang stale. Marker tetap ditampilkan di titik terakhir.
+export function isGpsOffline(item, elapsedMs) {
+  return item.online === false || item.gps_fix === false || elapsedMs > STALE_THRESHOLD_MS;
+}
+
 export function formatAgo(ms) {
   const seconds = Math.max(0, Math.round(ms / 1000));
   if (seconds < 60) return `${seconds} dtk lalu`;

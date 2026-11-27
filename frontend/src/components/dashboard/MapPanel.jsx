@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, CircleMarker, Tooltip, Marker } from "react-le
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { STATUS_LABEL } from "../../lib/activity";
-import { STALE_THRESHOLD_MS, pickMapCenter, formatAgo } from "../../lib/map";
+import { isGpsOffline, pickMapCenter, formatAgo } from "../../lib/map";
 import { record, correctedNow } from "../../lib/metrics";
 
 const MARKER_COLOR = {
@@ -42,7 +42,7 @@ const LEGEND_ITEMS = [
   { label: "Kuning", color: MARKER_COLOR.kuning },
   { label: "Hijau", color: MARKER_COLOR.hijau },
   { label: "Belum diregistrasi", color: NO_VICTIM_COLOR, dashed: true },
-  { label: "Tidak ada update", color: NO_VICTIM_COLOR, faded: true },
+  { label: "GPS offline (lokasi terakhir)", color: NO_VICTIM_COLOR, faded: true },
 ];
 
 export default function MapPanel({
@@ -105,7 +105,7 @@ export default function MapPanel({
         {markers.map((item) => {
           const hasVictim = Boolean(item.victim);
           const elapsedMs = now - new Date(item.received_at);
-          const isStale = elapsedMs > STALE_THRESHOLD_MS;
+          const isStale = isGpsOffline(item, elapsedMs);
           const color = hasVictim
             ? MARKER_COLOR[item.victim.kategori_triase] ?? NO_VICTIM_COLOR
             : NO_VICTIM_COLOR;
@@ -141,9 +141,10 @@ export default function MapPanel({
                   {hasVictim && onMarkerClick && (
                     <div className="mt-1 text-[10px] text-muted">Klik untuk buka di Evakuasi</div>
                   )}
+                  {isStale && <div className="font-semibold text-neutral-500">GPS offline</div>}
                   <div>
                     {isStale
-                      ? `Lokasi terakhir diketahui · ${formatAgo(elapsedMs)}`
+                      ? `Lokasi terakhir · ${formatAgo(elapsedMs)}`
                       : `Update ${formatAgo(elapsedMs)}`}
                   </div>
                 </div>
